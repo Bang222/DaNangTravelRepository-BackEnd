@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   Ctx,
@@ -7,13 +7,14 @@ import {
   RmqContext,
 } from '@nestjs/microservices';
 import { SharedService } from '@app/shared';
-import { ExistingUserDto, NewUserDto } from '../dtos';
-import { JwtGuard } from "./jwt.guard";
+import { JwtGuard } from './jwt.guard';
+import { ExistingUserDTO, NewUserDTO } from './dto';
 
 @Controller()
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    @Inject('AuthServiceInterface') private readonly authService: AuthService,
+    @Inject('SharedServiceInterface')
     private readonly sharedService: SharedService,
   ) {}
 
@@ -32,14 +33,14 @@ export class AuthController {
   //   return await this.authService.postUser();
   // }
   @MessagePattern({ cmd: 'register' }) // getup API gateway
-  async register(@Ctx() context: RmqContext, @Payload() newUser: NewUserDto) {
+  async register(@Ctx() context: RmqContext, @Payload() newUser: NewUserDTO) {
     this.sharedService.acknowledgeMessage(context);
     return await this.authService.register(newUser);
   }
   @MessagePattern({ cmd: 'login' }) // getup API gateway
   async login(
     @Ctx() context: RmqContext,
-    @Payload() existingUser: ExistingUserDto,
+    @Payload() existingUser: ExistingUserDTO,
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.authService.login(existingUser);
