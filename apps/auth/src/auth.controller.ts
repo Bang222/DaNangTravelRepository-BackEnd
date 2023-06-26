@@ -1,12 +1,14 @@
-import { Controller, Get, Inject, UseGuards } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
-import { SharedService } from "@app/shared";
-import { ExistingUserDTO, NewUserDTO } from "./dto";
-import { JwtGuard } from "./guard/jwt.guard";
-import { Roles } from "./decorator/roles.decorator";
-import { Role } from "@app/shared/models/enum";
-import { UseRoleGuard } from "./guard/role.guard";
+import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import {
+  Ctx,
+  MessagePattern,
+  Payload,
+  RmqContext,
+} from '@nestjs/microservices';
+import { SharedService } from '@app/shared';
+import { ExistingUserDTO, NewUserDTO } from './dto';
+import { JwtGuard } from './guard/jwt.guard';
 
 @Controller()
 export class AuthController {
@@ -25,11 +27,6 @@ export class AuthController {
     this.sharedService.acknowledgeMessage(context);
     return this.authService.getUsers();
   }
-  // @MessagePattern({ cmd: 'post-user' })
-  // async postUser(@Ctx() context: RmqContext) {
-  //   this.sharedService.acknowledgeMessage(context);
-  //   return await this.authService.postUser();
-  // }
   @MessagePattern({ cmd: 'register' }) // getup API gateway
   async register(@Ctx() context: RmqContext, @Payload() newUser: NewUserDTO) {
     this.sharedService.acknowledgeMessage(context);
@@ -60,5 +57,21 @@ export class AuthController {
     this.sharedService.acknowledgeMessage(context);
 
     return this.authService.getUserFromHeader(payload.jwt);
+  }
+  @MessagePattern({ cmd: 'add-friend' })
+  async addFriend(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: number; friendId: number },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.authService.addFriend(payload.userId, payload.friendId);
+  }
+  @MessagePattern({ cmd: 'get-friends' })
+  async getFriends(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: number },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.authService.getFriends(payload.userId);
   }
 }

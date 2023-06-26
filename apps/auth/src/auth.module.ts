@@ -9,14 +9,13 @@ import {
   PostgresdbModule,
   SharedService,
   UserEntity,
-} from '@app/shared';
+  FriendRequestRepository,
+  UsersRepository, FriendRequestEntity
+} from "@app/shared";
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
-import { JwtStrategy } from './jwt/jwt-strategy';
-import { UsersRepository } from '@app/shared/repository/users.repository';
-import { RolesGuard } from '@app/shared/guard/roles.guard';
-import { Reflector } from '@nestjs/core';
-import { UseRoleGuard } from "./guard/role.guard";
+import { JwtStrategy } from './strategy/jwt-strategy';
+import { UseRoleGuard } from './guard/role.guard';
 
 @Module({
   imports: [
@@ -39,7 +38,7 @@ import { UseRoleGuard } from "./guard/role.guard";
     ),
     SharedModule,
     PostgresdbModule,
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity, FriendRequestEntity]),
   ],
   controllers: [AuthController],
   providers: [
@@ -57,6 +56,10 @@ import { UseRoleGuard } from "./guard/role.guard";
     {
       provide: 'SharedServiceInterface',
       useClass: SharedService,
+    },
+    {
+      provide: 'FriendRequestRepositoryInterface',
+      useClass: FriendRequestRepository,
     },
   ],
 })

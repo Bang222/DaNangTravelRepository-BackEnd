@@ -1,6 +1,7 @@
 import { UserEntity } from '@app/shared/models/entities/user.entity';
 import { ExistingUserDTO, NewUserDTO } from '../dto';
 import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
 
 export interface AuthServiceInterface {
   getUsers(): Promise<UserEntity[]>;
@@ -17,4 +18,6 @@ export interface AuthServiceInterface {
   }>;
   verifyJwt(jwt: string): Promise<{ user: UserEntity; exp: number }>;
   getUserFromHeader(jwt: string): Promise<UserJwt>;
+  addFriend(userId: number, friendId: number): Promise<FriendRequestEntity>;
+  getFriends(userId: number): Promise<FriendRequestEntity[]>;
 }

@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Role } from '@app/shared/models/enum/role.enum';
+import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -20,4 +21,14 @@ export class UserEntity {
 
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
+  @OneToMany(
+    () => FriendRequestEntity,
+    (friendRequestEntity) => friendRequestEntity.creator,
+  )
+  friendRequestCreator: FriendRequestEntity[];
+  @OneToMany(
+    () => FriendRequestEntity,
+    (FriendRequestEntity) => FriendRequestEntity.receiver,
+  )
+  friendRequestReceiver: FriendRequestEntity[];
 }

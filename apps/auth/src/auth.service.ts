@@ -3,15 +3,19 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  UnauthorizedException
-} from "@nestjs/common";
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 import { JwtService } from '@nestjs/jwt';
 import { ExistingUserDTO, NewUserDTO } from './dto';
 import { UsersRepositoryInterface } from '@app/shared/interfaces/users.repository.interface';
 import { AuthServiceInterface } from './interface/auth.service.interface';
-import { UserEntity } from '@app/shared';
+import {
+  FriendRequestEntity,
+  FriendRequestRepository,
+  UserEntity,
+} from '@app/shared';
 import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
 
 @Injectable()
@@ -19,6 +23,8 @@ export class AuthService implements AuthServiceInterface {
   constructor(
     @Inject('UsersRepositoryInterface')
     private readonly usersRepository: UsersRepositoryInterface,
+    @Inject('FriendRequestRepositoryInterface')
+    private readonly friendRequestRepository: FriendRequestRepository,
     private readonly jwtService: JwtService,
   ) {}
   getHello(): string {
@@ -127,5 +133,20 @@ export class AuthService implements AuthServiceInterface {
     } catch (error) {
       throw new BadRequestException();
     }
+  }
+  async addFriend(
+    userId: number,
+    friendId: number,
+  ): Promise<FriendRequestEntity> {
+    const creator = await this.findById(userId);
+    const receiver = await this.findById(friendId);
+    return await this.friendRequestRepository.save({ creator, receiver });
+  }
+  async getFriends(userId: number): Promise<FriendRequestEntity[]> {
+    const creator = await this.findById(userId);
+    return await this.friendRequestRepository.findWithRelations({
+      where: [{ creator }, { receiver: creator }],
+      relations: ['creator', 'receiver'],
+    });
   }
 }

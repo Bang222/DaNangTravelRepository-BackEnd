@@ -12,5 +12,6 @@ async function bootstrap() {
   app
     .startAllMicroservices()
     .then(() => console.log('service PRESENCE STARTED'));
+  await app.listen(6000);
 }
 bootstrap();

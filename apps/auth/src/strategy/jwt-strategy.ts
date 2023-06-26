@@ -1,4 +1,4 @@
-import { JwtRequest } from './jwt-request.interface';
+import { JwtRequest } from '../interface/jwt-request.interface';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
