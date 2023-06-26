@@ -11,9 +11,12 @@ import {
   UserEntity,
 } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtGuard } from './jwt.guard';
-import { JwtStrategy } from './jwt-strategy';
+import { JwtGuard } from './guard/jwt.guard';
+import { JwtStrategy } from './jwt/jwt-strategy';
 import { UsersRepository } from '@app/shared/repository/users.repository';
+import { RolesGuard } from '@app/shared/guard/roles.guard';
+import { Reflector } from '@nestjs/core';
+import { UseRoleGuard } from "./guard/role.guard";
 
 @Module({
   imports: [
@@ -29,6 +32,11 @@ import { UsersRepository } from '@app/shared/repository/users.repository';
       }),
       inject: [ConfigService],
     }),
+    SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
+    SharedModule.registerRmq(
+      'PRESENCE_SERVICE',
+      process.env.RABBITMQ_PRESENCE_QUEUE,
+    ),
     SharedModule,
     PostgresdbModule,
     TypeOrmModule.forFeature([UserEntity]),
@@ -37,6 +45,7 @@ import { UsersRepository } from '@app/shared/repository/users.repository';
   providers: [
     JwtGuard,
     JwtStrategy,
+    UseRoleGuard,
     {
       provide: 'AuthServiceInterface',
       useClass: AuthService,

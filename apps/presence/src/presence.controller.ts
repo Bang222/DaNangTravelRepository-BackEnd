@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { PresenceService } from './presence.service';
 import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
 import { SharedService } from '@app/shared';
@@ -7,6 +7,7 @@ import { SharedService } from '@app/shared';
 export class PresenceController {
   constructor(
     private readonly presenceService: PresenceService,
+    @Inject('SharedServiceInterface')
     private readonly sharedService: SharedService,
   ) {}
 

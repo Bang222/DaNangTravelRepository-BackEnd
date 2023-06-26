@@ -1,6 +1,6 @@
-import { UserEntity } from '@app/shared/entities/user.entity';
+import { UserEntity } from '@app/shared/models/entities/user.entity';
 import { ExistingUserDTO, NewUserDTO } from '../dto';
-
+import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
 
 export interface AuthServiceInterface {
   getUsers(): Promise<UserEntity[]>;
@@ -16,4 +16,5 @@ export interface AuthServiceInterface {
     user: UserEntity;
   }>;
   verifyJwt(jwt: string): Promise<{ user: UserEntity; exp: number }>;
+  getUserFromHeader(jwt: string): Promise<UserJwt>;
 }

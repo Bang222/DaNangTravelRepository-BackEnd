@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
     if (authHeaderParts.length !== 2) return false;
 
     const [, jwt] = authHeaderParts;
-    console.log('auth guard in lib');
+
     return this.authService.send({ cmd: 'verify-jwt' }, { jwt }).pipe(
       switchMap(({ exp }) => {
         if (!exp) return of(false);

@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as passport from 'passport';
+import { ValidationPipe } from '@nestjs/common';
+import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(5000);
 }
 bootstrap();
