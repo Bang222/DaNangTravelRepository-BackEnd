@@ -3,7 +3,8 @@ import { PresenceServiceInterface } from './interfaces/presence.service.interfac
 
 @Injectable()
 export class PresenceService implements PresenceServiceInterface {
-  getHello(): string {
-    return 'Hello World!';
+  getHello() {
+    console.log('not Cached');
+    return { helloBang: 'Hello World!' };
   }
 }

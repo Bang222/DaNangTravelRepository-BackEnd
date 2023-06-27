@@ -1,3 +1,3 @@
 export interface PresenceServiceInterface {
-  getHello(): string;
+  getHello();
 }

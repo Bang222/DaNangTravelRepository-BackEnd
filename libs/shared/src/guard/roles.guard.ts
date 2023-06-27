@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { catchError, mergeMap, Observable, of } from 'rxjs';
+import { catchError, Observable, of, switchMap } from 'rxjs';
 import { Role } from '@app/shared/models/enum';
 import { ROLES_KEY } from '../../../../apps/auth/src/decorator/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
@@ -40,7 +40,8 @@ export class RolesGuard implements CanActivate {
 
     const [, jwt] = authHeaderParts;
     return this.authService.send<UserJwt>({ cmd: 'decode-jwt' }, { jwt }).pipe(
-      mergeMap(({ user }) => {
+      switchMap(({ user }) => {
+        //complete observable and create new one
         return of(requiredRoles.some((role) => user.role?.includes(role)));
       }),
       catchError(() => {

@@ -10,8 +10,9 @@ import {
   SharedService,
   UserEntity,
   FriendRequestRepository,
-  UsersRepository, FriendRequestEntity
-} from "@app/shared";
+  UsersRepository,
+  FriendRequestEntity,
+} from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';

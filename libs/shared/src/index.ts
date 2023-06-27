@@ -1,8 +1,10 @@
 // export module
-export * from './shared.module';
-export * from './postgresdb.module';
+export * from './module/shared.module';
+export * from './module/postgresdb.module';
+export * from './module/redis.module';
 // export Service
-export * from './shared.service';
+export * from './service/shared.service';
+export * from './service/redis.service';
 //export guard
 export * from './guard/auth.guard';
 export * from './guard/roles.guard';

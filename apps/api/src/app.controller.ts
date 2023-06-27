@@ -22,8 +22,6 @@ import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 
 @Controller()
-@UseInterceptors(UserInterceptor)
-@UseGuards(AuthGuard)
 export class AppController {
   constructor(
     private readonly appService: AppService,
@@ -32,7 +30,7 @@ export class AppController {
   ) {}
 
   @Get()
-  @UseGuards(UseRoleGuard)
+  @UseGuards(UseRoleGuard, AuthGuard)
   @Roles(Role.ADMIN)
   async getUser() {
     return this.authService.send(
@@ -51,6 +49,7 @@ export class AppController {
       {},
     );
   }
+  @UseGuards(AuthGuard)
   @Post('auth')
   async postUser() {
     return this.authService.send({ cmd: 'post-user' }, {});
@@ -87,6 +86,7 @@ export class AppController {
       { userId: req.user.id, friendId },
     );
   }
+  @UseGuards(AuthGuard)
   @Get('get-friends')
   async getFriends(@Req() req: UserRequest) {
     if (!req?.user) {

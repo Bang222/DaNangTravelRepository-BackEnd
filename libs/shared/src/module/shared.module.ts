@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { SharedService } from './shared.service';
+import { SharedService } from '../service/shared.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
