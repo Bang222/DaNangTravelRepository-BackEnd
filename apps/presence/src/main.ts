@@ -5,6 +5,7 @@ import { SharedService } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(PresenceModule);
+  app.enableCors();
   const configService = app.get(ConfigService);
   const sharedService = app.get(SharedService);
   const queue = configService.get<string>('RABBITMQ_PRESENCE_QUEUE');

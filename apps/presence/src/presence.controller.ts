@@ -1,12 +1,8 @@
-import {
-  Controller,
-  Inject,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Inject, UseInterceptors } from '@nestjs/common';
 import { PresenceService } from './presence.service';
 import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
 import { RedisCacheService, SharedService } from '@app/shared';
-import { CacheInterceptor } from "@nestjs/cache-manager";
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller()
 export class PresenceController {
