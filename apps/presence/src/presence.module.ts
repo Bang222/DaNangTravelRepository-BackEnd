@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PresenceController } from './presence.controller';
 import { PresenceService } from './presence.service';
 import { RedisModule, SharedModule, SharedService } from '@app/shared';
-import { CacheModule } from "@nestjs/cache-manager";
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [

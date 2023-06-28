@@ -72,7 +72,7 @@ export class PresenceGateway
       }
     }
   }
-  private async setActiveStatus(socket: Socket, isActive: boolean){
+  private async setActiveStatus(socket: Socket, isActive: boolean) {
     const user = socket.data?.user;
     if (!user) return;
     const activeUser: ActiveUser = {
