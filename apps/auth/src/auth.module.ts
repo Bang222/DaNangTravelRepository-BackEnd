@@ -17,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';
 import { UseRoleGuard } from './guard/role.guard';
+import {MessageEntity} from "@app/shared/models/entities/message.entity";
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { UseRoleGuard } from './guard/role.guard';
     ),
     SharedModule,
     PostgresdbModule,
-    TypeOrmModule.forFeature([UserEntity, FriendRequestEntity]),
+    TypeOrmModule.forFeature([UserEntity, FriendRequestEntity, MessageEntity]),
   ],
   controllers: [AuthController],
   providers: [
