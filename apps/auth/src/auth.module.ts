@@ -12,12 +12,13 @@ import {
   FriendRequestRepository,
   UsersRepository,
   FriendRequestEntity,
+  MessageEntity,
+  ConversationEntity,
 } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';
 import { UseRoleGuard } from './guard/role.guard';
-import {MessageEntity} from "@app/shared/models/entities/message.entity";
 
 @Module({
   imports: [
@@ -40,7 +41,12 @@ import {MessageEntity} from "@app/shared/models/entities/message.entity";
     ),
     SharedModule,
     PostgresdbModule,
-    TypeOrmModule.forFeature([UserEntity, FriendRequestEntity, MessageEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      FriendRequestEntity,
+      MessageEntity,
+      ConversationEntity,
+    ]),
   ],
   controllers: [AuthController],
   providers: [

@@ -149,4 +149,15 @@ export class AuthService implements AuthServiceInterface {
       relations: ['creator', 'receiver'],
     });
   }
+  async getFriendsList(userId: number) {
+    const friendsRequests = await this.getFriends(userId);
+    if (!friendsRequests) return [];
+    const friends = friendsRequests.map((item) => {
+      const isUserCreator = userId === item.creator.id; // creator is user
+      const friendDetails = isUserCreator ? item.receiver : item.creator;
+      const { id, firstName, lastName, email } = friendDetails;
+      return { id, firstName, lastName, email };
+    });
+    return friends;
+  }
 }
