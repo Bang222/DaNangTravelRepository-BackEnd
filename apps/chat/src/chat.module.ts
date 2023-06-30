@@ -13,6 +13,7 @@ import {
   UserEntity,
 } from '@app/shared';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatGateWay } from './ChatGateWay';
 
 @Module({
   imports: [

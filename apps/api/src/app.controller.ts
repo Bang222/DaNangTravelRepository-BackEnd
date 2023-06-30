@@ -31,7 +31,7 @@ export class AppController {
 
   @Get()
   @UseGuards(UseRoleGuard, AuthGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.USER)
   async getUser() {
     return this.authService.send(
       {
