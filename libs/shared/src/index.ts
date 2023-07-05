@@ -2,9 +2,11 @@
 export * from './module/shared.module';
 export * from './module/postgresdb.module';
 export * from './module/redis.module';
+// export * from './module/email.module';
 // export Service
 export * from './service/shared.service';
 export * from './service/redis.service';
+// export * from './service/email.service';
 //export guard
 export * from './guard/auth.guard';
 export * from './guard/roles.guard';

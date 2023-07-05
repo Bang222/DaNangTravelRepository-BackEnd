@@ -7,6 +7,7 @@ export interface UserRequest extends Request {
     firstName: string;
     lastName: string;
     email: string;
+    emailConfirmed: boolean;
     role: Role;
   };
 }

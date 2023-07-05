@@ -1,6 +1,7 @@
 import {
   OnGatewayConnection,
-  OnGatewayDisconnect, SubscribeMessage,
+  OnGatewayDisconnect,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -50,9 +51,9 @@ export class ChatGateWay implements OnGatewayConnection, OnGatewayDisconnect {
     const { user } = socket.data;
     if (!user) return;
     const conversations = await this.chatService.getConversations(user.id);
-    this.server.to(socket.id).emit('getAllConversations', conversations)
+    this.server.to(socket.id).emit('getAllConversations', conversations);
   }
-  private async createConversationUser(socket: Socket, userId: number){
+  private async createConversationUser(socket: Socket, userId: number) {
     const ob2$ = this.authService.send({ cmd: 'get-friend-list' }, { userId });
     const friends = await firstValueFrom(ob2$).catch((err) =>
       console.error(err),

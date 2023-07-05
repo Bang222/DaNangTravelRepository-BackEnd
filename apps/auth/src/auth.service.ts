@@ -41,7 +41,15 @@ export class AuthService implements AuthServiceInterface {
   async findByEmail(email: string): Promise<UserEntity> {
     return this.usersRepository.findByCondition({
       where: { email },
-      select: ['id', 'firstName', 'lastName', 'email', 'password', 'role'],
+      select: [
+        'id',
+        'firstName',
+        'lastName',
+        'email',
+        'password',
+        'role',
+        'emailConfirmed',
+      ],
     });
   }
 
@@ -86,8 +94,8 @@ export class AuthService implements AuthServiceInterface {
     const user = await this.findByEmail(email);
 
     const doesUserExist = !!user;
-
     if (!doesUserExist) return null;
+    if (user.emailConfirmed === true) return null;
 
     const doesPasswordMatch = await this.doesPasswordMatch(
       password,
@@ -100,18 +108,18 @@ export class AuthService implements AuthServiceInterface {
   }
 
   async login(existingUser: Readonly<ExistingUserDTO>) {
-    const { email, password } = existingUser;
-    const user = await this.validateUser(email, password);
+    try {
+      const { email, password } = existingUser;
+      const user = await this.validateUser(email, password);
 
-    if (!user) {
-      throw new UnauthorizedException();
+      if (!user) throw new UnauthorizedException('can not login');
+      delete user.password;
+      const jwt = await this.jwtService.signAsync({ user });
+
+      return { token: jwt, user };
+    } catch (err) {
+      throw new UnauthorizedException(err);
     }
-
-    delete user.password;
-
-    const jwt = await this.jwtService.signAsync({ user });
-
-    return { token: jwt, user };
   }
 
   async verifyJwt(jwt: string): Promise<{ user: UserEntity; exp: number }> {

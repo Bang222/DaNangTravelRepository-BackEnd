@@ -65,6 +65,6 @@ export class ChatService {
       message: newMessage.message,
       user,
       conversation,
-    })
+    });
   }
 }

@@ -6,6 +6,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -21,7 +22,7 @@ import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 
-@Controller()
+@Controller('api/')
 export class AppController {
   constructor(
     private readonly appService: AppService,
@@ -32,13 +33,18 @@ export class AppController {
   @Get()
   @UseGuards(UseRoleGuard, AuthGuard)
   @Roles(Role.USER)
-  async getUser() {
+  async getUsers() {
     return this.authService.send(
       {
         cmd: 'get-users',
       },
       {},
     );
+  }
+  @UseInterceptors(UserInterceptor)
+  @Get('user-detail')
+  async getUserId(@Req() req: UserRequest) {
+    return this.authService.send({ cmd: 'get-user' }, { id: req.user.id });
   }
   @Get('presence')
   async getPresence() {
@@ -99,6 +105,15 @@ export class AppController {
       {
         userId: req.user.id,
       },
+    );
+  }
+  @Get('auth')
+  async emailVerifyToKen(@Query('token') jwt: string) {
+    return this.authService.send(
+      {
+        cmd: 'verify-jwt',
+      },
+      { jwt },
     );
   }
 }

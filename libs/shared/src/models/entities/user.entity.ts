@@ -27,6 +27,9 @@ export class UserEntity {
   @Column({ select: false })
   password: string;
 
+  @Column({ default: false })
+  emailConfirmed: boolean;
+
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
   @OneToMany(
