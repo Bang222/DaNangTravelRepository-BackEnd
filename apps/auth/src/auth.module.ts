@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -14,11 +14,15 @@ import {
   FriendRequestEntity,
   MessageEntity,
   ConversationEntity,
+  EmailVerifiedModule,
+  EmailVerifiedService,
 } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';
 import { UseRoleGuard } from './guard/role.guard';
+import {MailerModule} from "@nestjs-modules/mailer";
+import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 
 @Module({
   imports: [
@@ -47,12 +51,33 @@ import { UseRoleGuard } from './guard/role.guard';
       MessageEntity,
       ConversationEntity,
     ]),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        transport: configService.get<string>('MAIL_TRANSPORT'),
+        defaults: {
+          from: `No Reply ${configService.get<string>('MAIL_USER')}`,
+        },
+        template: {
+          dir: __dirname + '/templates/email',
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AuthController],
   providers: [
     JwtGuard,
     JwtStrategy,
     UseRoleGuard,
+    {
+      provide: 'EmailServiceInterface',
+      useClass: EmailVerifiedService,
+    },
     {
       provide: 'AuthServiceInterface',
       useClass: AuthService,

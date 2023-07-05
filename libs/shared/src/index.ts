@@ -2,11 +2,11 @@
 export * from './module/shared.module';
 export * from './module/postgresdb.module';
 export * from './module/redis.module';
-// export * from './module/email.module';
+export * from './module/email.module';
 // export Service
 export * from './service/shared.service';
 export * from './service/redis.service';
-// export * from './service/email.service';
+export * from './service/email.service';
 //export guard
 export * from './guard/auth.guard';
 export * from './guard/roles.guard';
@@ -22,6 +22,7 @@ export * from './interfaces/shared.service.interface';
 export * from './interfaces/friend-request.repository.interface';
 export * from './interfaces/message.repository.interface';
 export * from './interfaces/conversations.repository.interface';
+export * from './interfaces/email.interface';
 // base repository
 export * from './repository/base/base.abstract.repository';
 export * from './repository/base/base.interface.repository';

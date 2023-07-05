@@ -4,7 +4,10 @@
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
     "webpack": true,
-    "tsConfigPath": "apps/api/tsconfig.app.json"
+    "tsConfigPath": "apps/api/tsconfig.app.json",
+    "assets": [
+      "lib/shared/src/templates/email/**/*"
+    ]
   },
   "monorepo": true,
   "root": "apps/api",

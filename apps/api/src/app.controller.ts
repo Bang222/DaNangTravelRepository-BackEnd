@@ -107,7 +107,7 @@ export class AppController {
       },
     );
   }
-  @Get('auth')
+  @Get('email-verify')
   async emailVerifyToKen(@Query('token') jwt: string) {
     return this.authService.send(
       {

@@ -12,6 +12,7 @@ import { ExistingUserDTO, NewUserDTO } from './dto';
 import { UsersRepositoryInterface } from '@app/shared/interfaces/users.repository.interface';
 import { AuthServiceInterface } from './interface/auth.service.interface';
 import {
+  EmailVerifiedService,
   FriendRequestEntity,
   FriendRequestRepository,
   UserEntity,
@@ -26,6 +27,8 @@ export class AuthService implements AuthServiceInterface {
     @Inject('FriendRequestRepositoryInterface')
     private readonly friendRequestRepository: FriendRequestRepository,
     private readonly jwtService: JwtService,
+    @Inject('EmailServiceInterface')
+    private readonly mailsService: EmailVerifiedService,
   ) {}
   getHello(): string {
     return 'Hello World!';
@@ -65,11 +68,10 @@ export class AuthService implements AuthServiceInterface {
     const { firstName, lastName, email, password } = newUser;
 
     const existingUser = await this.findByEmail(email);
-
     if (existingUser) {
       throw new ConflictException('An account with that email already exists!');
     }
-
+    await this.mailsService.sendEmailVerify(email);
     const hashedPassword = await this.hashPassword(password);
 
     const savedUser = await this.usersRepository.save({
