@@ -21,8 +21,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';
 import { UseRoleGuard } from './guard/role.guard';
-import {MailerModule} from "@nestjs-modules/mailer";
-import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Module({
   imports: [

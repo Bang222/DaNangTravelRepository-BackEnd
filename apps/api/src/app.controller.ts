@@ -22,12 +22,13 @@ import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 
-@Controller('api/')
+@Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     @Inject('AUTH_SERVICE') private authService: ClientProxy,
     @Inject('PRESENCE_SERVICE') private presenceService: ClientProxy,
+    @Inject('TOUR_SERVICE') private tourService: ClientProxy,
   ) {}
 
   @Get()
@@ -40,6 +41,10 @@ export class AppController {
       },
       {},
     );
+  }
+  @Get('tour')
+  async getTourHello() {
+    return this.tourService.send({ cmd: 'tour' }, {});
   }
   @UseInterceptors(UserInterceptor)
   @Get('user-detail')
@@ -63,7 +68,7 @@ export class AppController {
   @Post('auth/register')
   @UsePipes(new ValidationPipe())
   async register(@Body() newUser: NewUserDTO) {
-    const { firstName, lastName, email, password } = newUser;
+    const { firstName, lastName, email, password, sex } = newUser;
     return this.authService.send(
       { cmd: 'register' },
       {
@@ -71,6 +76,7 @@ export class AppController {
         lastName,
         email,
         password,
+        sex,
       },
     );
   }

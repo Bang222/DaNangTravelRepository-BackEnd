@@ -15,6 +15,7 @@ import { SharedModule } from '@app/shared';
       'PRESENCE_SERVICE',
       process.env.RABBITMQ_PRESENCE_QUEUE,
     ),
+    SharedModule.registerRmq('TOUR_SERVICE', process.env.RABBITMQ_TOUR_QUEUE),
   ],
   controllers: [AppController],
   providers: [AppService],

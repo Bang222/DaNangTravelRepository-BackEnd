@@ -48,10 +48,15 @@ export class AuthService implements AuthServiceInterface {
         'id',
         'firstName',
         'lastName',
+        'address',
+        'createdTime',
+        'profilePicture',
+        'phone',
         'email',
+        'sex',
         'password',
         'role',
-        'emailConfirmed',
+        'isEmailValidated',
       ],
     });
   }
@@ -65,7 +70,8 @@ export class AuthService implements AuthServiceInterface {
   }
 
   async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
-    const { firstName, lastName, email, password } = newUser;
+    const { firstName, lastName, email, password, sex } = newUser;
+    console.log(firstName);
 
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
@@ -78,6 +84,8 @@ export class AuthService implements AuthServiceInterface {
       firstName,
       lastName,
       email,
+      sex,
+      createdTime: new Date(),
       password: hashedPassword,
     });
 
@@ -97,7 +105,7 @@ export class AuthService implements AuthServiceInterface {
 
     const doesUserExist = !!user;
     if (!doesUserExist) return null;
-    if (user.emailConfirmed === true) return null;
+    if (user.isEmailValidated === true) return null;
 
     const doesPasswordMatch = await this.doesPasswordMatch(
       password,

@@ -4,6 +4,9 @@ export class NewUserDTO {
   lastName: string;
   @IsEmail()
   email: string;
+
+  sex: string;
+
   @IsNotEmpty()
   password: string;
 }

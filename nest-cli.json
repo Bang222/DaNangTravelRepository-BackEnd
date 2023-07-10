@@ -56,6 +56,24 @@
       "compilerOptions": {
         "tsConfigPath": "apps/chat/tsconfig.app.json"
       }
+    },
+    "tour": {
+      "type": "application",
+      "root": "apps/tour",
+      "entryFile": "main",
+      "sourceRoot": "apps/tour/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tour/tsconfig.app.json"
+      }
+    },
+    "post": {
+      "type": "application",
+      "root": "apps/post",
+      "entryFile": "main",
+      "sourceRoot": "apps/post/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/post/tsconfig.app.json"
+      }
     }
   }
 }

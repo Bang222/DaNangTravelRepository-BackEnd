@@ -7,7 +7,12 @@ export interface UserRequest extends Request {
     firstName: string;
     lastName: string;
     email: string;
-    emailConfirmed: boolean;
+    sex: string;
+    isEmailValidated: boolean;
+    address: string;
+    phone: string;
+    createdTime: Date;
+    profilePicture: string;
     role: Role;
   };
 }

@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToMany,
   OneToMany,
@@ -27,16 +28,39 @@ export class UserEntity {
   @Column({ select: false })
   password: string;
 
+  @Column({ nullable: true })
+  phone: string;
+
+  @CreateDateColumn()
+  createdTime: Date;
+
+  @Column({ default: true })
+  isActive: boolean;
+
   @Column({ default: false })
-  emailConfirmed: boolean;
+  isEmailValidated: boolean;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  sex: string;
+
+  @Column({
+    default:
+      'https://preview.redd.it/rrz3hmsxcll71.png?width=640&crop=smart&auto=webp&s=87cc5ed38d8f088ef9fffef7a4c5756b64309d6a',
+  })
+  profilePicture: string;
 
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
+
   @OneToMany(
     () => FriendRequestEntity,
     (friendRequestEntity) => friendRequestEntity.creator,
   )
   friendRequestCreator: FriendRequestEntity[];
+
   @OneToMany(
     () => FriendRequestEntity,
     (FriendRequestEntity) => FriendRequestEntity.receiver,
