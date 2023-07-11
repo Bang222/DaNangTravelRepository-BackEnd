@@ -4,7 +4,7 @@ import { ConversationEntity } from '@app/shared/models/entities/converstion.enti
 export interface ConversationsRepositoryInterface
   extends BaseInterfaceRepository<ConversationEntity> {
   findConversations(
-    userId: number,
-    friendId: number,
+    userId: string,
+    friendId: string,
   ): Promise<ConversationEntity | undefined>;
 }

@@ -1,15 +1,8 @@
 import { Module } from '@nestjs/common';
-import {
-  ConversationEntity,
-  EmailVerifiedService,
-  FriendRequestEntity,
-  FriendRequestRepository,
-  MessageEntity,
-  PostgresdbModule,
-} from '@app/shared';
+import { EmailVerifiedService, PostgresdbModule } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MAILER_OPTIONS, MailerModule } from '@nestjs-modules/mailer';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Module({

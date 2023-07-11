@@ -4,12 +4,12 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Role, TourStatus } from '@app/shared/models/enum';
+import { TourStatus } from '@app/shared/models/enum';
 
-@Entity('manager')
+@Entity('tour')
 export class TourEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -32,7 +32,7 @@ export class TourEntity {
   @Column()
   quantity: number;
 
-  @Column()
+  @Column({ nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()

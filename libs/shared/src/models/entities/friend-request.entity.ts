@@ -3,8 +3,8 @@ import { UserEntity } from '@app/shared';
 
 @Entity('friend-request')
 export class FriendRequestEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.friendRequestCreator)
   creator: UserEntity;
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.friendRequestReceiver)

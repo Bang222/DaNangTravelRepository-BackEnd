@@ -21,12 +21,12 @@ export class ChatService {
   getHello(): string {
     return 'Hello World!';
   }
-  private async getUser(id: number) {
+  private async getUser(id: string) {
     const os$ = this.authService.send<UserEntity>({ cmd: 'get-user' }, { id });
     const user = await firstValueFrom(os$).catch((err) => console.log(err));
     return user;
   }
-  async createConversation(userId: number, friendId: number) {
+  async createConversation(userId: string, friendId: string) {
     const user = await this.getUser(userId);
     const friend = await this.getUser(friendId);
     if (!user || !friend) return;
@@ -39,7 +39,7 @@ export class ChatService {
     }
     return conversation;
   }
-  async getConversations(userId: number) {
+  async getConversations(userId: string) {
     const allConversations =
       await this.conversationRepository.findWithRelations({
         relations: ['users'],
@@ -53,7 +53,7 @@ export class ChatService {
       userIds: (conversation?.users ?? []).map((user) => user.id),
     }));
   }
-  async createMessage(userId: number, newMessage: NewMessageDTO) {
+  async createMessage(userId: string, newMessage: NewMessageDTO) {
     const user = await this.getUser(userId);
     if (!user) return;
     const conversation = await this.conversationRepository.findConversations(

@@ -13,8 +13,8 @@ import { MessageEntity } from '@app/shared/models/entities/message.entity';
 
 @Entity('user')
 export class UserEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   firstName: string;

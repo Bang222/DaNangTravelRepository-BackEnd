@@ -11,8 +11,8 @@ import { UserEntity } from '@app/shared';
 
 @Entity('message')
 export class MessageEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   @Column()
   message: string;
   @OneToMany(() => UserEntity, (userEntity) => userEntity.messages)

@@ -1,5 +1,5 @@
 export interface ActiveUser {
-  id: number;
+  id: string;
   socketId: string;
   isActive: boolean;
 }

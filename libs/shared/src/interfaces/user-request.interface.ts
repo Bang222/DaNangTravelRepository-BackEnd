@@ -3,7 +3,7 @@ import { Role } from '@app/shared/models/enum';
 
 export interface UserRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;

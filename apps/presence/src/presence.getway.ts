@@ -28,7 +28,7 @@ export class PresenceGateway
   async onModuleInit() {
     await this.cache.reset();
   }
-  private async getFriend(userId: number) {
+  private async getFriend(userId: string) {
     const ob$ = this.authService.send<FriendRequestEntity[]>(
       { cmd: 'get-friend' },
       { userId },

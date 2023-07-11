@@ -11,8 +11,8 @@ import { MessageEntity } from '@app/shared/models/entities/message.entity';
 
 @Entity('conversation')
 export class ConversationEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   @ManyToMany(() => UserEntity)
   @JoinTable()
   users: UserEntity[];

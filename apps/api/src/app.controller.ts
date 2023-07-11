@@ -21,6 +21,7 @@ import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
 import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import { NewTouristDTO } from '../../manager/src/tour/dtos';
 
 @Controller()
 export class AppController {
@@ -43,8 +44,47 @@ export class AppController {
     );
   }
   @Get('manager')
-  async getTourHello() {
+  async getManagerHello() {
     return this.managerService.send({ cmd: 'manager' }, {});
+  }
+  // MANAGER
+  @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard)
+  @Get('tour')
+  async getTourHello(@Req() req: UserRequest) {
+    return this.managerService.send({ cmd: 'tour' }, { id: req.user.id });
+  }
+  @Get('tour/all')
+  async getAllTour(){
+    return this.managerService.send({ cmd: 'get-tours' }, {});
+  }
+  @Post('manager/create-tour')
+  async createTour(@Body() newTouristDTO: NewTouristDTO) {
+    const {
+      name,
+      description,
+      price,
+      quantity,
+      address,
+      imageUrl,
+      startDate,
+      endDate,
+      lastRegisterDate,
+    } = newTouristDTO;
+    return this.managerService.send(
+      { cmd: 'create-tour' },
+      {
+        name,
+        description,
+        price,
+        quantity,
+        address,
+        imageUrl,
+        startDate,
+        endDate,
+        lastRegisterDate,
+      },
+    );
   }
   @UseInterceptors(UserInterceptor)
   @Get('user-detail')
@@ -88,7 +128,7 @@ export class AppController {
   @Post('add-friend/:friendId')
   async addFriend(
     @Req() req: UserRequest,
-    @Param('friendId') friendId: number,
+    @Param('friendId') friendId: string,
   ) {
     if (!req?.user) {
       throw new BadRequestException();

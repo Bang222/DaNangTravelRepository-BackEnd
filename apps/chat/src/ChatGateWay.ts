@@ -53,7 +53,7 @@ export class ChatGateWay implements OnGatewayConnection, OnGatewayDisconnect {
     const conversations = await this.chatService.getConversations(user.id);
     this.server.to(socket.id).emit('getAllConversations', conversations);
   }
-  private async createConversationUser(socket: Socket, userId: number) {
+  private async createConversationUser(socket: Socket, userId: string) {
     const ob2$ = this.authService.send({ cmd: 'get-friend-list' }, { userId });
     const friends = await firstValueFrom(ob2$).catch((err) =>
       console.error(err),
