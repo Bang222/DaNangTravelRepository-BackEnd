@@ -57,13 +57,13 @@
         "tsConfigPath": "apps/chat/tsconfig.app.json"
       }
     },
-    "tour": {
+    "manager": {
       "type": "application",
-      "root": "apps/tour",
+      "root": "apps/manager",
       "entryFile": "main",
-      "sourceRoot": "apps/tour/src",
+      "sourceRoot": "apps/manager/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/tour/tsconfig.app.json"
+        "tsConfigPath": "apps/manager/tsconfig.app.json"
       }
     },
     "post": {

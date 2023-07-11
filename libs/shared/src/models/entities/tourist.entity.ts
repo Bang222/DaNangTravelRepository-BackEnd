@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 import { Role, TourStatus } from '@app/shared/models/enum';
 
-@Entity('tour')
+@Entity('manager')
 export class TourEntity {
   @PrimaryGeneratedColumn()
   id: number;

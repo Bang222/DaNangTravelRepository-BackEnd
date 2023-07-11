@@ -15,7 +15,10 @@ import { SharedModule } from '@app/shared';
       'PRESENCE_SERVICE',
       process.env.RABBITMQ_PRESENCE_QUEUE,
     ),
-    SharedModule.registerRmq('TOUR_SERVICE', process.env.RABBITMQ_TOUR_QUEUE),
+    SharedModule.registerRmq(
+      'MANAGER_SERVICE',
+      process.env.RABBITMQ_MANAGER_QUEUE,
+    ),
   ],
   controllers: [AppController],
   providers: [AppService],

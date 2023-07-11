@@ -24,10 +24,10 @@ services:
       - .:/usr/src/app # any change to base folder should be reflected
       - /usr/src/app/node_modules
     command: npm run start:dev auth # overrides CMD from dockerfile
-  tour:
+  manager:
     build:
       context: ./
-      dockerfile: ./apps/tour/Dockerfile
+      dockerfile: apps/manager/Dockerfile
     env_file:
       - .env
     ports:
@@ -40,7 +40,7 @@ services:
     volumes:
       - .:/usr/src/app # any change to base folder should be reflected
       - /usr/src/app/node_modules
-    command: npm run start:dev tour # overrides CMD from dockerfile
+    command: npm run start:dev manager # overrides CMD from dockerfile
   presence:
     build:
       context: ./
@@ -57,23 +57,23 @@ services:
       - .:/usr/src/app # any change to base folder should be reflected
       - /usr/src/app/node_modules
     command: npm run start:dev presence # overrides CMD from dockerfile
-  chat:
-    build:
-      context: ./
-      dockerfile: ./apps/chat/Dockerfile
-    ports:
-      - '7000:7000'
-    env_file:
-      - .env
-    depends_on:
-      - rabbitmq
-      - postgres
-      - redis
-      - presence
-    volumes:
-      - .:/usr/src/app # any change to base folder should be reflected
-      - /usr/src/app/node_modules
-    command: npm run start:dev chat # overrides CMD from dockerfile
+#  chat:
+#    build:
+#      context: ./
+#      dockerfile: ./apps/chat/Dockerfile
+#    ports:
+#      - '7000:7000'
+#    env_file:
+#      - .env
+#    depends_on:
+#      - rabbitmq
+#      - postgres
+#      - redis
+#      - presence
+#    volumes:
+#      - .:/usr/src/app # any change to base folder should be reflected
+#      - /usr/src/app/node_modules
+#    command: npm run start:dev chat # overrides CMD from dockerfile
   api:
     build:
       context: ./
@@ -86,7 +86,7 @@ services:
       - rabbitmq
       - auth
       - presence
-      - tour
+      - manager
     volumes:
       - .:/usr/src/app # any change to base folder should be reflected
       - /usr/src/app/node_modules

@@ -28,7 +28,7 @@ export class AppController {
     private readonly appService: AppService,
     @Inject('AUTH_SERVICE') private authService: ClientProxy,
     @Inject('PRESENCE_SERVICE') private presenceService: ClientProxy,
-    @Inject('TOUR_SERVICE') private tourService: ClientProxy,
+    @Inject('MANAGER_SERVICE') private managerService: ClientProxy,
   ) {}
 
   @Get()
@@ -42,9 +42,9 @@ export class AppController {
       {},
     );
   }
-  @Get('tour')
+  @Get('manager')
   async getTourHello() {
-    return this.tourService.send({ cmd: 'tour' }, {});
+    return this.managerService.send({ cmd: 'manager' }, {});
   }
   @UseInterceptors(UserInterceptor)
   @Get('user-detail')
