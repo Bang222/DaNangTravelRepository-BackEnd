@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TourService } from './tour.service';
 import {
-  ConversationEntity, FriendRequestEntity, MessageEntity,
   PostgresdbModule,
   RedisModule,
   TourEntity,
@@ -10,16 +8,14 @@ import {
 } from '@app/shared';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TourService } from './tour.service';
 
 @Module({
   imports: [
     RedisModule,
     CacheModule.register(),
     PostgresdbModule,
-    TypeOrmModule.forFeature([
-      UserEntity,
-      TourEntity,
-    ]),
+    TypeOrmModule.forFeature([UserEntity, TourEntity]),
   ],
   controllers: [],
   providers: [

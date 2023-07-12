@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TourEntity, TourRepositoryInterface } from '@app/shared';
+import { StoreEntity, TourEntity, TourRepositoryInterface } from '@app/shared';
 import { NewTouristDTO } from './dtos';
 
 @Injectable()
@@ -12,10 +12,13 @@ export class TourService {
     console.log(id);
     return 'tourHello';
   }
-  async getTours(): Promise<TourEntity[]> {
+  async getAllTours(): Promise<TourEntity[]> {
     return await this.tourRepository.findAll();
   }
-  async createTour(newTour: Readonly<NewTouristDTO>): Promise<TourEntity> {
+  async createTour(
+    newTour: Readonly<NewTouristDTO>,
+    storeOfUserOwner,
+  ): Promise<TourEntity> {
     const {
       name,
       description,
@@ -37,6 +40,7 @@ export class TourService {
       startDate,
       endDate,
       lastRegisterDate,
+      store: storeOfUserOwner,
     });
     return savedTour;
   }

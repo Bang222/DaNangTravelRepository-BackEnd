@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { Role } from '@app/shared/models/enum';
+import { StoreEntity } from '@app/shared/models/entities/store.entity';
 
 export interface UserRequest extends Request {
   user?: {
@@ -14,6 +15,5 @@ export interface UserRequest extends Request {
     createdTime: Date;
     profilePicture: string;
     role: Role;
-    store: string;
   };
 }

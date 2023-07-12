@@ -11,6 +11,7 @@ import {
   TourEntity,
   TourRepository,
   UserEntity,
+  UsersRepository,
 } from '@app/shared';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -36,6 +37,10 @@ import { SellerService } from './seller.service';
     {
       provide: 'StoreRepositoryInterface',
       useClass: StoreRepository,
+    },
+    {
+      provide: 'UsersRepositoryInterface',
+      useClass: UsersRepository,
     },
   ],
   exports: [SellerService],

@@ -22,7 +22,7 @@ import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 import { NewTouristDTO } from '../../manager/src/tour/dtos';
-import {NewStoreDTO} from "../../manager/src/seller/dto";
+import { NewStoreDTO } from '../../manager/src/seller/dto';
 
 @Controller()
 export class AppController {
@@ -55,12 +55,21 @@ export class AppController {
   async getTourHello(@Req() req: UserRequest) {
     return this.managerService.send({ cmd: 'tour' }, { id: req.user.id });
   }
+
   @Get('tour/all')
   async getAllTour() {
-    return this.managerService.send({ cmd: 'get-tours' }, {});
+    return this.managerService.send({ cmd: 'get-all-tour' }, {});
   }
+
+  @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER)
   @Post('manager/create-tour')
-  async createTour(@Body() newTouristDTO: NewTouristDTO) {
+  async createTour(@Body() newTouristDTO: NewTouristDTO, @Req() req) {
+    console.log(req?.user);
+    if (req.user?.role !== Role.SELLER) {
+      return 'you are not a seller';
+    }
     const {
       name,
       description,
@@ -84,14 +93,30 @@ export class AppController {
         startDate,
         endDate,
         lastRegisterDate,
+        userId: req.user?.id,
       },
     );
   }
   @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard)
   @Get('user-detail')
   async getUserId(@Req() req: UserRequest) {
     return this.authService.send({ cmd: 'get-user' }, { id: req.user.id });
   }
+  @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER)
+  @Get('store/list-tour')
+  async getTourToStore(@Req() req: UserRequest) {
+    if (!req?.user) {
+      return 'you can not allow to do that';
+    }
+    return this.managerService.send(
+      { cmd: 'get-tour-to-Store' },
+      { userId: req.user?.id },
+    );
+  }
+
   @Get('presence')
   async getPresence() {
     return this.presenceService.send(
@@ -168,14 +193,23 @@ export class AppController {
   @Post('store/create')
   async createStore(@Body() newStoreDTO: NewStoreDTO, @Req() req: UserRequest) {
     const { name, slogan } = newStoreDTO;
-    console.log(req.user);
+    // console.log(req.user);
     if (!req?.user) {
       throw new BadRequestException('can not find user');
     }
-    return this.managerService.send({ cmd: 'create-store' }, { name, slogan });
+    return this.managerService.send(
+      { cmd: 'create-store' },
+      { name, slogan, userId: req.user.id },
+    );
   }
-  @Get('store/all')
-  async getAllStore(){
-    return this.managerService.send({ cmd: 'find-all' }, {});
-  }
+  // @UseInterceptors(UserInterceptor)
+  // @UseGuards(AuthGuard)
+  // @Get('store/all')
+  // async getAllStore(@Req() req: UserRequest) {
+  //   console.log(req.user);
+  //   return this.managerService.send(
+  //     { cmd: 'find-all' },
+  //     { userId: req.user?.id },
+  //   );
+  // }
 }

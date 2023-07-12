@@ -32,6 +32,10 @@ export abstract class BaseAbstractRepository<T extends HasId>
   public async saveMany(data: DeepPartial<T>[]): Promise<T[]> {
     return await this.entity.save(data);
   }
+
+  // async updateById(id: any, data: DeepPartial<T>): Promise<T | UpdateResult> {
+  //   return await this.entity.update(id, { ...data });
+  // }
   public async findOneById(id: any): Promise<T> {
     const options: FindOptionsWhere<T> = {
       id: id,

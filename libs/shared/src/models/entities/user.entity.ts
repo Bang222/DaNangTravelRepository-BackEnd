@@ -59,7 +59,6 @@ export class UserEntity {
   role: Role;
 
   @OneToOne(() => StoreEntity, (store) => store.user)
-  @JoinColumn()
   store: StoreEntity;
 
   @OneToMany(

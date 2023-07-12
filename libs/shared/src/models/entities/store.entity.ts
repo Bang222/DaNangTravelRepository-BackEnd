@@ -1,12 +1,13 @@
 import {
   Column,
-  Entity, JoinColumn,
+  Entity,
+  JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TourEntity, UserEntity } from '@app/shared';
-import {Role, StoreStatus} from "@app/shared/models/enum";
+import { Role, StoreStatus } from '@app/shared/models/enum';
 
 @Entity('store')
 export class StoreEntity {
@@ -26,6 +27,6 @@ export class StoreEntity {
   @JoinColumn()
   user: UserEntity;
 
-  @OneToMany(() => TourEntity, (tour) => tour.store) // specify inverse side as a second parameter
+  @OneToMany(() => TourEntity, (tours) => tours.store) // specify inverse side as a second parameter
   tours: TourEntity[];
 }

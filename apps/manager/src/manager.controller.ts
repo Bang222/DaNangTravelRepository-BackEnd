@@ -1,6 +1,10 @@
-import { Controller, Get, Inject, Post, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Inject, UseInterceptors } from '@nestjs/common';
 import { ManagerService } from './manager.service';
-import {RedisCacheService, SharedService, SharedServiceInterface} from '@app/shared';
+import {
+  RedisCacheService,
+  SharedServiceInterface,
+  StoreEntity,
+} from '@app/shared';
 import {
   Ctx,
   MessagePattern,
@@ -10,9 +14,9 @@ import {
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
 import { NewTouristDTO } from './tour/dtos';
-import {SellerService} from "./seller/seller.service";
-import {NewStoreDTO} from "./seller/dto";
-import {AuthServiceInterface} from "../../auth/src/interface/auth.service.interface";
+import { SellerService } from './seller/seller.service';
+import { NewStoreDTO } from './seller/dto';
+import { AuthServiceInterface } from '../../auth/src/interface/auth.service.interface';
 
 @Controller('manager')
 export class ManagerController {
@@ -43,6 +47,7 @@ export class ManagerController {
     await this.redisService.set('hello', h);
     return h;
   }
+  //tourService--------------------------
   @MessagePattern({ cmd: 'tour' })
   async tourHello(
     @Ctx() context: RmqContext,
@@ -55,26 +60,54 @@ export class ManagerController {
   async createTour(
     @Ctx() context: RmqContext,
     @Payload() newTourDto: NewTouristDTO,
+    @Payload() payload: { userId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return this.tourService.createTour(newTourDto);
+    const storeOfUserOwner = await this.sellerService.findOneStoreById(
+      payload.userId,
+    );
+    return this.tourService.createTour(newTourDto, storeOfUserOwner);
   }
-  @MessagePattern({ cmd: 'get-tours' })
-  async getAllTour(@Ctx() context: RmqContext) {
+  @MessagePattern({ cmd: 'get-all-tour' })
+  async getAllStore(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
-    return this.tourService.getTours();
+    const tourView = await this.redisService.get('tourView');
+    if (tourView) {
+      console.log('cache');
+      return tourView;
+    }
+    const setTourView = await this.tourService.getAllTours();
+    await this.redisService.set('tourView', setTourView);
+    return setTourView;
   }
+  // @MessagePattern({ cmd: 'get-tours' })
+  // async getAllTour(@Ctx() context: RmqContext) {
+  //   this.sharedService.acknowledgeMessage(context);
+  //   return this.tourService.getTours();
+  // }
+  //-----------seller------------------
   @MessagePattern({ cmd: 'create-store' })
   async createStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { newStoreDTO: NewStoreDTO; id: string },
+    @Payload() payload: { userId: string },
+    @Payload() newStoreDTO: NewStoreDTO,
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return this.sellerService.createStore(payload.newStoreDTO, payload.id);
+    const user = await this.managerService.findUserById(payload.userId);
+    return this.sellerService.createStore(newStoreDTO, user);
   }
-  @MessagePattern({ cmd: 'find-all' })
-  async getAllStore(@Ctx() context: RmqContext) {
-    this.sharedService.acknowledgeMessage(context);
-    return this.sellerService.findAllStore();
+  @MessagePattern({ cmd: 'get-tour-to-Store' })
+  async getTourToStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    const getTourOfStore = await this.redisService.get('getTourOfStore');
+    if (getTourOfStore) {
+      console.log('Cache');
+      return getTourOfStore;
+    }
+    const tour = await this.sellerService.getTourEachStore(payload.userId);
+    await this.redisService.set('getTourOfStore', tour);
+    return tour;
   }
 }

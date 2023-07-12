@@ -34,7 +34,7 @@ export class AuthService implements AuthServiceInterface {
     return 'Hello World!';
   }
   async getUsers(): Promise<UserEntity[]> {
-    return await this.usersRepository.findAll();
+    return await this.usersRepository.findAll({ relations: { store: true } });
   }
 
   async getUserById(id: string): Promise<UserEntity> {
@@ -57,7 +57,6 @@ export class AuthService implements AuthServiceInterface {
         'password',
         'role',
         'isEmailValidated',
-        'store',
       ],
     });
   }

@@ -27,10 +27,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { TourModule } from './tour/tour.module';
-import { TourService } from './tour/tour.service';
 import { StoreEntity } from '@app/shared/models/entities/store.entity';
-import {SellerService} from "./seller/seller.service";
-import {SellerModule} from "./seller/seller.module";
+import { SellerService } from './seller/seller.service';
+import { SellerModule } from './seller/seller.module';
+import { TourService } from './tour/tour.service';
 
 @Module({
   imports: [

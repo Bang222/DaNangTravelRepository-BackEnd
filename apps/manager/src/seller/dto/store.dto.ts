@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
 
 export class NewStoreDTO {
-    id:string;
-    @IsNotEmpty()
+  id: string;
+  @IsNotEmpty()
   name: string;
-    @IsNotEmpty()
+  @IsNotEmpty()
   slogan: string;
 }
