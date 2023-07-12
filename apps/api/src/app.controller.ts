@@ -163,13 +163,19 @@ export class AppController {
       { jwt },
     );
   }
+  @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Post('store/create')
   async createStore(@Body() newStoreDTO: NewStoreDTO, @Req() req: UserRequest) {
     const { name, slogan } = newStoreDTO;
+    console.log(req.user);
     if (!req?.user) {
-      throw new BadRequestException();
+      throw new BadRequestException('can not find user');
     }
     return this.managerService.send({ cmd: 'create-store' }, { name, slogan });
+  }
+  @Get('store/all')
+  async getAllStore(){
+    return this.managerService.send({ cmd: 'find-all' }, {});
   }
 }

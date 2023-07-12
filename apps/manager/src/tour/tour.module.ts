@@ -18,9 +18,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     PostgresdbModule,
     TypeOrmModule.forFeature([
       UserEntity,
-      FriendRequestEntity,
-      MessageEntity,
-      ConversationEntity,
       TourEntity,
     ]),
   ],

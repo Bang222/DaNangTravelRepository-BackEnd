@@ -8,6 +8,9 @@ export class SellerService {
     @Inject('StoreRepositoryInterface')
     private readonly storeRepository: StoreRepositoryInterface,
   ) {}
+  async findAllStore() {
+    return await this.storeRepository.findAll();
+  }
   async createStore(
     newStoreDTO: NewStoreDTO,
     id: string,

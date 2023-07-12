@@ -57,6 +57,7 @@ export class AuthService implements AuthServiceInterface {
         'password',
         'role',
         'isEmailValidated',
+        'store',
       ],
     });
   }
@@ -71,7 +72,7 @@ export class AuthService implements AuthServiceInterface {
 
   async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
     const { firstName, lastName, email, password, sex } = newUser;
-    console.log(firstName);
+    // console.log(firstName);
 
     const existingUser = await this.findByEmail(email);
     if (existingUser) {

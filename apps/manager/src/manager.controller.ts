@@ -72,4 +72,9 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return this.sellerService.createStore(payload.newStoreDTO, payload.id);
   }
+  @MessagePattern({ cmd: 'find-all' })
+  async getAllStore(@Ctx() context: RmqContext) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.sellerService.findAllStore();
+  }
 }

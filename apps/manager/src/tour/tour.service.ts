@@ -27,7 +27,6 @@ export class TourService {
       endDate,
       lastRegisterDate,
     } = newTour;
-    console.log('test', price);
     const savedTour = this.tourRepository.save({
       name,
       description,
