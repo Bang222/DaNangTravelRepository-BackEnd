@@ -14,8 +14,9 @@ import {
   FriendRequestEntity,
   MessageEntity,
   ConversationEntity,
-  EmailVerifiedModule,
   EmailVerifiedService,
+  TourEntity,
+  StoreEntity,
 } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
@@ -50,6 +51,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       FriendRequestEntity,
       MessageEntity,
       ConversationEntity,
+      TourEntity,
+      StoreEntity,
     ]),
     MailerModule.forRootAsync({
       imports: [ConfigModule],

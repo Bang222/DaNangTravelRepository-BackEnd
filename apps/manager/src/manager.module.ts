@@ -11,6 +11,7 @@ import {
   RedisModule,
   SharedModule,
   SharedService,
+  StoreRepository,
   TourRepository,
   UserEntity,
   UsersRepository,
@@ -27,6 +28,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { TourModule } from './tour/tour.module';
 import { TourService } from './tour/tour.service';
+import { StoreEntity } from '@app/shared/models/entities/store.entity';
+import {SellerService} from "./seller/seller.service";
+import {SellerModule} from "./seller/seller.module";
 
 @Module({
   imports: [
@@ -39,6 +43,7 @@ import { TourService } from './tour/tour.service';
     SharedModule,
     PostgresdbModule,
     TourModule,
+    SellerModule,
     RedisModule,
     CacheModule.register(),
     JwtModule.registerAsync({
@@ -72,14 +77,15 @@ import { TourService } from './tour/tour.service';
       MessageEntity,
       ConversationEntity,
       TourEntity,
+      StoreEntity,
     ]),
   ],
   controllers: [ManagerController],
   providers: [
     ManagerService,
-    ManagerService,
     JwtStrategy,
     TourService,
+    SellerService,
     UseRoleGuard,
     {
       provide: 'TourRepositoryInterface',
@@ -104,6 +110,10 @@ import { TourService } from './tour/tour.service';
     {
       provide: 'FriendRequestRepositoryInterface',
       useClass: FriendRequestRepository,
+    },
+    {
+      provide: 'StoreRepositoryInterface',
+      useClass: StoreRepository,
     },
   ],
 })

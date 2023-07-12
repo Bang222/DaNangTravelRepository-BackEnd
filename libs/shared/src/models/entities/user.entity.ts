@@ -2,14 +2,17 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToMany,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '@app/shared/models/enum/role.enum';
 import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
 import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
 import { MessageEntity } from '@app/shared/models/entities/message.entity';
+import { StoreEntity } from '@app/shared/models/entities/store.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -54,6 +57,10 @@ export class UserEntity {
 
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
+
+  @OneToOne(() => StoreEntity, (store) => store.user)
+  @JoinColumn()
+  store: StoreEntity;
 
   @OneToMany(
     () => FriendRequestEntity,

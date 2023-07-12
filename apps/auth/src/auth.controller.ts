@@ -30,7 +30,7 @@ export class AuthController {
   @MessagePattern({ cmd: 'get-user' })
   async getUserById(
     @Ctx() context: RmqContext,
-    @Payload() user: { id: number },
+    @Payload() user: { id: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
     return this.authService.getUserById(user.id);
@@ -69,7 +69,7 @@ export class AuthController {
   @MessagePattern({ cmd: 'add-friend' })
   async addFriend(
     @Ctx() context: RmqContext,
-    @Payload() payload: { userId: number; friendId: number },
+    @Payload() payload: { userId: string; friendId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.authService.addFriend(payload.userId, payload.friendId);
@@ -77,14 +77,14 @@ export class AuthController {
   @MessagePattern({ cmd: 'get-friends' })
   async getFriends(
     @Ctx() context: RmqContext,
-    @Payload() payload: { userId: number },
+    @Payload() payload: { userId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.authService.getFriends(payload.userId);
   }
   @MessagePattern({ cmd: 'get-friends-list' })
   async getFriendsList(
-    @Payload() payload: { userId: number },
+    @Payload() payload: { userId: string },
     @Ctx() context: RmqContext,
   ) {
     this.sharedService.acknowledgeMessage(context);

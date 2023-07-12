@@ -1,6 +1,6 @@
-import { Controller, Get, Inject, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Inject, Post, UseInterceptors } from '@nestjs/common';
 import { ManagerService } from './manager.service';
-import { RedisCacheService, SharedService } from '@app/shared';
+import {RedisCacheService, SharedService, SharedServiceInterface} from '@app/shared';
 import {
   Ctx,
   MessagePattern,
@@ -10,6 +10,9 @@ import {
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
 import { NewTouristDTO } from './tour/dtos';
+import {SellerService} from "./seller/seller.service";
+import {NewStoreDTO} from "./seller/dto";
+import {AuthServiceInterface} from "../../auth/src/interface/auth.service.interface";
 
 @Controller('manager')
 export class ManagerController {
@@ -17,8 +20,11 @@ export class ManagerController {
     private readonly managerService: ManagerService,
     private readonly redisService: RedisCacheService,
     @Inject('SharedServiceInterface')
-    private readonly sharedService: SharedService,
+    private readonly sharedService: SharedServiceInterface,
+    @Inject('AuthServiceInterface')
+    private readonly authService: AuthServiceInterface,
     private readonly tourService: TourService,
+    private readonly sellerService: SellerService,
   ) {}
   @Get('hello')
   async hello() {
@@ -57,5 +63,13 @@ export class ManagerController {
   async getAllTour(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
     return this.tourService.getTours();
+  }
+  @MessagePattern({ cmd: 'create-store' })
+  async createStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { newStoreDTO: NewStoreDTO; id: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.sellerService.createStore(payload.newStoreDTO, payload.id);
   }
 }

@@ -14,5 +14,6 @@ export interface UserRequest extends Request {
     createdTime: Date;
     profilePicture: string;
     role: Role;
+    storeId: string;
   };
 }

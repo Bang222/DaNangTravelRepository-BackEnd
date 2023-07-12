@@ -17,8 +17,8 @@ export class ConversationsRepository
     super(conversationEntity);
   }
   public async findConversations(
-    userId: number,
-    friendId: number,
+    userId: string,
+    friendId: string,
   ): Promise<ConversationEntity | undefined> {
     return await this.conversationEntity
       .createQueryBuilder('conversation')

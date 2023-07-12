@@ -22,6 +22,7 @@ import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 import { NewTouristDTO } from '../../manager/src/tour/dtos';
+import {NewStoreDTO} from "../../manager/src/seller/dto";
 
 @Controller()
 export class AppController {
@@ -55,7 +56,7 @@ export class AppController {
     return this.managerService.send({ cmd: 'tour' }, { id: req.user.id });
   }
   @Get('tour/all')
-  async getAllTour(){
+  async getAllTour() {
     return this.managerService.send({ cmd: 'get-tours' }, {});
   }
   @Post('manager/create-tour')
@@ -161,5 +162,14 @@ export class AppController {
       },
       { jwt },
     );
+  }
+  @UseGuards(AuthGuard)
+  @Post('store/create')
+  async createStore(@Body() newStoreDTO: NewStoreDTO, @Req() req: UserRequest) {
+    const { name, slogan } = newStoreDTO;
+    if (!req?.user) {
+      throw new BadRequestException();
+    }
+    return this.managerService.send({ cmd: 'create-store' }, { name, slogan });
   }
 }

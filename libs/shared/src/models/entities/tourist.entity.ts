@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TourStatus } from '@app/shared/models/enum';
+import { StoreEntity } from '@app/shared/models/entities/store.entity';
 
 @Entity('tour')
 export class TourEntity {
@@ -43,4 +45,7 @@ export class TourEntity {
 
   @CreateDateColumn()
   endDate: Date;
+
+  @ManyToOne(() => StoreEntity, (store) => store.tours)
+  store: StoreEntity;
 }

@@ -1,15 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TourService } from './tour.service';
 import {
-  ConversationEntity, FriendRequestEntity, MessageEntity,
+  ConversationEntity,
+  FriendRequestEntity,
+  MessageEntity,
   PostgresdbModule,
   RedisModule,
+  StoreEntity,
+  StoreRepository,
   TourEntity,
   TourRepository,
   UserEntity,
 } from '@app/shared';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SellerService } from './seller.service';
 
 @Module({
   imports: [
@@ -18,20 +23,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     PostgresdbModule,
     TypeOrmModule.forFeature([
       UserEntity,
-      FriendRequestEntity,
-      MessageEntity,
-      ConversationEntity,
+      // FriendRequestEntity,
+      // MessageEntity,
+      // ConversationEntity,
       TourEntity,
+      StoreEntity,
     ]),
   ],
   controllers: [],
   providers: [
-    TourService,
+    SellerService,
     {
-      provide: 'TourRepositoryInterface',
-      useClass: TourRepository,
+      provide: 'StoreRepositoryInterface',
+      useClass: StoreRepository,
     },
   ],
-  exports: [TourService],
+  exports: [SellerService],
 })
-export class TourModule {}
+export class SellerModule {}

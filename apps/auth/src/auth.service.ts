@@ -37,7 +37,7 @@ export class AuthService implements AuthServiceInterface {
     return await this.usersRepository.findAll();
   }
 
-  async getUserById(id: number): Promise<UserEntity> {
+  async getUserById(id: string): Promise<UserEntity> {
     return await this.usersRepository.findOneById(id);
   }
 
@@ -61,7 +61,7 @@ export class AuthService implements AuthServiceInterface {
     });
   }
 
-  async findById(id: number): Promise<UserEntity> {
+  async findById(id: string): Promise<UserEntity> {
     return this.usersRepository.findOneById(id);
   }
 
@@ -153,21 +153,21 @@ export class AuthService implements AuthServiceInterface {
     }
   }
   async addFriend(
-    userId: number,
-    friendId: number,
+    userId: string,
+    friendId: string,
   ): Promise<FriendRequestEntity> {
     const creator = await this.findById(userId);
     const receiver = await this.findById(friendId);
     return await this.friendRequestRepository.save({ creator, receiver });
   }
-  async getFriends(userId: number): Promise<FriendRequestEntity[]> {
+  async getFriends(userId: string): Promise<FriendRequestEntity[]> {
     const creator = await this.findById(userId);
     return await this.friendRequestRepository.findWithRelations({
       where: [{ creator }, { receiver: creator }],
       relations: ['creator', 'receiver'],
     });
   }
-  async getFriendsList(userId: number) {
+  async getFriendsList(userId: string) {
     const friendsRequests = await this.getFriends(userId);
     if (!friendsRequests) return [];
     const friends = friendsRequests.map((item) => {

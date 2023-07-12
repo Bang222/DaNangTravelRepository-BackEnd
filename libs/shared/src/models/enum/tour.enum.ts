@@ -3,3 +3,7 @@ export enum TourStatus {
   PROCESS = 'process',
   ENDING = 'ending',
 }
+export enum StoreStatus {
+  ACTIVE = 'active',
+  ENDING = 'ending',
+}

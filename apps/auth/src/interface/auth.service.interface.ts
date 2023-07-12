@@ -4,10 +4,11 @@ import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
 import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
 
 export interface AuthServiceInterface {
+  getHello(): string;
   getUsers(): Promise<UserEntity[]>;
-  getUserById(id: number): Promise<UserEntity>;
+  getUserById(id: string): Promise<UserEntity>;
   findByEmail(email: string): Promise<UserEntity>;
-  findById(id: number): Promise<UserEntity>;
+  findById(id: string): Promise<UserEntity>;
   hashPassword(password: string): Promise<string>;
   register(newUser: Readonly<NewUserDTO>): Promise<UserEntity>;
   doesPasswordMatch(password: string, hashedPassword: string): Promise<boolean>;
@@ -18,6 +19,6 @@ export interface AuthServiceInterface {
   }>;
   verifyJwt(jwt: string): Promise<{ user: UserEntity; exp: number }>;
   getUserFromHeader(jwt: string): Promise<UserJwt>;
-  addFriend(userId: number, friendId: number): Promise<FriendRequestEntity>;
-  getFriends(userId: number): Promise<FriendRequestEntity[]>;
+  addFriend(userId: string, friendId: string): Promise<FriendRequestEntity>;
+  getFriends(userId: string): Promise<FriendRequestEntity[]>;
 }
