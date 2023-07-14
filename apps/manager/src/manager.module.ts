@@ -3,6 +3,7 @@ import { ManagerController } from './manager.controller';
 import { ManagerService } from './manager.service';
 import {
   CartEntity,
+  CartRepository,
   ConversationEntity,
   EmailVerifiedService,
   FriendRequestEntity,
@@ -118,6 +119,10 @@ import { TourService } from './tour/tour.service';
     {
       provide: 'StoreRepositoryInterface',
       useClass: StoreRepository,
+    },
+    {
+      provide: 'CartRepositoryInterface',
+      useClass: CartRepository,
     },
   ],
 })

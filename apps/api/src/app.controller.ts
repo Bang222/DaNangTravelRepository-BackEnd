@@ -20,7 +20,7 @@ import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
 import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
-import { NewTouristDTO } from '../../manager/src/tour/dtos';
+import {CartDto, NewTouristDTO} from '../../manager/src/tour/dtos';
 import { NewStoreDTO } from '../../manager/src/seller/dto';
 
 @Controller()
@@ -101,9 +101,9 @@ export class AppController {
   async getUserId(@Req() req: UserRequest) {
     return this.authService.send({ cmd: 'get-user' }, { id: req.user.id });
   }
-  @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
+  @UseInterceptors(UserInterceptor)
   @Get('store/list-tour')
   async getTourToStore(@Req() req: UserRequest) {
     if (!req?.user) {
@@ -200,14 +200,14 @@ export class AppController {
       { name, slogan, userId: req.user.id },
     );
   }
-  // @UseInterceptors(UserInterceptor)
-  // @UseGuards(AuthGuard)
-  // @Get('store/all')
-  // async getAllStore(@Req() req: UserRequest) {
-  //   console.log(req.user);
-  //   return this.managerService.send(
-  //     { cmd: 'find-all' },
-  //     { userId: req.user?.id },
-  //   );
-  // }
+  @UseGuards(AuthGuard)
+  @UseInterceptors(UserInterceptor)
+  @Post('cart')
+  async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
+    const { tourId, quantity } = newCartDTO;
+    return this.managerService.send(
+      { cmd: 'create-cart' },
+      { tourId, quantity, userId: req.user?.id },
+    );
+  }
 }

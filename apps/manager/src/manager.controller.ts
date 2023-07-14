@@ -9,7 +9,7 @@ import {
 } from '@nestjs/microservices';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
-import { NewTouristDTO } from './tour/dtos';
+import {CartDto, NewTouristDTO} from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
 import { AuthServiceInterface } from '../../auth/src/interface/auth.service.interface';
@@ -52,18 +52,6 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return this.tourService.tourHello(payload.id);
   }
-  @MessagePattern({ cmd: 'create-tour' })
-  async createTour(
-    @Ctx() context: RmqContext,
-    @Payload() newTourDto: NewTouristDTO,
-    @Payload() payload: { userId: string },
-  ) {
-    this.sharedService.acknowledgeMessage(context);
-    const storeOfUserOwner = await this.sellerService.findOneStoreById(
-      payload.userId,
-    );
-    return this.tourService.createTour(newTourDto, storeOfUserOwner);
-  }
   @MessagePattern({ cmd: 'get-all-tour' })
   async getAllStore(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
@@ -105,5 +93,27 @@ export class ManagerController {
     const tour = await this.sellerService.getTourEachStore(payload.userId);
     await this.redisService.set('getTourOfStore', tour);
     return tour;
+  }
+  @MessagePattern({ cmd: 'create-tour' })
+  async createTour(
+    @Ctx() context: RmqContext,
+    @Payload() newTourDto: NewTouristDTO,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const storeOfUserOwner = await this.sellerService.findOneStoreById(
+      payload.userId,
+    );
+    return this.tourService.createTour(newTourDto, storeOfUserOwner);
+  }
+  @MessagePattern({ cmd: 'create-cart' })
+  async createCart(
+    @Ctx() context: RmqContext,
+    @Payload() newCartDTO: CartDto,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const user = await this.managerService.findUserById(payload.userId);
+    return await this.tourService.createCart(newCartDTO, user);
   }
 }

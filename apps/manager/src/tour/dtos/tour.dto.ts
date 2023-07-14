@@ -18,5 +18,10 @@ export class NewTouristDTO {
   startDate: Date;
   @IsNotEmpty()
   endDate: Date;
-
+}
+export class CartDto {
+  @IsNotEmpty()
+  tourId: string;
+  @IsNotEmpty()
+  quantity: number;
 }

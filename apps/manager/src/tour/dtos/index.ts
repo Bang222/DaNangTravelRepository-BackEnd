@@ -1,1 +1,1 @@
-export * from './newTour.dto';
+export * from './tour.dto';
