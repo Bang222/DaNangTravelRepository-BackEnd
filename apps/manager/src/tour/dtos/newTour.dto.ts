@@ -18,4 +18,5 @@ export class NewTouristDTO {
   startDate: Date;
   @IsNotEmpty()
   endDate: Date;
+
 }
