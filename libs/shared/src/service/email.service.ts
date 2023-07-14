@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { JwtService } from '@nestjs/jwt';
-import { EmailServiceInterface } from '@app/shared/interfaces/email.interface';
+import { EmailServiceInterface } from '@app/shared/interfaces/service-interface/email.interface';
 
 @Injectable()
 export class EmailVerifiedService implements EmailServiceInterface {

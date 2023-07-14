@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { StoreEntity, TourEntity, TourRepositoryInterface } from '@app/shared';
+import { TourEntity, TourRepositoryInterface } from '@app/shared';
 import { NewTouristDTO } from './dtos';
 
 @Injectable()

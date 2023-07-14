@@ -13,7 +13,6 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { AppService } from './app.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
 import { AuthGuard, UserRequest } from '@app/shared';
@@ -27,7 +26,6 @@ import { NewStoreDTO } from '../../manager/src/seller/dto';
 @Controller()
 export class AppController {
   constructor(
-    private readonly appService: AppService,
     @Inject('AUTH_SERVICE') private authService: ClientProxy,
     @Inject('PRESENCE_SERVICE') private presenceService: ClientProxy,
     @Inject('MANAGER_SERVICE') private managerService: ClientProxy,
@@ -67,8 +65,8 @@ export class AppController {
   @Post('manager/create-tour')
   async createTour(@Body() newTouristDTO: NewTouristDTO, @Req() req) {
     console.log(req?.user);
-    if (req.user?.role !== Role.SELLER) {
-      return 'you are not a seller';
+    if (!req?.user) {
+      return 'you can not allow to do that';
     }
     const {
       name,

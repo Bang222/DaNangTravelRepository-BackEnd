@@ -3,10 +3,16 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import { TourStatus } from '@app/shared/models/enum';
 import { StoreEntity } from '@app/shared/models/entities/store.entity';
+import { CartEntity } from '@app/shared/models/entities/cart.entity';
+import { OrderDetailEntity } from '@app/shared/models/entities/order-detail.entity';
+import { UserRegisteredTourEntity } from '@app/shared/models/entities/user-registered-tour.entity';
 
 @Entity('tour')
 export class TourEntity {
@@ -48,4 +54,16 @@ export class TourEntity {
 
   @ManyToOne(() => StoreEntity, (store) => store.tours)
   store: StoreEntity;
+
+  @OneToMany(() => CartEntity, (carts) => carts.tour)
+  carts: CartEntity[];
+
+  @OneToMany(() => OrderDetailEntity, (orderDetails) => orderDetails.tour)
+  orderDetails: OrderDetailEntity[];
+
+  @OneToOne(
+    () => UserRegisteredTourEntity,
+    (userRegisteredTour) => userRegisteredTour.tour,
+  )
+  userRegisteredTour: UserRegisteredTourEntity;
 }

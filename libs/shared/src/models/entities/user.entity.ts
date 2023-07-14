@@ -2,8 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +13,9 @@ import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.
 import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
 import { MessageEntity } from '@app/shared/models/entities/message.entity';
 import { StoreEntity } from '@app/shared/models/entities/store.entity';
+import { CartEntity } from '@app/shared/models/entities/cart.entity';
+import { OrderEntity } from '@app/shared/models/entities/order.entity';
+import { UserRegisteredTourEntity } from '@app/shared/models/entities/user-registered-tour.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -60,6 +63,18 @@ export class UserEntity {
 
   @OneToOne(() => StoreEntity, (store) => store.user)
   store: StoreEntity;
+
+  @OneToMany(() => CartEntity, (carts) => carts.user)
+  carts: CartEntity[];
+
+  @OneToMany(() => OrderEntity, (orders) => orders.user)
+  orders: OrderEntity[];
+
+  @ManyToOne(
+    () => UserRegisteredTourEntity,
+    (userRegisteredTour) => userRegisteredTour.users,
+  )
+  userRegisteredTour: UserRegisteredTourEntity;
 
   @OneToMany(
     () => FriendRequestEntity,

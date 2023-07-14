@@ -10,7 +10,7 @@ import { RedisCacheService } from '@app/shared';
 import { ClientProxy } from '@nestjs/microservices';
 import { ChatService } from './chat.service';
 import { Server, Socket } from 'socket.io';
-import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 import { firstValueFrom } from 'rxjs';
 
 @WebSocketGateway({ cors: true })

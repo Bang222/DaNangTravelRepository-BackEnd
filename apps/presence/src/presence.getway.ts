@@ -9,7 +9,7 @@ import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Server, Socket } from 'socket.io';
-import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { ActiveUser } from './interfaces/ActiveUser';

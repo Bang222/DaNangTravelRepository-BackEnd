@@ -10,7 +10,7 @@ import { catchError, Observable, of, switchMap } from 'rxjs';
 import { Role } from '@app/shared/models/enum';
 import { ROLES_KEY } from '../../../../apps/auth/src/decorator/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
-import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

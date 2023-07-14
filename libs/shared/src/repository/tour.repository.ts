@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BaseAbstractRepository } from '@app/shared';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TourEntity } from '@app/shared/models/entities/tourist.entity';
-import { TourRepositoryInterface } from '@app/shared/interfaces/tour.repository.interface';
+import {
+  TourEntity,
+  BaseAbstractRepository,
+  TourRepositoryInterface,
+} from '@app/shared';
 
 @Injectable()
 export class TourRepository

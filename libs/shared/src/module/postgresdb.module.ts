@@ -12,10 +12,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       imports: [ConfigModule],
       useFactory: () => ({
         type: 'postgres',
+        // replication: {
+        //   master: {
         url: process.env.POSTGRES_URI,
+        //   },
+        //   slaves: [
+        //     {
+        //       url: process.env.POSTGRES_REPLICATION_URI,
+        //     },
+        //   ],
+        // },
+        // entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         autoLoadEntities: true,
-        // entities: [UserEntity],
-        synchronize: true, // shouldn't be used in production - may lose db
+        synchronize: true, // production - may lose db // automatic create new colum
+        // extra: { connectionLimit: 10 },
       }),
       inject: [ConfigService],
     }),

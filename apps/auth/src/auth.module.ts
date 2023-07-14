@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -17,6 +17,10 @@ import {
   EmailVerifiedService,
   TourEntity,
   StoreEntity,
+  CartEntity,
+  OrderEntity,
+  OrderDetailEntity,
+  UserRegisteredTourEntity,
 } from '@app/shared';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
@@ -53,6 +57,10 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       ConversationEntity,
       TourEntity,
       StoreEntity,
+      CartEntity,
+      OrderEntity,
+      OrderDetailEntity,
+      UserRegisteredTourEntity,
     ]),
     MailerModule.forRootAsync({
       imports: [ConfigModule],

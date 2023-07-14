@@ -1,5 +1,4 @@
-import { BaseInterfaceRepository } from '@app/shared';
-import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
+import { BaseInterfaceRepository, ConversationEntity } from '@app/shared';
 
 export interface ConversationsRepositoryInterface
   extends BaseInterfaceRepository<ConversationEntity> {

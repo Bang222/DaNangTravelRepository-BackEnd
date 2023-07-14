@@ -1,6 +1,6 @@
 import { UserEntity } from '@app/shared/models/entities/user.entity';
 import { ExistingUserDTO, NewUserDTO } from '../dto';
-import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
 
 export interface AuthServiceInterface {

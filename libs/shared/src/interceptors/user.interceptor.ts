@@ -10,7 +10,7 @@ import { ClientProxy } from '@nestjs/microservices';
 
 import { Observable, catchError, switchMap } from 'rxjs';
 
-import { UserJwt } from '../interfaces/user-jwt.interface';
+import { UserJwt } from '../interfaces/service-interface/user-jwt.interface';
 
 @Injectable()
 export class UserInterceptor implements NestInterceptor {
@@ -34,7 +34,7 @@ export class UserInterceptor implements NestInterceptor {
 
     return this.authService.send<UserJwt>({ cmd: 'decode-jwt' }, { jwt }).pipe(
       switchMap(({ user }) => {
-        // like async and sync switch map sync and mergeMap is Async
+        //create New Observable
         request.user = user;
         return next.handle();
       }),

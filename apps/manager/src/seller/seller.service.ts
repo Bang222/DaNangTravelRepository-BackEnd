@@ -35,7 +35,7 @@ export class SellerService {
       relations: { store: true },
     });
   }
-  async findOneStoreById(userId: string) {
+  async findOneStoreById(userId: string): Promise<StoreEntity> {
     const userDetails = await this.findOwnerIdByUserId(userId);
     return await this.storeRepository.findOneById(userDetails.store?.id);
   }
@@ -48,10 +48,13 @@ export class SellerService {
     if (userExistsStore.includes(user.id)) {
       throw new Error('You have store');
     }
-    await this.userRepository.save({ ...user, role: Role.SELLER });
+    await this.userRepository.save({
+      ...user,
+      role: Role.SELLER,
+    });
     return await this.storeRepository.save({ name, slogan, user });
   }
-  async getTourEachStore(userId: string) {
+  async getTourEachStore(userId: string): Promise<StoreEntity[]> {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
     return await this.storeRepository.findWithRelations({
       where: { id: OwnerDetail.store?.id },

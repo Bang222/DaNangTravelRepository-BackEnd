@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TourEntity, UserEntity } from '@app/shared';
-import { Role, StoreStatus } from '@app/shared/models/enum';
+import { StoreStatus } from '@app/shared/models/enum';
 
 @Entity('store')
 export class StoreEntity {

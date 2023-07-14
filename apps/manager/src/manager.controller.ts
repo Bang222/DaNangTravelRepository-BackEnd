@@ -1,10 +1,6 @@
 import { Controller, Get, Inject, UseInterceptors } from '@nestjs/common';
 import { ManagerService } from './manager.service';
-import {
-  RedisCacheService,
-  SharedServiceInterface,
-  StoreEntity,
-} from '@app/shared';
+import { RedisCacheService, SharedServiceInterface } from '@app/shared';
 import {
   Ctx,
   MessagePattern,

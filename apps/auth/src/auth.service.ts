@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 
 import { JwtService } from '@nestjs/jwt';
 import { ExistingUserDTO, NewUserDTO } from './dto';
-import { UsersRepositoryInterface } from '@app/shared/interfaces/users.repository.interface';
+import { UsersRepositoryInterface } from '@app/shared/interfaces/repository-interface/users.repository.interface';
 import { AuthServiceInterface } from './interface/auth.service.interface';
 import {
   EmailVerifiedService,
@@ -17,7 +17,7 @@ import {
   FriendRequestRepository,
   UserEntity,
 } from '@app/shared';
-import { UserJwt } from '@app/shared/interfaces/user-jwt.interface';
+import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ConversationsRepositoryInterface } from '@app/shared/interfaces/conversations.repository.interface';
-import { BaseAbstractRepository } from '@app/shared';
-import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+import { ConversationsRepositoryInterface } from '@app/shared/interfaces/repository-interface/conversations.repository.interface';
+import { BaseAbstractRepository } from '@app/shared';
+import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
 
 @Injectable()
 export class ConversationsRepository
