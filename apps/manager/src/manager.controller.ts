@@ -9,7 +9,7 @@ import {
 } from '@nestjs/microservices';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
-import {CartDto, NewTouristDTO} from './tour/dtos';
+import { CartDto, NewTouristDTO } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
 import { AuthServiceInterface } from '../../auth/src/interface/auth.service.interface';
@@ -29,19 +29,6 @@ export class ManagerController {
   @Get('hello')
   async hello() {
     return this.managerService.getHello();
-  }
-  @MessagePattern({ cmd: 'manager' })
-  @UseInterceptors(CacheInterceptor)
-  async getTourHello(@Ctx() context: RmqContext) {
-    this.sharedService.acknowledgeMessage(context);
-    const hello = await this.redisService.get('hello');
-    if (hello) {
-      console.log('Cache');
-      return hello;
-    }
-    const h = this.managerService.getHello();
-    await this.redisService.set('hello', h);
-    return h;
   }
   //tourService--------------------------
   @MessagePattern({ cmd: 'tour' })
@@ -63,6 +50,33 @@ export class ManagerController {
     const setTourView = await this.tourService.getAllTours();
     await this.redisService.set('tourView', setTourView);
     return setTourView;
+  }
+  @MessagePattern({ cmd: 'create-tour' })
+  async createTour(
+    @Ctx() context: RmqContext,
+    @Payload() newTourDto: NewTouristDTO,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const storeOfUserOwner = await this.sellerService.findOneStoreById(
+      payload.userId,
+    );
+    return this.tourService.createTour(newTourDto, storeOfUserOwner);
+  }
+  @MessagePattern({ cmd: 'create-cart' })
+  async createCart(
+    @Ctx() context: RmqContext,
+    @Payload() newCartDTO: CartDto,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const user = await this.managerService.findUserById(payload.userId);
+    return await this.tourService.createCart(newCartDTO, user);
+  }
+  @MessagePattern({ cmd: 'check-out' })
+  async checkout(@Ctx() context: RmqContext, @Payload() payload: { user }) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.checkout(payload.user);
   }
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {
@@ -94,26 +108,17 @@ export class ManagerController {
     await this.redisService.set('getTourOfStore', tour);
     return tour;
   }
-  @MessagePattern({ cmd: 'create-tour' })
-  async createTour(
-    @Ctx() context: RmqContext,
-    @Payload() newTourDto: NewTouristDTO,
-    @Payload() payload: { userId: string },
-  ) {
+  @MessagePattern({ cmd: 'manager' })
+  @UseInterceptors(CacheInterceptor)
+  async getTourHello(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
-    const storeOfUserOwner = await this.sellerService.findOneStoreById(
-      payload.userId,
-    );
-    return this.tourService.createTour(newTourDto, storeOfUserOwner);
-  }
-  @MessagePattern({ cmd: 'create-cart' })
-  async createCart(
-    @Ctx() context: RmqContext,
-    @Payload() newCartDTO: CartDto,
-    @Payload() payload: { userId: string },
-  ) {
-    this.sharedService.acknowledgeMessage(context);
-    const user = await this.managerService.findUserById(payload.userId);
-    return await this.tourService.createCart(newCartDTO, user);
+    const hello = await this.redisService.get('hello');
+    if (hello) {
+      console.log('Cache');
+      return hello;
+    }
+    const h = this.managerService.getHello();
+    await this.redisService.set('hello', h);
+    return h;
   }
 }

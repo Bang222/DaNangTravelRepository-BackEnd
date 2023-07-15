@@ -13,15 +13,15 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
-import { AuthGuard, UserRequest } from '@app/shared';
-import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
-import { Roles } from '../../auth/src/decorator/roles.decorator';
-import { Role } from '@app/shared/models/enum';
-import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import {ClientProxy} from '@nestjs/microservices';
+import {ExistingUserDTO, NewUserDTO} from '../../auth/src/dto';
+import {AuthGuard, UserRequest} from '@app/shared';
+import {UserInterceptor} from '@app/shared/interceptors/user.interceptor';
+import {Roles} from '../../auth/src/decorator/roles.decorator';
+import {Role} from '@app/shared/models/enum';
+import {UseRoleGuard} from '../../auth/src/guard/role.guard';
 import {CartDto, NewTouristDTO} from '../../manager/src/tour/dtos';
-import { NewStoreDTO } from '../../manager/src/seller/dto';
+import {NewStoreDTO} from '../../manager/src/seller/dto';
 
 @Controller()
 export class AppController {
@@ -61,9 +61,20 @@ export class AppController {
 
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.SELLER)
+  @Get('checkout')
+  async checkOut(@Req() req: UserRequest) {
+    return this.managerService.send({ cmd: 'check-out' }, { user: req?.user });
+  }
+
+  @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
-  @Post('manager/create-tour')
-  async createTour(@Body() newTouristDTO: NewTouristDTO, @Req() req) {
+  @Post('tour/create')
+  async createTour(
+    @Body() newTouristDTO: NewTouristDTO,
+    @Req() req: UserRequest,
+  ) {
     console.log(req?.user);
     if (!req?.user) {
       return 'you can not allow to do that';

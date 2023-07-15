@@ -1,6 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {CartRepositoryInterface, TourEntity, TourRepositoryInterface, UserEntity} from '@app/shared';
-import {CartDto, NewTouristDTO} from './dtos';
+import {
+  CartRepositoryInterface,
+  TourEntity,
+  TourRepositoryInterface,
+  UserEntity,
+} from '@app/shared';
+import { CartDto, NewTouristDTO } from './dtos';
 
 @Injectable()
 export class TourService {
@@ -14,9 +19,6 @@ export class TourService {
     console.log(id);
     return 'tourHello';
   }
-  async findByTourId(tourId: string) {
-    return await this.tourRepository.findOneById(tourId);
-  }
   async getAllTours(): Promise<TourEntity[]> {
     return await this.tourRepository.findAll();
   }
@@ -24,57 +26,73 @@ export class TourService {
     newTour: Readonly<NewTouristDTO>,
     storeOfUserOwner,
   ): Promise<TourEntity> {
-    const {
-      name,
-      description,
-      price,
-      quantity,
-      address,
-      imageUrl,
-      startDate,
-      endDate,
-      lastRegisterDate,
-    } = newTour;
-    const savedTour = this.tourRepository.save({
-      name,
-      description,
-      price,
-      quantity,
-      address,
-      imageUrl,
-      startDate,
-      endDate,
-      lastRegisterDate,
-      store: storeOfUserOwner,
-    });
-    return savedTour;
-  }
-
-  async createCart(cartDto: CartDto, user: Readonly<UserEntity>) {
     try {
-      const tour = await this.findByTourId(cartDto.tourId);
-      const cartFromDb = await this.cartRepository.findByCondition({
-        where: [{ user: user },{ tour: tour }],
-        relations: { tour: true },
-      });
-      if (!cartFromDb) {
-        return await this.cartRepository.save({
-          user,
-          tour,
-          quantity: +cartDto.quantity,
-        });
-      } else {
-        const findCart = await this.cartRepository.findByCondition({
-          where: [{ user: user }, { tour: tour }],
-          relations: { tour: true },
-        });
-        return await this.cartRepository.save({
-          ...findCart,
-          quantity: +findCart.quantity + +cartDto.quantity,
-        });
+      const {
+        name,
+        description,
+        price,
+        quantity,
+        address,
+        imageUrl,
+        startDate,
+        endDate,
+        lastRegisterDate,
+      } = newTour;
+      if (quantity * price === 0 && startDate <= new Date(Date.now())) {
+        throw new Error('you can not create Tour');
       }
+      return this.tourRepository.save({
+        name,
+        description,
+        price,
+        quantity,
+        address,
+        imageUrl,
+        startDate,
+        endDate,
+        lastRegisterDate,
+        store: storeOfUserOwner,
+      });
     } catch (e) {
       throw new Error(e);
     }
+  }
+  async findCartDetailsByUser(user: Readonly<UserEntity>) {
+    return await this.cartRepository.findWithRelations({
+      where: [{ user: user }],
+      relations: { tour: true, user: true },
+    });
+  }
+  async findOneByTourId(id: string): Promise<TourEntity> {
+    return await this.tourRepository.findOneById(id);
+  }
+  async createCart(cartDto: CartDto, user: Readonly<UserEntity>) {
+    try {
+      const tour = await this.findOneByTourId(cartDto.tourId);
+      const cartFromDb = await this.cartRepository.findByCondition({
+        where: { user },
+        relations: { user: true, tour: true },
+      });
+      if (!cartFromDb) {
+        return await this.cartRepository.save({
+          tour: tour,
+          user: user,
+          quantity: +cartDto.quantity,
+        });
+      } else {
+        return await this.cartRepository.save({
+          ...cartFromDb,
+          quantity: +cartFromDb.quantity + +cartDto.quantity,
+        });
+      }
+      // return cartFromDb;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+
+  async checkout(user: Readonly<UserEntity>) {
+    const findCartByUser = await this.findCartDetailsByUser(user);
+    return findCartByUser;
   }
 }

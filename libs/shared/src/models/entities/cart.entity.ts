@@ -1,7 +1,6 @@
 import {
   Column, CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -12,17 +11,16 @@ export class CartEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ default: true })
-  isActive: false;
+  @Column({ nullable: true, default: true })
+  isActive: boolean;
 
   @Column()
   quantity: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ nullable: true })
   CreateAt: Date;
 
   @ManyToOne(() => UserEntity, (user) => user.carts)
-  @JoinTable()
   user: UserEntity;
 
   @ManyToOne(() => TourEntity, (tour) => tour.carts)
