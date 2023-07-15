@@ -68,10 +68,10 @@ export class TourService {
   }
   async createCart(cartDto: CartDto, user: Readonly<UserEntity>) {
     try {
-      const tour = await this.findOneByTourId(cartDto.tourId);
+      const tour = await this.tourRepository.findOneById(cartDto.tourId);
       const cartFromDb = await this.cartRepository.findByCondition({
-        where: { user },
-        relations: { user: true, tour: true },
+        relations: ['tour', 'user'],
+        where: [{ tour: { id: cartDto.tourId }, user }],
       });
       if (!cartFromDb) {
         return await this.cartRepository.save({
@@ -85,7 +85,6 @@ export class TourService {
           quantity: +cartFromDb.quantity + +cartDto.quantity,
         });
       }
-      // return cartFromDb;
     } catch (e) {
       throw new Error(e);
     }
