@@ -21,6 +21,7 @@ export * from './models/entities/cart.entity';
 export * from './models/entities/order.entity';
 export * from './models/entities/order-detail.entity';
 export * from './models/entities/user-registered-tour.entity';
+export * from './models/entities/used-tour-review.entity';
 // interface
 export * from './interfaces/service-interface/user-request.interface';
 export * from './interfaces/repository-interface/users.repository.interface';
@@ -35,6 +36,7 @@ export * from './interfaces/repository-interface/cart.repository.interface';
 export * from './interfaces/repository-interface/order.repository.interface';
 export * from './interfaces/repository-interface/order-detail.repository.interface';
 export * from './interfaces/repository-interface/user-registered-tour.repository.interface';
+export * from './interfaces/repository-interface/used-tour-review.repository.interface';
 
 // base repository
 export * from './repository/base/base.abstract.repository';
@@ -50,3 +52,4 @@ export * from './repository/cart.repositoty';
 export * from './repository/order.repository';
 export * from './repository/order-detail.repository';
 export * from './repository/user-registered-tour.repository';
+export * from './repository/used-tour-review.repository';

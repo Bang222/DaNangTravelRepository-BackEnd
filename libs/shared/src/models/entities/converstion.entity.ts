@@ -6,8 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserEntity } from '@app/shared';
-import { MessageEntity } from '@app/shared/models/entities/message.entity';
+import { MessageEntity, UserEntity } from '@app/shared';
 
 @Entity('conversation')
 export class ConversationEntity {

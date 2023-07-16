@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { BaseAbstractRepository } from '@app/shared';
-import { FriendRequestRepositoryInterface } from '@app/shared/interfaces/repository-interface/friend-request.repository.interface';
-import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
+import {
+  BaseAbstractRepository,
+  FriendRequestRepositoryInterface,
+  FriendRequestEntity,
+} from '@app/shared';
 
 @Injectable()
 export class FriendRequestRepository

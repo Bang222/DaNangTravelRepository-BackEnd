@@ -4,6 +4,13 @@ import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { JwtModule } from '@nestjs/jwt';
+import { JwtGuard } from './guard/jwt.guard';
+import { JwtStrategy } from './strategy/jwt-strategy';
+import { UseRoleGuard } from './guard/role.guard';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+
 import {
   SharedModule,
   PostgresdbModule,
@@ -21,13 +28,8 @@ import {
   OrderEntity,
   OrderDetailEntity,
   UserRegisteredTourEntity,
+  UsedTourReviewEntity,
 } from '@app/shared';
-import { JwtModule } from '@nestjs/jwt';
-import { JwtGuard } from './guard/jwt.guard';
-import { JwtStrategy } from './strategy/jwt-strategy';
-import { UseRoleGuard } from './guard/role.guard';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       OrderEntity,
       OrderDetailEntity,
       UserRegisteredTourEntity,
+      UsedTourReviewEntity,
     ]),
     MailerModule.forRootAsync({
       imports: [ConfigModule],

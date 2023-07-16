@@ -9,13 +9,17 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '@app/shared/models/enum/role.enum';
-import { FriendRequestEntity } from '@app/shared/models/entities/friend-request.entity';
-import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
-import { MessageEntity } from '@app/shared/models/entities/message.entity';
-import { StoreEntity } from '@app/shared/models/entities/store.entity';
-import { CartEntity } from '@app/shared/models/entities/cart.entity';
-import { OrderEntity } from '@app/shared/models/entities/order.entity';
-import { UserRegisteredTourEntity } from '@app/shared/models/entities/user-registered-tour.entity';
+
+import {
+  CartEntity,
+  ConversationEntity,
+  FriendRequestEntity,
+  MessageEntity,
+  OrderEntity,
+  StoreEntity,
+  UsedTourReviewEntity,
+  UserRegisteredTourEntity,
+} from '@app/shared';
 
 @Entity('user')
 export class UserEntity {
@@ -70,6 +74,9 @@ export class UserEntity {
   @OneToMany(() => OrderEntity, (orders) => orders.user)
   orders: OrderEntity[];
 
+  @OneToMany(() => UsedTourReviewEntity, (reviews) => reviews.user)
+  reviews?: UsedTourReviewEntity[];
+
   @ManyToOne(
     () => UserRegisteredTourEntity,
     (userRegisteredTour) => userRegisteredTour.users,
@@ -87,11 +94,13 @@ export class UserEntity {
     (FriendRequestEntity) => FriendRequestEntity.receiver,
   )
   friendRequestReceiver: FriendRequestEntity[];
+
   @ManyToMany(
     () => ConversationEntity,
     (conversationEntity) => conversationEntity.users,
   )
   conversations: ConversationEntity[];
+
   @OneToMany(() => MessageEntity, (messageEntity) => messageEntity.message)
   messages: MessageEntity[];
 }

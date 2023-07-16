@@ -1,6 +1,22 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { MailerModule } from '@nestjs-modules/mailer';
+
 import { ManagerController } from './manager.controller';
+
+import { SellerService } from './seller/seller.service';
+import { TourService } from './tour/tour.service';
 import { ManagerService } from './manager.service';
+import { AuthService } from '../../auth/src/auth.service';
+
+import { CacheModule } from '@nestjs/cache-manager';
+import { JwtStrategy } from '../../auth/src/strategy/jwt-strategy';
+import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import { JwtModule } from '@nestjs/jwt';
+
 import {
   CartEntity,
   CartRepository,
@@ -10,30 +26,24 @@ import {
   FriendRequestRepository,
   MessageEntity,
   OrderDetailEntity,
+  OrderDetailRepository,
   OrderEntity,
+  OrderRepository,
   PostgresdbModule,
   RedisModule,
   SharedModule,
   SharedService,
+  StoreEntity,
   StoreRepository,
+  TourEntity,
   TourRepository,
+  UsedTourReviewEntity,
+  UsedTourReviewRepository,
   UserEntity,
   UserRegisteredTourEntity,
+  UserRegisteredTourRepository,
   UsersRepository,
 } from '@app/shared';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TourEntity } from '@app/shared/models/entities/tourist.entity';
-import { AuthService } from '../../auth/src/auth.service';
-import { CacheModule } from '@nestjs/cache-manager';
-import { JwtStrategy } from '../../auth/src/strategy/jwt-strategy';
-import { UseRoleGuard } from '../../auth/src/guard/role.guard';
-import { JwtModule } from '@nestjs/jwt';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { StoreEntity } from '@app/shared/models/entities/store.entity';
-import { SellerService } from './seller/seller.service';
-import { TourService } from './tour/tour.service';
 
 @Module({
   imports: [
@@ -83,6 +93,7 @@ import { TourService } from './tour/tour.service';
       CartEntity,
       UserRegisteredTourEntity,
       OrderDetailEntity,
+      UsedTourReviewEntity,
     ]),
   ],
   controllers: [ManagerController],
@@ -123,6 +134,22 @@ import { TourService } from './tour/tour.service';
     {
       provide: 'CartRepositoryInterface',
       useClass: CartRepository,
+    },
+    {
+      provide: 'UserRegisteredTourRepositoryInterface',
+      useClass: UserRegisteredTourRepository,
+    },
+    {
+      provide: 'OrderDetailRepositoryInterface',
+      useClass: OrderDetailRepository,
+    },
+    {
+      provide: 'OrderRepositoryInterface',
+      useClass: OrderRepository,
+    },
+    {
+      provide: 'UsedTourReviewRepositoryInterface',
+      useClass: UsedTourReviewRepository,
     },
   ],
 })

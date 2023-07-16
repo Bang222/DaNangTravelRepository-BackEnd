@@ -1,4 +1,5 @@
-import {Entity, JoinTable, OneToMany, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
+import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { TourEntity, UserEntity } from '@app/shared';
 
 @Entity('user-registered-trip')

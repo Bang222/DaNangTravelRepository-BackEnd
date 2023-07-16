@@ -13,15 +13,15 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import {ClientProxy} from '@nestjs/microservices';
-import {ExistingUserDTO, NewUserDTO} from '../../auth/src/dto';
-import {AuthGuard, UserRequest} from '@app/shared';
-import {UserInterceptor} from '@app/shared/interceptors/user.interceptor';
-import {Roles} from '../../auth/src/decorator/roles.decorator';
-import {Role} from '@app/shared/models/enum';
-import {UseRoleGuard} from '../../auth/src/guard/role.guard';
-import {CartDto, NewTouristDTO} from '../../manager/src/tour/dtos';
-import {NewStoreDTO} from '../../manager/src/seller/dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
+import { AuthGuard, UserRequest } from '@app/shared';
+import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
+import { Roles } from '../../auth/src/decorator/roles.decorator';
+import { Role } from '@app/shared/models/enum';
+import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import { CartDto, NewTouristDTO } from '../../manager/src/tour/dtos';
+import { NewStoreDTO } from '../../manager/src/seller/dto';
 
 @Controller()
 export class AppController {

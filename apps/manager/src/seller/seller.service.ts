@@ -6,7 +6,6 @@ import {
   UsersRepositoryInterface,
 } from '@app/shared';
 import { NewStoreDTO } from './dto';
-import { UpdateResult } from 'typeorm';
 import { Role } from '@app/shared/models/enum';
 
 @Injectable()

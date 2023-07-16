@@ -9,10 +9,13 @@ import {
 } from 'typeorm';
 
 import { TourStatus } from '@app/shared/models/enum';
-import { StoreEntity } from '@app/shared/models/entities/store.entity';
-import { CartEntity } from '@app/shared/models/entities/cart.entity';
-import { OrderDetailEntity } from '@app/shared/models/entities/order-detail.entity';
-import { UserRegisteredTourEntity } from '@app/shared/models/entities/user-registered-tour.entity';
+import {
+  CartEntity,
+  OrderDetailEntity,
+  StoreEntity,
+  UsedTourReviewEntity,
+  UserRegisteredTourEntity,
+} from '@app/shared';
 
 @Entity('tour')
 export class TourEntity {
@@ -66,4 +69,7 @@ export class TourEntity {
     (userRegisteredTour) => userRegisteredTour.tour,
   )
   userRegisteredTour: UserRegisteredTourEntity;
+
+  @OneToMany(() => UsedTourReviewEntity, (reviews) => reviews.tour)
+  reviews: UsedTourReviewEntity[];
 }

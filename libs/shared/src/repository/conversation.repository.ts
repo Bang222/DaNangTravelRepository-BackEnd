@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ConversationsRepositoryInterface } from '@app/shared/interfaces/repository-interface/conversations.repository.interface';
-import { BaseAbstractRepository } from '@app/shared';
-import { ConversationEntity } from '@app/shared/models/entities/converstion.entity';
+import {
+  BaseAbstractRepository,
+  ConversationsRepositoryInterface,
+  ConversationEntity,
+} from '@app/shared';
 
 @Injectable()
 export class ConversationsRepository
