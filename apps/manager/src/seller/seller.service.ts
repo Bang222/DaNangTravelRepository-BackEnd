@@ -53,9 +53,9 @@ export class SellerService {
     });
     return await this.storeRepository.save({ name, slogan, user });
   }
-  async getTourEachStore(userId: string): Promise<StoreEntity[]> {
+  async getTourEachStore(userId: string): Promise<StoreEntity> {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
-    return await this.storeRepository.findWithRelations({
+    return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
       relations: ['tours'],
     });

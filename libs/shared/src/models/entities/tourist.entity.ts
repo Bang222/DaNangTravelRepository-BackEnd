@@ -37,7 +37,7 @@ export class TourEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ type: 'enum', enum: TourStatus, default: TourStatus.ACTIVE })
+  @Column({ type: 'enum', enum: TourStatus, default: TourStatus.AVAILABLE })
   status: TourStatus;
 
   @Column()

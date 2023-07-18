@@ -19,6 +19,17 @@ export class NewTouristDTO {
   @IsNotEmpty()
   endDate: Date;
 }
+export class UpdateTouristDTO {
+  name?: string;
+  description?: string;
+  price?: number;
+  quantity?: number;
+  imageUrl?: string;
+  lastRegisterDate?: Date;
+  address?: string;
+  startDate?: Date;
+  endDate?: Date;
+}
 export class CartDto {
   @IsNotEmpty()
   tourId: string;

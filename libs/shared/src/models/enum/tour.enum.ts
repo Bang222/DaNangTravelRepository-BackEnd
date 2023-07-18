@@ -1,9 +1,11 @@
 export enum TourStatus {
-  ACTIVE = 'active',
-  PROCESS = 'process',
-  ENDING = 'ending',
+  AVAILABLE = 'available',
+  DOING = 'doing',
+  FULL = 'full-slot',
+  PRIVATE = 'private',
+  DONE = 'done',
 }
 export enum StoreStatus {
   ACTIVE = 'active',
-  ENDING = 'ending',
+  CLOSE = 'close',
 }

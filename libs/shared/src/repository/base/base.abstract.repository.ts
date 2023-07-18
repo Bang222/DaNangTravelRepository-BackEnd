@@ -54,6 +54,15 @@ export abstract class BaseAbstractRepository<T extends HasId>
   public async remove(data: T): Promise<T> {
     return await this.entity.remove(data);
   }
+  public async removeCondition(
+    filterCondition: FindManyOptions<T>,
+  ): Promise<T[]> {
+    const entityToRemove = await this.entity.find(filterCondition);
+    if (entityToRemove) {
+      return await this.entity.remove(entityToRemove);
+    }
+    return null; // Return null if no entity found matching the condition
+  }
   public async preload(entity: DeepPartial<T>): Promise<T> {
     return await this.entity.preload(entity);
   }

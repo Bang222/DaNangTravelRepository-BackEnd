@@ -20,7 +20,7 @@ import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
 import { Roles } from '../../auth/src/decorator/roles.decorator';
 import { Role } from '@app/shared/models/enum';
 import { UseRoleGuard } from '../../auth/src/guard/role.guard';
-import { CartDto, NewTouristDTO } from '../../manager/src/tour/dtos';
+import {CartDto, NewTouristDTO, UpdateTouristDTO} from '../../manager/src/tour/dtos';
 import { NewStoreDTO } from '../../manager/src/seller/dto';
 
 @Controller()
@@ -31,22 +31,18 @@ export class AppController {
     @Inject('MANAGER_SERVICE') private managerService: ClientProxy,
   ) {}
 
-  @Get()
-  @UseGuards(UseRoleGuard, AuthGuard)
-  @Roles(Role.USER)
-  async getUsers() {
-    return this.authService.send(
-      {
-        cmd: 'get-users',
-      },
-      {},
+  // MANAGER----------------------------------------
+  @UseGuards(AuthGuard)
+  @UseInterceptors(UserInterceptor)
+  @Post('cart')
+  async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
+    const { tourId, quantity } = newCartDTO;
+    return this.managerService.send(
+      { cmd: 'create-cart' },
+      { tourId, quantity, userId: req.user?.id },
     );
   }
-  @Get('manager')
-  async getManagerHello() {
-    return this.managerService.send({ cmd: 'manager' }, {});
-  }
-  // MANAGER
+
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Get('tour')
@@ -66,7 +62,44 @@ export class AppController {
   async checkOut(@Req() req: UserRequest) {
     return this.managerService.send({ cmd: 'check-out' }, { user: req?.user });
   }
-
+  @UseInterceptors(UserInterceptor)
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER)
+  @Post('tour/update/:id')
+  async updateTour(
+    @Req() req: UserRequest,
+    @Param('id') tourId: string,
+    @Body() updateTouristDto: UpdateTouristDTO,
+  ) {
+    const {
+      name,
+      description,
+      price,
+      quantity,
+      address,
+      imageUrl,
+      startDate,
+      endDate,
+      lastRegisterDate,
+    } = updateTouristDto;
+    // console.log('updateTouristDto: ', updateTouristDto.address);
+    return this.managerService.send(
+      { cmd: 'update-tour' },
+      {
+        name,
+        description,
+        price,
+        quantity,
+        address,
+        imageUrl,
+        startDate,
+        endDate,
+        lastRegisterDate,
+        tourId,
+        userId: req?.user.id,
+      },
+    );
+  }
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
@@ -125,7 +158,7 @@ export class AppController {
       { userId: req.user?.id },
     );
   }
-
+  // PRESENCE----------------------------------------
   @Get('presence')
   async getPresence() {
     return this.presenceService.send(
@@ -134,6 +167,22 @@ export class AppController {
       },
       {},
     );
+  }
+  // AUTH----------------------------------------
+  @Get()
+  @UseGuards(UseRoleGuard, AuthGuard)
+  @Roles(Role.USER)
+  async getUsers() {
+    return this.authService.send(
+      {
+        cmd: 'get-users',
+      },
+      {},
+    );
+  }
+  @Get('manager')
+  async getManagerHello() {
+    return this.managerService.send({ cmd: 'manager' }, {});
   }
   @UseGuards(AuthGuard)
   @Post('auth')
@@ -209,16 +258,6 @@ export class AppController {
     return this.managerService.send(
       { cmd: 'create-store' },
       { name, slogan, userId: req.user.id },
-    );
-  }
-  @UseGuards(AuthGuard)
-  @UseInterceptors(UserInterceptor)
-  @Post('cart')
-  async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
-    const { tourId, quantity } = newCartDTO;
-    return this.managerService.send(
-      { cmd: 'create-cart' },
-      { tourId, quantity, userId: req.user?.id },
     );
   }
 }

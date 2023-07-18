@@ -10,6 +10,7 @@ export interface BaseInterfaceRepository<T> {
   findByCondition(filterCondition: FindOneOptions<T>): Promise<T>;
   findAll(options?: FindManyOptions<T>): Promise<T[]>;
   remove(data: T): Promise<T>;
+  removeCondition(filterCondition: FindOneOptions<T>): Promise<T[]>;
   findWithRelations(relations: FindManyOptions<T>): Promise<T[]>;
   preload(entityLike: DeepPartial<T>): Promise<T>;
 }

@@ -122,7 +122,7 @@ export class AuthService implements AuthServiceInterface {
       const { email, password } = existingUser;
       const user = await this.validateUser(email, password);
 
-      if (!user) throw new UnauthorizedException('can not login');
+      if (!user) throw new UnauthorizedException('Please Register Broo!!');
       delete user.password;
       const jwt = await this.jwtService.signAsync({ user });
 

@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -75,14 +76,13 @@ export class UserEntity {
   orders: OrderEntity[];
 
   @OneToMany(() => UsedTourReviewEntity, (reviews) => reviews.user)
-  reviews?: UsedTourReviewEntity[];
+  reviews: UsedTourReviewEntity[];
 
-  @ManyToOne(
+  @ManyToMany(
     () => UserRegisteredTourEntity,
     (userRegisteredTour) => userRegisteredTour.users,
   )
-  userRegisteredTour: UserRegisteredTourEntity;
-
+  userRegisteredTours: UserRegisteredTourEntity[];
   @OneToMany(
     () => FriendRequestEntity,
     (friendRequestEntity) => friendRequestEntity.creator,

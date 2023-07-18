@@ -9,7 +9,7 @@ import {
 } from '@nestjs/microservices';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
-import { CartDto, NewTouristDTO } from './tour/dtos';
+import { CartDto, NewTouristDTO, UpdateTouristDTO } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
 import { AuthServiceInterface } from '../../auth/src/interface/auth.service.interface';
@@ -77,6 +77,15 @@ export class ManagerController {
   async checkout(@Ctx() context: RmqContext, @Payload() payload: { user }) {
     this.sharedService.acknowledgeMessage(context);
     return await this.tourService.checkout(payload.user);
+  }
+  @MessagePattern({ cmd: 'update-tour' })
+  async updateTourist(
+    @Ctx() context: RmqContext,
+    @Payload() updateTouristDto: UpdateTouristDTO,
+    @Payload() payload: { tourId: string; userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.updateTour(payload.tourId, payload.userId, { ...updateTouristDto });
   }
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {

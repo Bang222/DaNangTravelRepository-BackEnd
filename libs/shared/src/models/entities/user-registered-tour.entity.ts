@@ -1,4 +1,12 @@
-import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { TourEntity, UserEntity } from '@app/shared';
 
@@ -8,8 +16,10 @@ export class UserRegisteredTourEntity {
   id: string;
 
   @OneToOne(() => TourEntity, (tour) => tour.userRegisteredTour)
+  @JoinColumn()
   tour: TourEntity;
 
-  @OneToMany(() => UserEntity, (users) => users.userRegisteredTour)
+  @ManyToMany(() => UserEntity, (user) => user.userRegisteredTours)
+  @JoinTable()
   users: UserEntity[];
 }
