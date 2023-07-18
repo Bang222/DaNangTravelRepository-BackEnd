@@ -1,12 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  CartRepositoryInterface,
+  OrderDetailRepositoryInterface,
+  OrderRepositoryInterface,
   StoreEntity,
   StoreRepositoryInterface,
+  TourRepositoryInterface,
+  UsedTourReviewRepositoryInterface,
   UserEntity,
+  UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
 import { NewStoreDTO } from './dto';
 import { Role } from '@app/shared/models/enum';
+import { AuthServiceInterface } from '../../../auth/src/interface/auth.service.interface';
 
 @Injectable()
 export class SellerService {
@@ -14,7 +21,21 @@ export class SellerService {
     @Inject('StoreRepositoryInterface')
     private readonly storeRepository: StoreRepositoryInterface,
     @Inject('UsersRepositoryInterface')
-    private readonly userRepository: UsersRepositoryInterface,
+    private readonly usersRepository: UsersRepositoryInterface,
+    @Inject('TourRepositoryInterface')
+    private readonly tourRepository: TourRepositoryInterface,
+    @Inject('CartRepositoryInterface')
+    private readonly cartRepository: CartRepositoryInterface,
+    @Inject('UsedTourReviewRepositoryInterface')
+    private readonly usedTourReviewRepository: UsedTourReviewRepositoryInterface,
+    @Inject('UserRegisteredTourRepositoryInterface')
+    private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
+    @Inject('OrderDetailRepositoryInterface')
+    private readonly orderDetailRepository: OrderDetailRepositoryInterface,
+    @Inject('OrderRepositoryInterface')
+    private readonly orderRepository: OrderRepositoryInterface,
+    @Inject('AuthServiceInterface')
+    private readonly authService: AuthServiceInterface,
   ) {}
   async findAllStore() {
     return await this.storeRepository.findWithRelations({
@@ -29,7 +50,7 @@ export class SellerService {
     });
   }
   async findOwnerIdByUserId(userId: string) {
-    return await this.userRepository.findByCondition({
+    return await this.usersRepository.findByCondition({
       where: { id: userId },
       relations: { store: true },
     });
@@ -47,7 +68,7 @@ export class SellerService {
     if (userExistsStore.includes(user.id)) {
       throw new Error('You have store');
     }
-    await this.userRepository.save({
+    await this.usersRepository.save({
       ...user,
       role: Role.SELLER,
     });
@@ -55,9 +76,73 @@ export class SellerService {
   }
   async getTourEachStore(userId: string): Promise<StoreEntity> {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail) return null;
     return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
-      relations: ['tours'],
+      relations: { tours: { orderDetails: { order: { user: true } } } },
     });
+  }
+  async trackUserRegistered(userId: string): Promise<StoreEntity> {
+    const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail.store) return;
+    return await this.storeRepository.findByCondition({
+      where: { id: OwnerDetail.store?.id },
+      relations: { tours: { userRegisteredTour: { users: true } } },
+    });
+  }
+  async selectBillOfStore(userId: string) {
+    const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail) return null;
+    return await this.storeRepository.findByCondition({
+      where: { id: OwnerDetail.store?.id },
+      relations: { tours: { orderDetails: { order: { user: true } } } },
+    });
+  }
+  async getUserRegisteredTour(tourId: string) { //oke
+    try {
+      const UsersRegisterTour =
+        await this.userRegisteredTourRepository.findByCondition({
+          where: { tour: { id: tourId } },
+          relations: { users: true },
+        });
+      if (!UsersRegisterTour) throw new Error('Can not found tour');
+      return UsersRegisterTour;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async getBillOfStore(userId: string) {
+    try {
+      const getTourOfStore = await this.selectBillOfStore(userId);
+      if (!getTourOfStore) return null;
+      return getTourOfStore.tours;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async getBillOfUser(userId: string) {
+    try {
+      const findUser = await this.usersRepository.findByCondition({
+        where: { id: userId },
+        relations: { orders: { orderDetails: { tour: true } } },
+      });
+      if(!findUser) return null;
+      return findUser;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async getFollowerTripRegistered(userId: string) {
+    const getFollowerTrip = await this.usersRepository.findByCondition({
+      where: { id: userId },
+      relations: { userRegisteredTours: true },
+    });
+    if (!getFollowerTrip) return null;
+    return getFollowerTrip;
+  }
+  async getTrackUserRegisteredTour(userId: string) { //oke
+    const findStore = await this.trackUserRegistered(userId);
+    if (!findStore) return null;
+    return findStore;
   }
 }

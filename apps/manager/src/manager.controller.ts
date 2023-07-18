@@ -117,17 +117,21 @@ export class ManagerController {
     await this.redisService.set('getTourOfStore', tour);
     return tour;
   }
-  @MessagePattern({ cmd: 'manager' })
+  @MessagePattern({ cmd: 'bill-store' })
   @UseInterceptors(CacheInterceptor)
-  async getTourHello(@Ctx() context: RmqContext) {
+  async getTourHello(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
     this.sharedService.acknowledgeMessage(context);
-    const hello = await this.redisService.get('hello');
-    if (hello) {
-      console.log('Cache');
-      return hello;
-    }
-    const h = this.managerService.getHello();
-    await this.redisService.set('hello', h);
-    return h;
+    // const hello = await this.redisService.get('hello');
+    // if (hello) {
+    //   console.log('Cache');
+    //   return hello;
+    // }
+    // const h = this.managerService.getHello();
+    // await this.redisService.set('hello', h);
+
+    return await this.sellerService.getTrackUserRegisteredTour(payload.userId);
   }
 }

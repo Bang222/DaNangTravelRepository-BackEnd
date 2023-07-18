@@ -13,15 +13,15 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
-import { AuthGuard, UserRequest } from '@app/shared';
-import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
-import { Roles } from '../../auth/src/decorator/roles.decorator';
-import { Role } from '@app/shared/models/enum';
-import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import {ClientProxy} from '@nestjs/microservices';
+import {ExistingUserDTO, NewUserDTO} from '../../auth/src/dto';
+import {AuthGuard, UserRequest} from '@app/shared';
+import {UserInterceptor} from '@app/shared/interceptors/user.interceptor';
+import {Roles} from '../../auth/src/decorator/roles.decorator';
+import {Role} from '@app/shared/models/enum';
+import {UseRoleGuard} from '../../auth/src/guard/role.guard';
 import {CartDto, NewTouristDTO, UpdateTouristDTO} from '../../manager/src/tour/dtos';
-import { NewStoreDTO } from '../../manager/src/seller/dto';
+import {NewStoreDTO} from '../../manager/src/seller/dto';
 
 @Controller()
 export class AppController {
@@ -181,8 +181,14 @@ export class AppController {
     );
   }
   @Get('manager')
-  async getManagerHello() {
-    return this.managerService.send({ cmd: 'manager' }, {});
+  @UseGuards(AuthGuard, UseRoleGuard)
+  // @Roles(Role.SELLER, Role.PREMIUM)
+  @UseInterceptors(UserInterceptor)
+  async getManagerHello(@Req() req: UserRequest) {
+    return this.managerService.send(
+      { cmd: 'bill-store' },
+      { userId: req.user?.id },
+    );
   }
   @UseGuards(AuthGuard)
   @Post('auth')
@@ -192,7 +198,7 @@ export class AppController {
   @Post('auth/register')
   @UsePipes(new ValidationPipe())
   async register(@Body() newUser: NewUserDTO) {
-    const { firstName, lastName, email, password, sex } = newUser;
+    const { firstName, lastName, email, password, sex, address } = newUser;
     return this.authService.send(
       { cmd: 'register' },
       {
@@ -201,6 +207,7 @@ export class AppController {
         email,
         password,
         sex,
+        address,
       },
     );
   }

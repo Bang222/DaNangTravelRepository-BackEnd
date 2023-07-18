@@ -42,7 +42,10 @@ export class TourService {
     return 'tourHello';
   }
   async getAllTours(): Promise<TourEntity[]> {
-    return await this.tourRepository.findAll();
+    return await this.tourRepository.findAll({
+      order: { createdAt: 'DESC' },
+      cache: true,
+    });
   }
   async findTourOfUserRegistered(tourId: string) {
     return await this.userRegisteredTourRepository.findOneById(tourId);

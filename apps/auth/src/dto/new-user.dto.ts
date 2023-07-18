@@ -8,5 +8,7 @@ export class NewUserDTO {
   sex: string;
 
   @IsNotEmpty()
+  address: string;
+  @IsNotEmpty()
   password: string;
 }
