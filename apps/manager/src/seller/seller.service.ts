@@ -79,7 +79,7 @@ export class SellerService {
     if (!OwnerDetail) return null;
     return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
-      relations: { tours: { orderDetails: { order: { user: true } } } },
+      relations: { tours: true },
     });
   }
   async trackUserRegistered(userId: string): Promise<StoreEntity> {
@@ -98,7 +98,8 @@ export class SellerService {
       relations: { tours: { orderDetails: { order: { user: true } } } },
     });
   }
-  async getUserRegisteredTour(tourId: string) { //oke
+  async getUserRegisteredTour(tourId: string) {
+    //oke
     try {
       const UsersRegisterTour =
         await this.userRegisteredTourRepository.findByCondition({
@@ -124,15 +125,15 @@ export class SellerService {
     try {
       const findUser = await this.usersRepository.findByCondition({
         where: { id: userId },
-        relations: { orders: { orderDetails: { tour: true } } },
+        relations: { orders: { orderDetail: { tour: true } } },
       });
-      if(!findUser) return null;
+      if (!findUser) return null;
       return findUser;
     } catch (e) {
       throw new Error(e);
     }
   }
-  async getFollowerTripRegistered(userId: string) {
+  async getFollowerTripRegisteredUser(userId: string) {
     const getFollowerTrip = await this.usersRepository.findByCondition({
       where: { id: userId },
       relations: { userRegisteredTours: true },
@@ -140,7 +141,7 @@ export class SellerService {
     if (!getFollowerTrip) return null;
     return getFollowerTrip;
   }
-  async getTrackUserRegisteredTour(userId: string) { //oke
+  async getTrackUserRegisteredTourStore(userId: string) {
     const findStore = await this.trackUserRegistered(userId);
     if (!findStore) return null;
     return findStore;

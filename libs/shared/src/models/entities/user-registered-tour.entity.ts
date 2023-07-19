@@ -1,9 +1,9 @@
 import {
+  Column,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -16,10 +16,11 @@ export class UserRegisteredTourEntity {
   id: string;
 
   @OneToOne(() => TourEntity, (tour) => tour.userRegisteredTour)
-  @JoinColumn()
+  @JoinColumn({ name: 'tourId' })
   tour: TourEntity;
-
-  @ManyToMany(() => UserEntity, (user) => user.userRegisteredTours)
+  @Column({ nullable: true })
+  tourId: string;
+  @ManyToMany(() => UserEntity, (users) => users.userRegisteredTours)
   @JoinTable()
   users: UserEntity[];
 }

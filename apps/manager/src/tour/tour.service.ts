@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {
   CartEntity,
   CartRepositoryInterface,
@@ -11,10 +11,10 @@ import {
   UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
-import { CartDto, NewTouristDTO, UpdateTouristDTO } from './dtos';
-import { AuthServiceInterface } from '../../../auth/src/interface/auth.service.interface';
-import { TourStatus } from '@app/shared/models/enum';
-import { SellerService } from '../seller/seller.service';
+import {BookingTourDto, CartDto, NewTouristDTO, UpdateTouristDTO,} from './dtos';
+import {AuthServiceInterface} from '../../../auth/src/interface/auth.service.interface';
+import {TourStatus} from '@app/shared/models/enum';
+import {SellerService} from '../seller/seller.service';
 
 @Injectable()
 export class TourService {
@@ -55,35 +55,19 @@ export class TourService {
     storeOfUserOwner,
   ): Promise<TourEntity> {
     try {
-      const {
-        name,
-        description,
-        price,
-        quantity,
-        address,
-        imageUrl,
-        startDate,
-        endDate,
-        lastRegisterDate,
-      } = newTourDTO;
-      if (quantity * price === 0 && startDate <= new Date(Date.now())) {
+      if (
+        newTourDTO.quantity * newTourDTO.price === 0 &&
+        newTourDTO.startDate >= new Date(Date.now())
+      ) {
         throw new Error('you can not create Tour');
       }
       const newTour = await this.tourRepository.save({
-        name,
-        description,
-        price,
-        quantity,
-        address,
-        imageUrl,
-        startDate,
-        endDate,
-        lastRegisterDate,
+        ...newTourDTO,
         store: storeOfUserOwner,
       });
       const findNewTour = await this.tourRepository.findOneById(newTour.id);
       await this.userRegisteredTourRepository.save({
-        tour: findNewTour,
+        tourId: findNewTour.id,
       });
       return newTour;
     } catch (e) {
@@ -117,9 +101,8 @@ export class TourService {
     }
   }
   async findCartDetailsByUser(user: Readonly<UserEntity>) {
-    return await this.cartRepository.findWithRelations({
-      relations: { tour: true, user: true },
-      where: [{ user: user }],
+    return await this.cartRepository.findByCondition({
+      relations: { user: true, tour: true },
     });
   }
   async findOneByTourId(id: string): Promise<TourEntity> {
@@ -139,71 +122,82 @@ export class TourService {
         return await this.cartRepository.save({
           tour: tour,
           user: user,
-          quantity: +cartDto.quantity,
         });
       } else {
         return await this.cartRepository.save({
           ...cartFromDb,
-          quantity: +cartDto.quantity,
         });
       }
     } catch (e) {
       throw new Error(e);
     }
   }
-
-  async checkout(user: Readonly<UserEntity>) {
+  async bookingTour(
+    tourId: string,
+    userId: string,
+    bookingTourDto: BookingTourDto,
+  ) {
     try {
-      const cartDetailOfUser = await this.findCartDetailsByUser(user);
-      const totalPriceEachTourInCart = cartDetailOfUser.map(
-        (item) => +item.quantity * +item.tour.price,
-      );
-      const sumAllPriceInCart = totalPriceEachTourInCart.reduce(
-        (a, b) => a + b,
-      );
-      const CreateOrderUser = await this.orderRepository.save({
-        totalPrice: +sumAllPriceInCart,
-        user: user,
+      const createOrder = await this.orderRepository.save({ userId: userId });
+      const findOrder = await this.orderRepository.findOneById(createOrder.id);
+      const findTourById = await this.findOneByTourId(tourId);
+      const findUserById = await this.authService.findById(userId);
+      const price: number = findTourById.price;
+      const createOrderDetail = await this.orderDetailRepository.save({
+        ...bookingTourDto,
+        orderId: findOrder.id,
+        tourId: tourId,
       });
-      for (const itemOfCart of cartDetailOfUser) {
-        if (itemOfCart.quantity > itemOfCart.tour.quantity) {
-          throw new Error('Not enough slot for this tour ');
-        }
-        await this.orderDetailRepository.save({
-          quantity: itemOfCart.quantity,
-          tour: itemOfCart.tour,
-          order: CreateOrderUser,
-        });
-        const findTour = await this.tourRepository.save({
-          ...itemOfCart.tour,
-          quantity: +itemOfCart.tour.quantity - +itemOfCart.quantity,
-        });
-        const findTourToUpdate = await this.findOneByTourId(findTour.id);
-        //update Status Of Tour
-        if (findTourToUpdate.quantity === 0) {
-          await this.tourRepository.save({
-            ...findTourToUpdate,
-            status: TourStatus.FULL,
-          });
-        }
-        const findUserRegisterTour =
-          await this.userRegisteredTourRepository.findByCondition({
-            relations: ['users', 'tour'],
-            where: { tour: { id: itemOfCart.tour.id } },
-          });
-        if (!findUserRegisterTour.users.includes(user)) {
-          await this.userRegisteredTourRepository.save({
-            ...findUserRegisterTour,
-            users: [...findUserRegisterTour.users, user],
-          });
-        }
-        await this.usedTourReviewRepository.save({
-          user: user,
-          tour: itemOfCart.tour,
+      const {
+        adultPassengers,
+        childPassengers,
+        toddlerPassengers,
+        infantPassengers,
+      } = createOrderDetail;
+      const totalPrice =
+        adultPassengers * price +
+        childPassengers * price +
+        toddlerPassengers * 0.7 * price;
+
+      const quantity =
+        adultPassengers +
+        childPassengers +
+        toddlerPassengers +
+        infantPassengers;
+      if (findTourById.quantity < quantity) throw new Error('Not Enough slot');
+      const updateQuantity = await this.tourRepository.save({
+        ...findTourById,
+        quantity: +findTourById.quantity - Number(quantity),
+      });
+      if (updateQuantity.quantity < 1) {
+        await this.tourRepository.save({
+          ...updateQuantity,
+          status: TourStatus.FULL,
         });
       }
-      await this.cartRepository.removeCondition({ where: [{ user }] });
-      return 'check out successes';
+      await this.orderRepository.save({
+        ...findOrder,
+        totalPrice: totalPrice,
+        orderDetailId: createOrderDetail.id,
+      });
+      await this.usedTourReviewRepository.save({ userId, tourId });
+      const findUserRegisteredTour =
+        await this.userRegisteredTourRepository.findByCondition({
+          where: { tourId },
+          relations: { users: true },
+        });
+      if (!findUserRegisteredTour.users.includes(findUserById)) {
+        await this.userRegisteredTourRepository.save({
+          users: [...findUserRegisteredTour.users, findUserById],
+        });
+      }
+      const findTourInCart = await this.cartRepository.findByCondition({
+        where: { tourId },
+      });
+      if (findTourInCart) {
+        await this.cartRepository.remove({ ...findTourInCart });
+      }
+      return 'booking success';
     } catch (e) {
       throw new Error(e);
     }

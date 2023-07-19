@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import {IsEmail, IsNotEmpty} from 'class-validator';
 
 export class NewTouristDTO {
   @IsNotEmpty()
@@ -18,6 +18,10 @@ export class NewTouristDTO {
   startDate: Date;
   @IsNotEmpty()
   endDate: Date;
+  @IsNotEmpty()
+  endingAddress: string;
+  @IsNotEmpty()
+  startAddress: string;
 }
 export class UpdateTouristDTO {
   name?: string;
@@ -25,14 +29,33 @@ export class UpdateTouristDTO {
   price?: number;
   quantity?: number;
   imageUrl?: string;
+  upVote?: number;
   lastRegisterDate?: Date;
   address?: string;
   startDate?: Date;
   endDate?: Date;
+  endingAddress?: string;
+  startAddress?: string;
 }
 export class CartDto {
   @IsNotEmpty()
   tourId: string;
+}
+export class BookingTourDto {
+  @IsEmail()
   @IsNotEmpty()
-  quantity: number;
+  email: string;
+  @IsNotEmpty()
+  firstName: string;
+  @IsNotEmpty()
+  fullName: string;
+  infantPassengers?: number;
+  toddlerPassengers?: number;
+  childPassengers?: number;
+  @IsNotEmpty()
+  adultPassengers: number;
+  @IsNotEmpty()
+  address: string;
+  @IsNotEmpty()
+  phone: string;
 }

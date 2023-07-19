@@ -28,7 +28,7 @@ import {
   OrderEntity,
   OrderDetailEntity,
   UserRegisteredTourEntity,
-  UsedTourReviewEntity,
+  UsedTourReviewEntity, CommentEntity,
 } from '@app/shared';
 
 @Module({
@@ -64,6 +64,7 @@ import {
       OrderDetailEntity,
       UserRegisteredTourEntity,
       UsedTourReviewEntity,
+      CommentEntity,
     ]),
     MailerModule.forRootAsync({
       imports: [ConfigModule],

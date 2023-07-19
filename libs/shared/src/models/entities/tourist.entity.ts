@@ -10,7 +10,7 @@ import {
 
 import { TourStatus } from '@app/shared/models/enum';
 import {
-  CartEntity,
+  CartEntity, CommentEntity,
   OrderDetailEntity,
   StoreEntity,
   UsedTourReviewEntity,
@@ -34,6 +34,12 @@ export class TourEntity {
   @Column()
   address: string;
 
+  @Column()
+  startAddress: string;
+
+  @Column()
+  endingAddress: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -45,6 +51,9 @@ export class TourEntity {
 
   @Column({ nullable: true })
   imageUrl: string;
+
+  @Column({ default: 0 })
+  upVote: number;
 
   @CreateDateColumn()
   lastRegisterDate: Date;
@@ -72,4 +81,7 @@ export class TourEntity {
 
   @OneToMany(() => UsedTourReviewEntity, (reviews) => reviews.tour)
   reviews: UsedTourReviewEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.tourist)
+  comments: CommentEntity[];
 }

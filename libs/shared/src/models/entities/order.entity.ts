@@ -1,9 +1,10 @@
 import {
   Column,
   CreateDateColumn,
-  Entity,
+  Entity, JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -14,15 +15,23 @@ export class OrderEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   totalPrice: number;
 
   @ManyToOne(() => UserEntity, (user) => user.orders)
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
+  @Column()
+  userId: string;
 
-  @OneToMany(() => OrderDetailEntity, (orderDetails) => orderDetails.order)
-  orderDetails: OrderDetailEntity[];
+  @OneToOne(() => OrderDetailEntity, (orderDetail) => orderDetail.order)
+  @JoinColumn({ name: 'orderDetailId' })
+  orderDetail: OrderDetailEntity;
+  @Column({ nullable: true })
+  orderDetailId: string;
+
+
 }

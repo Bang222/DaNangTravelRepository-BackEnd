@@ -19,7 +19,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import {
   CartEntity,
-  CartRepository,
+  CartRepository, CommentEntity,
   ConversationEntity,
   EmailVerifiedService,
   FriendRequestEntity,
@@ -94,6 +94,7 @@ import {
       UserRegisteredTourEntity,
       OrderDetailEntity,
       UsedTourReviewEntity,
+      CommentEntity,
     ]),
   ],
   controllers: [ManagerController],

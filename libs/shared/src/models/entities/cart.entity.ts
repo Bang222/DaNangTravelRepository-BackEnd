@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -15,15 +16,19 @@ export class CartEntity {
   @Column({ nullable: true, default: true })
   isActive: boolean;
 
-  @Column()
-  quantity: number;
-
   @CreateDateColumn({ nullable: true })
   CreateAt: Date;
 
   @ManyToOne(() => UserEntity, (user) => user.carts)
+  @JoinTable({ name: 'userId' })
   user: UserEntity;
 
+  @Column()
+  userId: string;
+
   @ManyToOne(() => TourEntity, (tour) => tour.carts)
+  @JoinTable({ name: 'tourId' })
   tour: TourEntity;
+  @Column({ nullable: true })
+  tourId: string;
 }

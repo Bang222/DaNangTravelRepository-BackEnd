@@ -80,8 +80,9 @@ export class UserEntity {
 
   @ManyToMany(
     () => UserRegisteredTourEntity,
-    (userRegisteredTour) => userRegisteredTour.users,
+    (userRegisteredTours) => userRegisteredTours.users,
   )
+  @JoinTable()
   userRegisteredTours: UserRegisteredTourEntity[];
   @OneToMany(
     () => FriendRequestEntity,

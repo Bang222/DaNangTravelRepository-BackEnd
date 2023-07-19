@@ -70,7 +70,7 @@ export class AuthService implements AuthServiceInterface {
   }
 
   async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
-    const { firstName, lastName, email, password, sex,address } = newUser;
+    const { firstName, lastName, email, password, sex, address } = newUser;
     // console.log(firstName);
 
     const existingUser = await this.findByEmail(email);
@@ -126,7 +126,7 @@ export class AuthService implements AuthServiceInterface {
       if (!user) throw new UnauthorizedException('Please Register Broo!!');
       delete user.password;
       const jwt = await this.jwtService.signAsync({ user });
-
+      // res.cookie('token', jwt, { httpOnly: true });
       return { token: jwt, user };
     } catch (err) {
       throw new UnauthorizedException(err);

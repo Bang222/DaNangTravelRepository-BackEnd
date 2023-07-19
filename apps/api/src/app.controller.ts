@@ -8,20 +8,27 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import {ClientProxy} from '@nestjs/microservices';
-import {ExistingUserDTO, NewUserDTO} from '../../auth/src/dto';
-import {AuthGuard, UserRequest} from '@app/shared';
-import {UserInterceptor} from '@app/shared/interceptors/user.interceptor';
-import {Roles} from '../../auth/src/decorator/roles.decorator';
-import {Role} from '@app/shared/models/enum';
-import {UseRoleGuard} from '../../auth/src/guard/role.guard';
-import {CartDto, NewTouristDTO, UpdateTouristDTO} from '../../manager/src/tour/dtos';
-import {NewStoreDTO} from '../../manager/src/seller/dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
+import { AuthGuard, UserRequest } from '@app/shared';
+import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
+import { Roles } from '../../auth/src/decorator/roles.decorator';
+import { Role } from '@app/shared/models/enum';
+import { UseRoleGuard } from '../../auth/src/guard/role.guard';
+import {
+  BookingTourDto,
+  CartDto,
+  NewTouristDTO,
+  UpdateTouristDTO,
+} from '../../manager/src/tour/dtos';
+import { NewStoreDTO } from '../../manager/src/seller/dto';
+import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interceptor';
 
 @Controller()
 export class AppController {
@@ -32,14 +39,70 @@ export class AppController {
   ) {}
 
   // MANAGER----------------------------------------
+  @Get('user/track-trip')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER)
+  @UseInterceptors(UserInterceptor)
+  async getFollowerTripRegisteredUser(@Req() req: UserRequest) {
+    return this.managerService.send(
+      { cmd: 'get-follower-user' },
+      { userId: req.user?.id },
+    );
+  }
+  @Post('booking/:id')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER)
+  @UseInterceptors(UserInterceptor)
+  async bookingTour(
+    @Req() req: UserRequest,
+    @Param('id') tourId: string,
+    @Body() bookingTourDto: BookingTourDto,
+  ) {
+    return this.managerService.send(
+      { cmd: 'booking-tour' },
+      { ...bookingTourDto, tourId: tourId, userId: req.user?.id },
+    );
+  }
+
+  @Get('store/user-registered')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER, Role.PREMIUM)
+  @UseInterceptors(UserInterceptor)
+  async getTrackUserRegisteredTourStore(@Req() req: UserRequest) {
+    return this.managerService.send(
+      { cmd: 'track-user-registered-trip' },
+      { userId: req.user?.id },
+    );
+  }
+
+  @Get('user/order-history')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER)
+  @UseInterceptors(UserInterceptor)
+  async getBillUser(@Req() req: UserRequest) {
+    return this.managerService.send(
+      { cmd: 'get-bill-user' },
+      { userId: req.user?.id },
+    );
+  }
+  @Get('store/bill')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER, Role.PREMIUM)
+  @UseInterceptors(UserInterceptor)
+  async getBillStore(@Req() req: UserRequest) {
+    return this.managerService.send(
+      { cmd: 'bill-store' },
+      { userId: req.user?.id },
+    );
+  }
   @UseGuards(AuthGuard)
   @UseInterceptors(UserInterceptor)
   @Post('cart')
   async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
-    const { tourId, quantity } = newCartDTO;
+    const { tourId } = newCartDTO;
     return this.managerService.send(
       { cmd: 'create-cart' },
-      { tourId, quantity, userId: req.user?.id },
+      { tourId, userId: req.user?.id },
     );
   }
 
@@ -81,8 +144,10 @@ export class AppController {
       startDate,
       endDate,
       lastRegisterDate,
+      startAddress,
+      endingAddress,
+      upVote,
     } = updateTouristDto;
-    // console.log('updateTouristDto: ', updateTouristDto.address);
     return this.managerService.send(
       { cmd: 'update-tour' },
       {
@@ -96,6 +161,9 @@ export class AppController {
         endDate,
         lastRegisterDate,
         tourId,
+        startAddress,
+        endingAddress,
+        upVote,
         userId: req?.user.id,
       },
     );
@@ -122,6 +190,8 @@ export class AppController {
       startDate,
       endDate,
       lastRegisterDate,
+      startAddress,
+      endingAddress,
     } = newTouristDTO;
     return this.managerService.send(
       { cmd: 'create-tour' },
@@ -135,6 +205,8 @@ export class AppController {
         startDate,
         endDate,
         lastRegisterDate,
+        startAddress,
+        endingAddress,
         userId: req.user?.id,
       },
     );
@@ -180,16 +252,6 @@ export class AppController {
       {},
     );
   }
-  @Get('manager')
-  @UseGuards(AuthGuard, UseRoleGuard)
-  // @Roles(Role.SELLER, Role.PREMIUM)
-  @UseInterceptors(UserInterceptor)
-  async getManagerHello(@Req() req: UserRequest) {
-    return this.managerService.send(
-      { cmd: 'bill-store' },
-      { userId: req.user?.id },
-    );
-  }
   @UseGuards(AuthGuard)
   @Post('auth')
   async postUser() {
@@ -211,6 +273,7 @@ export class AppController {
       },
     );
   }
+  @UseInterceptors(CookieResInterceptor)
   @Post('auth/login')
   async login(@Body() existingUserDTO: ExistingUserDTO) {
     const { email, password } = existingUserDTO;

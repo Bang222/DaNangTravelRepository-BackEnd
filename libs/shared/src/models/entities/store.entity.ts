@@ -24,8 +24,11 @@ export class StoreEntity {
   isActive: StoreStatus;
 
   @OneToOne(() => UserEntity, (user) => user.store) // specify inverse side as a second parameter
-  @JoinColumn()
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
+
+  @Column()
+  userId: string;
 
   @OneToMany(() => TourEntity, (tours) => tours.store) // specify inverse side as a second parameter
   tours: TourEntity[];
