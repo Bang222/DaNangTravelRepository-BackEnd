@@ -10,20 +10,16 @@ import { ManagerController } from './manager.controller';
 import { SellerService } from './seller/seller.service';
 import { TourService } from './tour/tour.service';
 import { ManagerService } from './manager.service';
-import { AuthService } from '../../auth/src/auth.service';
 
 import { CacheModule } from '@nestjs/cache-manager';
-import { JwtStrategy } from '../../auth/src/strategy/jwt-strategy';
-import { UseRoleGuard } from '../../auth/src/guard/role.guard';
-import { JwtModule } from '@nestjs/jwt';
 
 import {
   CartEntity,
-  CartRepository, CommentEntity,
+  CartRepository,
+  CommentEntity,
+  CommentRepository,
   ConversationEntity,
-  EmailVerifiedService,
   FriendRequestEntity,
-  FriendRequestRepository,
   MessageEntity,
   OrderDetailEntity,
   OrderDetailRepository,
@@ -37,11 +33,11 @@ import {
   StoreRepository,
   TourEntity,
   TourRepository,
-  UsedTourReviewEntity,
-  UsedTourReviewRepository,
+  ShareExperienceEntity,
+  ShareExperience,
   UserEntity,
   UserRegisteredTourEntity,
-  UserRegisteredTourRepository,
+  UserRegisteredTour,
   UsersRepository,
 } from '@app/shared';
 
@@ -57,14 +53,6 @@ import {
     PostgresdbModule,
     RedisModule,
     CacheModule.register(),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '3600s' },
-      }),
-      inject: [ConfigService],
-    }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -93,29 +81,23 @@ import {
       CartEntity,
       UserRegisteredTourEntity,
       OrderDetailEntity,
-      UsedTourReviewEntity,
+      ShareExperienceEntity,
       CommentEntity,
     ]),
   ],
   controllers: [ManagerController],
   providers: [
     ManagerService,
-    JwtStrategy,
     TourService,
     SellerService,
-    UseRoleGuard,
     {
       provide: 'TourRepositoryInterface',
       useClass: TourRepository,
     },
-    {
-      provide: 'EmailServiceInterface',
-      useClass: EmailVerifiedService,
-    },
-    {
-      provide: 'AuthServiceInterface',
-      useClass: AuthService,
-    },
+    // {
+    //   provide: 'EmailServiceInterface',
+    //   useClass: EmailVerifiedService,
+    // },
     {
       provide: 'UsersRepositoryInterface',
       useClass: UsersRepository,
@@ -123,10 +105,6 @@ import {
     {
       provide: 'SharedServiceInterface',
       useClass: SharedService,
-    },
-    {
-      provide: 'FriendRequestRepositoryInterface',
-      useClass: FriendRequestRepository,
     },
     {
       provide: 'StoreRepositoryInterface',
@@ -138,7 +116,7 @@ import {
     },
     {
       provide: 'UserRegisteredTourRepositoryInterface',
-      useClass: UserRegisteredTourRepository,
+      useClass: UserRegisteredTour,
     },
     {
       provide: 'OrderDetailRepositoryInterface',
@@ -149,8 +127,12 @@ import {
       useClass: OrderRepository,
     },
     {
-      provide: 'UsedTourReviewRepositoryInterface',
-      useClass: UsedTourReviewRepository,
+      provide: 'ShareExperienceRepositoryInterface',
+      useClass: ShareExperience,
+    },
+    {
+      provide: 'CommentRepositoryInterface',
+      useClass: CommentRepository,
     },
   ],
 })

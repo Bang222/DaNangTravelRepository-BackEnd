@@ -4,7 +4,6 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -13,12 +12,13 @@ import { Role } from '@app/shared/models/enum/role.enum';
 
 import {
   CartEntity,
+  CommentEntity,
   ConversationEntity,
   FriendRequestEntity,
   MessageEntity,
   OrderEntity,
   StoreEntity,
-  UsedTourReviewEntity,
+  ShareExperienceEntity,
   UserRegisteredTourEntity,
 } from '@app/shared';
 
@@ -75,8 +75,11 @@ export class UserEntity {
   @OneToMany(() => OrderEntity, (orders) => orders.user)
   orders: OrderEntity[];
 
-  @OneToMany(() => UsedTourReviewEntity, (reviews) => reviews.user)
-  reviews: UsedTourReviewEntity[];
+  @OneToMany(() => ShareExperienceEntity, (reviews) => reviews.user)
+  reviews: ShareExperienceEntity[];
+
+  @OneToMany(() => CommentEntity, (comments) => comments.user)
+  comments: CommentEntity[];
 
   @ManyToMany(
     () => UserRegisteredTourEntity,

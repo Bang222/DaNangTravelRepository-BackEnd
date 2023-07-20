@@ -1,7 +1,8 @@
 import {
   Column,
   CreateDateColumn,
-  Entity, JoinColumn,
+  Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -32,6 +33,4 @@ export class OrderEntity {
   orderDetail: OrderDetailEntity;
   @Column({ nullable: true })
   orderDetailId: string;
-
-
 }

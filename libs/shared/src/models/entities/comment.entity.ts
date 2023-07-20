@@ -6,8 +6,9 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
-import { TourEntity, UsedTourReviewEntity } from '@app/shared';
+import { TourEntity, ShareExperienceEntity, UserEntity } from '@app/shared';
 
 @Entity()
 export class CommentEntity {
@@ -17,22 +18,30 @@ export class CommentEntity {
   @Column()
   content: string;
 
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
+
+  @ManyToOne(() => UserEntity, (user) => user.comments, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user: UserEntity;
+  @Column()
+  userId: string;
 
   @ManyToOne(() => TourEntity, (tourist) => tourist.comments, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'touristId' })
+  @JoinColumn({ name: 'tourId' })
   tourist: TourEntity;
   @Column({ nullable: true })
-  touristId: string;
+  tourId: string;
 
-  @ManyToOne(() => UsedTourReviewEntity, (review) => review.comments, {
+  @ManyToOne(() => ShareExperienceEntity, (experience) => experience.comments, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'reviewId' })
-  review: UsedTourReviewEntity;
+  @JoinColumn({ name: 'experienceId' })
+  experience: ShareExperienceEntity;
   @Column({ nullable: true })
-  reviewId: string;
+  experienceId: string;
 }

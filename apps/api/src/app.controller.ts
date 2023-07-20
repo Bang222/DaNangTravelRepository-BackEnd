@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   Req,
-  Res,
   UseGuards,
   UseInterceptors,
   UsePipes,
@@ -24,7 +23,10 @@ import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 import {
   BookingTourDto,
   CartDto,
+  CreateExperienceDto,
+  ExperienceCommentDto,
   NewTouristDTO,
+  TourCommentDto,
   UpdateTouristDTO,
 } from '../../manager/src/tour/dtos';
 import { NewStoreDTO } from '../../manager/src/seller/dto';
@@ -39,6 +41,74 @@ export class AppController {
   ) {}
 
   // MANAGER----------------------------------------
+  @Post('experience/create/comment')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async createCommentExperience(
+    @Req() req: UserRequest,
+    @Body() experienceCommentDto: ExperienceCommentDto,
+  ) {
+    return this.managerService.send(
+      { cmd: 'create-comment-experience' },
+      { userId: req.user?.id, ...experienceCommentDto },
+    );
+  }
+  @Post('tour/create/comment')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async createCommentTour(
+    @Req() req: UserRequest,
+    @Body() tourCommentDto: TourCommentDto,
+  ) {
+    return this.managerService.send(
+      { cmd: 'create-comment-tour' },
+      { userId: req.user?.id, ...tourCommentDto },
+    );
+  }
+  @Post('experience/create')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async createReview(
+    @Req() req: UserRequest,
+    @Body() createExperienceDto: CreateExperienceDto,
+  ) {
+    const { content, anonymous } = createExperienceDto;
+    return this.managerService.send(
+      { cmd: 'create-content-experience' },
+      { userId: req.user?.id, content, anonymous },
+    );
+  }
+  @Get('experience/all')
+  async getReview() {
+    return this.managerService.send({ cmd: 'get-experience' }, {});
+  }
+
+  @Post('tour/upvote')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async upvoteOfTour(@Req() req: UserRequest, @Body('tourId') tourId: string) {
+    return this.managerService.send(
+      { cmd: 'upvote-tour' },
+      { userId: req?.user.id, tourId },
+    );
+  }
+  @Post('experience/upvote')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async upvoteOfReview(
+    @Req() req: UserRequest,
+    @Body('experienceId') experienceId: string,
+  ) {
+    return this.managerService.send(
+      { cmd: 'upvote-experience' },
+      { userId: req?.user.id, experienceId },
+    );
+  }
   @Get('user/track-trip')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER)
@@ -121,9 +191,15 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.SELLER)
-  @Get('checkout')
-  async checkOut(@Req() req: UserRequest) {
-    return this.managerService.send({ cmd: 'check-out' }, { user: req?.user });
+  @Get('create-content-experience')
+  async createContentExperienceOfUser(
+    @Req() req: UserRequest,
+    @Body() content: string,
+  ) {
+    return this.managerService.send(
+      { cmd: 'create-content-experience' },
+      { userId: req.user?.id, content },
+    );
   }
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
@@ -146,7 +222,6 @@ export class AppController {
       lastRegisterDate,
       startAddress,
       endingAddress,
-      upVote,
     } = updateTouristDto;
     return this.managerService.send(
       { cmd: 'update-tour' },
@@ -163,7 +238,6 @@ export class AppController {
         tourId,
         startAddress,
         endingAddress,
-        upVote,
         userId: req?.user.id,
       },
     );
@@ -316,6 +390,7 @@ export class AppController {
       { jwt },
     );
   }
+
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Post('store/create')

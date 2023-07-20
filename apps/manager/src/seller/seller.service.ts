@@ -6,14 +6,13 @@ import {
   StoreEntity,
   StoreRepositoryInterface,
   TourRepositoryInterface,
-  UsedTourReviewRepositoryInterface,
+  ShareExperienceRepositoryInterface,
   UserEntity,
   UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
 import { NewStoreDTO } from './dto';
 import { Role } from '@app/shared/models/enum';
-import { AuthServiceInterface } from '../../../auth/src/interface/auth.service.interface';
 
 @Injectable()
 export class SellerService {
@@ -26,16 +25,14 @@ export class SellerService {
     private readonly tourRepository: TourRepositoryInterface,
     @Inject('CartRepositoryInterface')
     private readonly cartRepository: CartRepositoryInterface,
-    @Inject('UsedTourReviewRepositoryInterface')
-    private readonly usedTourReviewRepository: UsedTourReviewRepositoryInterface,
+    @Inject('ShareExperienceRepositoryInterface')
+    private readonly usedTourReviewRepository: ShareExperienceRepositoryInterface,
     @Inject('UserRegisteredTourRepositoryInterface')
     private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')
     private readonly orderRepository: OrderRepositoryInterface,
-    @Inject('AuthServiceInterface')
-    private readonly authService: AuthServiceInterface,
   ) {}
   async findAllStore() {
     return await this.storeRepository.findWithRelations({
@@ -95,7 +92,7 @@ export class SellerService {
     if (!OwnerDetail) return null;
     return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
-      relations: { tours: { orderDetails: { order: { user: true } } } },
+      relations: { tours: { orderDetails: { order: true } } },
     });
   }
   async getUserRegisteredTour(tourId: string) {
@@ -116,7 +113,7 @@ export class SellerService {
     try {
       const getTourOfStore = await this.selectBillOfStore(userId);
       if (!getTourOfStore) return null;
-      return getTourOfStore.tours;
+      return getTourOfStore.tours.map((item) => item.orderDetails);
     } catch (e) {
       throw new Error(e);
     }
@@ -128,7 +125,7 @@ export class SellerService {
         relations: { orders: { orderDetail: { tour: true } } },
       });
       if (!findUser) return null;
-      return findUser;
+      return findUser.orders;
     } catch (e) {
       throw new Error(e);
     }

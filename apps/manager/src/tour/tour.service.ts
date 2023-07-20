@@ -1,20 +1,33 @@
-import {Inject, Injectable} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+
 import {
   CartEntity,
   CartRepositoryInterface,
+  CommentEntity,
+  CommentRepositoryInterface,
   OrderDetailRepositoryInterface,
   OrderRepositoryInterface,
   TourEntity,
   TourRepositoryInterface,
-  UsedTourReviewRepositoryInterface,
+  ShareExperienceRepositoryInterface,
   UserEntity,
   UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
+  ShareExperienceEntity,
 } from '@app/shared';
-import {BookingTourDto, CartDto, NewTouristDTO, UpdateTouristDTO,} from './dtos';
-import {AuthServiceInterface} from '../../../auth/src/interface/auth.service.interface';
-import {TourStatus} from '@app/shared/models/enum';
-import {SellerService} from '../seller/seller.service';
+
+import {
+  BookingTourDto,
+  CartDto,
+  CreateExperienceDto,
+  ExperienceCommentDto,
+  NewTouristDTO,
+  TourCommentDto,
+  UpdateTouristDTO,
+} from './dtos';
+
+import { TourStatus } from '@app/shared/models/enum';
+import { SellerService } from '../seller/seller.service';
 
 @Injectable()
 export class TourService {
@@ -25,16 +38,16 @@ export class TourService {
     private readonly tourRepository: TourRepositoryInterface,
     @Inject('CartRepositoryInterface')
     private readonly cartRepository: CartRepositoryInterface,
-    @Inject('UsedTourReviewRepositoryInterface')
-    private readonly usedTourReviewRepository: UsedTourReviewRepositoryInterface,
+    @Inject('ShareExperienceRepositoryInterface')
+    private readonly usedTourExperienceOfUserRepository: ShareExperienceRepositoryInterface,
     @Inject('UserRegisteredTourRepositoryInterface')
     private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')
     private readonly orderRepository: OrderRepositoryInterface,
-    @Inject('AuthServiceInterface')
-    private readonly authService: AuthServiceInterface,
+    @Inject('CommentRepositoryInterface')
+    private readonly commentRepository: CommentRepositoryInterface,
     private readonly sellerService: SellerService,
   ) {}
   async tourHello(id: number) {
@@ -44,6 +57,7 @@ export class TourService {
   async getAllTours(): Promise<TourEntity[]> {
     return await this.tourRepository.findAll({
       order: { createdAt: 'DESC' },
+      relations: { comments: { user: true } },
       cache: true,
     });
   }
@@ -67,7 +81,7 @@ export class TourService {
       });
       const findNewTour = await this.tourRepository.findOneById(newTour.id);
       await this.userRegisteredTourRepository.save({
-        tourId: findNewTour.id,
+        tour: findNewTour,
       });
       return newTour;
     } catch (e) {
@@ -100,11 +114,7 @@ export class TourService {
       throw new Error(e);
     }
   }
-  async findCartDetailsByUser(user: Readonly<UserEntity>) {
-    return await this.cartRepository.findByCondition({
-      relations: { user: true, tour: true },
-    });
-  }
+
   async findOneByTourId(id: string): Promise<TourEntity> {
     return await this.tourRepository.findOneById(id);
   }
@@ -141,7 +151,7 @@ export class TourService {
       const createOrder = await this.orderRepository.save({ userId: userId });
       const findOrder = await this.orderRepository.findOneById(createOrder.id);
       const findTourById = await this.findOneByTourId(tourId);
-      const findUserById = await this.authService.findById(userId);
+      const findUserById = await this.usersRepository.findOneById(userId);
       const price: number = findTourById.price;
       const createOrderDetail = await this.orderDetailRepository.save({
         ...bookingTourDto,
@@ -180,7 +190,6 @@ export class TourService {
         totalPrice: totalPrice,
         orderDetailId: createOrderDetail.id,
       });
-      await this.usedTourReviewRepository.save({ userId, tourId });
       const findUserRegisteredTour =
         await this.userRegisteredTourRepository.findByCondition({
           where: { tourId },
@@ -188,6 +197,7 @@ export class TourService {
         });
       if (!findUserRegisteredTour.users.includes(findUserById)) {
         await this.userRegisteredTourRepository.save({
+          ...findUserRegisteredTour,
           users: [...findUserRegisteredTour.users, findUserById],
         });
       }
@@ -198,6 +208,106 @@ export class TourService {
         await this.cartRepository.remove({ ...findTourInCart });
       }
       return 'booking success';
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async createContentExperienceOfUser(
+    userId: string,
+    createExperienceDto: CreateExperienceDto,
+  ): Promise<ShareExperienceEntity> {
+    try {
+      return await this.usedTourExperienceOfUserRepository.save({
+        ...createExperienceDto,
+        anonymous: Boolean(createExperienceDto.anonymous),
+        userId,
+      });
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async createCommentOfTour(
+    userId: string,
+    tourCommentDto: TourCommentDto,
+  ): Promise<CommentEntity> {
+    try {
+      return await this.commentRepository.save({
+        ...tourCommentDto,
+        userId,
+      });
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async createCommentOfExperienceOfUser(
+    userId: string,
+    experienceCommentDto: ExperienceCommentDto,
+  ): Promise<CommentEntity> {
+    try {
+      return await this.commentRepository.save({
+        ...experienceCommentDto,
+        userId,
+      });
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async getExperienceOfUser() {
+    try {
+      const findExperienceOfUser =
+        await this.usedTourExperienceOfUserRepository.findAll({
+          relations: { comments: { user: true }, user: true },
+        });
+      return findExperienceOfUser;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+  async upvoteOfTour(userId: string, tourId: string) {
+    const findTourById = await this.findOneByTourId(tourId);
+    if (findTourById.upVote.includes(userId)) {
+      const updateUpVoteExistUserId = findTourById.upVote.filter(
+        (item) => item !== userId,
+      );
+      return (
+        (
+          await this.tourRepository.save({
+            ...findTourById,
+            upVote: [...updateUpVoteExistUserId],
+          })
+        ).upVote.length - 1
+      );
+    } else {
+      const updateUpvoteExistUser = await this.tourRepository.save({
+        ...findTourById,
+        upVote: [...findTourById.upVote, userId],
+      });
+      return updateUpvoteExistUser.upVote.length - 1;
+    }
+  }
+  async upvoteOfExperienceOfUser(userId: string, experienceId: string) {
+    try {
+      const findExperienceOfUserById =
+        await this.usedTourExperienceOfUserRepository.findOneById(experienceId);
+      console.log(findExperienceOfUserById.upVote.includes(userId));
+      if (findExperienceOfUserById.upVote.includes(userId)) {
+        const updateUpVoteExistUserId = findExperienceOfUserById.upVote.filter(
+          (item) => item !== userId,
+        );
+        const totalUpvote = await this.usedTourExperienceOfUserRepository.save({
+          ...findExperienceOfUserById,
+          upVote: [...updateUpVoteExistUserId],
+        });
+        return totalUpvote.upVote.length - 1;
+      } else {
+        const updateUpvote = await this.usedTourExperienceOfUserRepository.save(
+          {
+            ...findExperienceOfUserById,
+            upVote: [...findExperienceOfUserById.upVote, userId],
+          },
+        );
+        return updateUpvote.upVote.length - 1;
+      }
     } catch (e) {
       throw new Error(e);
     }

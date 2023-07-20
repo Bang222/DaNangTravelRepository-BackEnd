@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, UseInterceptors } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { ManagerService } from './manager.service';
 import { RedisCacheService, SharedServiceInterface } from '@app/shared';
 import {
@@ -7,34 +7,29 @@ import {
   Payload,
   RmqContext,
 } from '@nestjs/microservices';
-import { CacheInterceptor } from '@nestjs/cache-manager';
 import { TourService } from './tour/tour.service';
 import {
   BookingTourDto,
   CartDto,
+  CreateExperienceDto,
+  ExperienceCommentDto,
   NewTouristDTO,
+  TourCommentDto,
   UpdateTouristDTO,
 } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
-import { AuthServiceInterface } from '../../auth/src/interface/auth.service.interface';
 
-@Controller('manager')
+@Controller()
 export class ManagerController {
   constructor(
     private readonly managerService: ManagerService,
     private readonly redisService: RedisCacheService,
     @Inject('SharedServiceInterface')
     private readonly sharedService: SharedServiceInterface,
-    @Inject('AuthServiceInterface')
-    private readonly authService: AuthServiceInterface,
     private readonly tourService: TourService,
     private readonly sellerService: SellerService,
   ) {}
-  @Get('hello')
-  async hello() {
-    return this.managerService.getHello();
-  }
   //tourService--------------------------
   @MessagePattern({ cmd: 'tour' })
   async tourHello(
@@ -78,11 +73,19 @@ export class ManagerController {
     const user = await this.managerService.findUserById(payload.userId);
     return await this.tourService.createCart(newCartDTO, user);
   }
-  // @MessagePattern({ cmd: 'check-out' })
-  // async checkout(@Ctx() context: RmqContext, @Payload() payload: { user }) {
-  //   this.sharedService.acknowledgeMessage(context);
-  //   return await this.tourService.checkout(payload.user);
-  // }
+  @MessagePattern({ cmd: 'create-content-experience' })
+  async createContentExperienceOfUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+    @Payload() createExperienceDto: CreateExperienceDto,
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const { userId } = payload;
+    return await this.tourService.createContentExperienceOfUser(
+      userId,
+      createExperienceDto,
+    );
+  }
   @MessagePattern({ cmd: 'update-tour' })
   async updateTourist(
     @Ctx() context: RmqContext,
@@ -104,6 +107,66 @@ export class ManagerController {
     const { userId, tourId } = payload;
     return this.tourService.bookingTour(tourId, userId, bookingTourDto);
   }
+  @MessagePattern({ cmd: 'create-comment-tour' })
+  async createCommentTour(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+    @Payload() tourCommentDto: TourCommentDto,
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    console.log(tourCommentDto.content);
+    return this.tourService.createCommentOfTour(payload.userId, tourCommentDto);
+  }
+
+  @MessagePattern({ cmd: 'create-comment-experience' })
+  async createCommentExperienceOfUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+    @Payload() experienceCommentDto: ExperienceCommentDto,
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const { userId } = payload;
+    return this.tourService.createCommentOfExperienceOfUser(
+      userId,
+      experienceCommentDto,
+    );
+  }
+
+  @MessagePattern({ cmd: 'get-experience' })
+  async getExperienceOfUser(@Ctx() context: RmqContext) {
+    this.sharedService.acknowledgeMessage(context);
+    const getExperienceOfUserCache = await this.redisService.get(
+      'getExperienceOfUserCache',
+    );
+    if (getExperienceOfUserCache) {
+      return getExperienceOfUserCache;
+    }
+    const getExperienceOfUser = await this.tourService.getExperienceOfUser();
+    await this.redisService.set(
+      'getExperienceOfUserCache',
+      getExperienceOfUser,
+    );
+    return getExperienceOfUser;
+  }
+  @MessagePattern({ cmd: 'upvote-tour' })
+  async upvoteOfTour(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string; tourId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.tourService.upvoteOfTour(payload.userId, payload.tourId);
+  }
+
+  @MessagePattern({ cmd: 'upvote-experience' })
+  async upvoteOfExperienceOfUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string; experienceId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    const { userId, experienceId } = payload;
+    return this.tourService.upvoteOfExperienceOfUser(userId, experienceId);
+  }
+
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {
   //   this.sharedService.acknowledgeMessage(context);
@@ -118,6 +181,7 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     const user = await this.managerService.findUserById(payload.userId);
+    console.log(user);
     return this.sellerService.createStore(newStoreDTO, user);
   }
   @MessagePattern({ cmd: 'get-tour-to-Store' })
@@ -127,7 +191,6 @@ export class ManagerController {
   ) {
     const getTourOfStore = await this.redisService.get('getTourOfStore');
     if (getTourOfStore) {
-      console.log('Cache');
       return getTourOfStore;
     }
     const tour = await this.sellerService.getTourEachStore(payload.userId);

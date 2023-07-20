@@ -32,7 +32,7 @@ export class CookieResInterceptor<T>
     const response = context.switchToHttp().getResponse();
     return next.handle().pipe(
       switchMap((data) => {
-        response.cookie('token', data.token, { httpOnly: true });
+        response.cookie('token', data?.token, { httpOnly: true });
         return of(data);
       }),
       catchError(() => {

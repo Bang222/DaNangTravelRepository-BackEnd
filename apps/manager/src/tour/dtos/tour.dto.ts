@@ -1,4 +1,4 @@
-import {IsEmail, IsNotEmpty} from 'class-validator';
+import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class NewTouristDTO {
   @IsNotEmpty()
@@ -29,7 +29,6 @@ export class UpdateTouristDTO {
   price?: number;
   quantity?: number;
   imageUrl?: string;
-  upVote?: number;
   lastRegisterDate?: Date;
   address?: string;
   startDate?: Date;
@@ -58,4 +57,21 @@ export class BookingTourDto {
   address: string;
   @IsNotEmpty()
   phone: string;
+}
+export class TourCommentDto {
+  @IsNotEmpty()
+  tourId: string;
+  @IsNotEmpty()
+  content: string;
+}
+export class ExperienceCommentDto {
+  @IsNotEmpty()
+  experienceId: string;
+  @IsNotEmpty()
+  content: string;
+}
+export class CreateExperienceDto {
+  @IsNotEmpty()
+  content: string;
+  anonymous?: boolean;
 }

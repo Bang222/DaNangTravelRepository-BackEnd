@@ -9,7 +9,7 @@ import {
 } from '@app/shared';
 
 @Injectable()
-export class UserRegisteredTourRepository
+export class UserRegisteredTour
   extends BaseAbstractRepository<UserRegisteredTourEntity>
   implements UserRegisteredTourRepositoryInterface
 {
