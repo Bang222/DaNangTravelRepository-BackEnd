@@ -1,4 +1,5 @@
 import {
+  AfterInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -14,7 +15,6 @@ import {
   CommentEntity,
   OrderDetailEntity,
   StoreEntity,
-  ShareExperienceEntity,
   UserRegisteredTourEntity,
 } from '@app/shared';
 
@@ -82,4 +82,10 @@ export class TourEntity {
 
   @OneToMany(() => CommentEntity, (comment) => comment.tourist)
   comments: CommentEntity[];
+
+  // @AfterInsert()
+  // async queueTaskAfterInsert() {
+  //   // Here, you can queue the task using the Queue instance you injected in the service
+  //   await this.queue.add('find-all', this); // Assuming you have a Bull queue named 'process_task'
+  // }
 }

@@ -74,6 +74,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/post/tsconfig.app.json"
       }
+    },
+    "third-party-service": {
+      "type": "application",
+      "root": "apps/third-party-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/third-party-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/third-party-service/tsconfig.app.json"
+      }
     }
   }
 }

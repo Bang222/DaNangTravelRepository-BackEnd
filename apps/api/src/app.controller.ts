@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
   UsePipes,
@@ -36,8 +37,14 @@ import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interc
 export class AppController {
   constructor(
     @Inject('AUTH_SERVICE') private authService: ClientProxy,
-    @Inject('PRESENCE_SERVICE') private presenceService: ClientProxy,
     @Inject('MANAGER_SERVICE') private managerService: ClientProxy,
+    @Inject('MAIL_SERVICE') private emailService: ClientProxy,
+    @Inject('SHARE_SERVICE')
+    private socialSharingService: ClientProxy,
+    @Inject('PAYMENT_SERVICE')
+    private paymentService: ClientProxy,
+    @Inject('TOUR_SERVICE')
+    private tourService: ClientProxy,
   ) {}
 
   // MANAGER----------------------------------------
@@ -76,14 +83,14 @@ export class AppController {
     @Body() createExperienceDto: CreateExperienceDto,
   ) {
     const { content, anonymous } = createExperienceDto;
-    return this.managerService.send(
-      { cmd: 'create-content-experience' },
+    return this.tourService.send(
+      { tour: 'create-content-experience' },
       { userId: req.user?.id, content, anonymous },
     );
   }
   @Get('experience/all')
   async getReview() {
-    return this.managerService.send({ cmd: 'get-experience' }, {});
+    return this.tourService.send({ tour: 'get-experience' }, {});
   }
 
   @Post('tour/upvote')
@@ -91,8 +98,8 @@ export class AppController {
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
   @UseInterceptors(UserInterceptor)
   async upvoteOfTour(@Req() req: UserRequest, @Body('tourId') tourId: string) {
-    return this.managerService.send(
-      { cmd: 'upvote-tour' },
+    return this.tourService.send(
+      { tour: 'upvote-tour' },
       { userId: req?.user.id, tourId },
     );
   }
@@ -104,8 +111,8 @@ export class AppController {
     @Req() req: UserRequest,
     @Body('experienceId') experienceId: string,
   ) {
-    return this.managerService.send(
-      { cmd: 'upvote-experience' },
+    return this.tourService.send(
+      { tour: 'upvote-experience' },
       { userId: req?.user.id, experienceId },
     );
   }
@@ -115,7 +122,7 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   async getFollowerTripRegisteredUser(@Req() req: UserRequest) {
     return this.managerService.send(
-      { cmd: 'get-follower-user' },
+      { manager: 'get-follower-user' },
       { userId: req.user?.id },
     );
   }
@@ -140,7 +147,7 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   async getTrackUserRegisteredTourStore(@Req() req: UserRequest) {
     return this.managerService.send(
-      { cmd: 'track-user-registered-trip' },
+      { manager: 'track-user-registered-trip' },
       { userId: req.user?.id },
     );
   }
@@ -151,7 +158,7 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   async getBillUser(@Req() req: UserRequest) {
     return this.managerService.send(
-      { cmd: 'get-bill-user' },
+      { manager: 'get-bill-user' },
       { userId: req.user?.id },
     );
   }
@@ -161,7 +168,7 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   async getBillStore(@Req() req: UserRequest) {
     return this.managerService.send(
-      { cmd: 'bill-store' },
+      { manager: 'bill-store' },
       { userId: req.user?.id },
     );
   }
@@ -170,8 +177,8 @@ export class AppController {
   @Post('cart')
   async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
     const { tourId } = newCartDTO;
-    return this.managerService.send(
-      { cmd: 'create-cart' },
+    return this.tourService.send(
+      { tour: 'create-cart' },
       { tourId, userId: req.user?.id },
     );
   }
@@ -184,8 +191,9 @@ export class AppController {
   }
 
   @Get('tour/all')
+  @UseInterceptors(UserInterceptor)
   async getAllTour() {
-    return this.managerService.send({ cmd: 'get-all-tour' }, {});
+    return this.tourService.send({ tour: 'get-all-tour' }, {});
   }
 
   @UseInterceptors(UserInterceptor)
@@ -267,8 +275,8 @@ export class AppController {
       startAddress,
       endingAddress,
     } = newTouristDTO;
-    return this.managerService.send(
-      { cmd: 'create-tour' },
+    return this.tourService.send(
+      { tour: 'create-tour' },
       {
         name,
         description,
@@ -300,20 +308,11 @@ export class AppController {
       return 'you can not allow to do that';
     }
     return this.managerService.send(
-      { cmd: 'get-tour-to-Store' },
+      { manager: 'get-tour-to-Store' },
       { userId: req.user?.id },
     );
   }
-  // PRESENCE----------------------------------------
-  @Get('presence')
-  async getPresence() {
-    return this.presenceService.send(
-      {
-        cmd: 'get-presence',
-      },
-      {},
-    );
-  }
+
   // AUTH----------------------------------------
   @Get()
   @UseGuards(UseRoleGuard, AuthGuard)
@@ -366,31 +365,6 @@ export class AppController {
       { userId: req.user.id, friendId },
     );
   }
-  @UseGuards(AuthGuard)
-  @Get('get-friends')
-  async getFriends(@Req() req: UserRequest) {
-    if (!req?.user) {
-      throw new BadRequestException();
-    }
-    return this.authService.send(
-      {
-        cmd: 'get-friends',
-      },
-      {
-        userId: req.user.id,
-      },
-    );
-  }
-  @Get('email-verify')
-  async emailVerifyToKen(@Query('token') jwt: string) {
-    return this.authService.send(
-      {
-        cmd: 'verify-jwt',
-      },
-      { jwt },
-    );
-  }
-
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Post('store/create')
@@ -401,8 +375,36 @@ export class AppController {
       throw new BadRequestException('can not find user');
     }
     return this.managerService.send(
-      { cmd: 'create-store' },
+      { manager: 'create-store' },
       { name, slogan, userId: req.user.id },
     );
+  }
+  //THIRD Party SERVICE
+  @Get('validate-email')
+  async validateTokenRegister(@Query('token') jwt: string, @Res() response) {
+    const data = await this.emailService
+      .send({ email: 'validate-email' }, { token: jwt })
+      .toPromise();
+    response.cookie('token', data.token);
+    return response.redirect('http://localhost:3000/');
+  }
+  @Get('email1')
+  async helloThirdPartyService2() {
+    return this.emailService.send({ email: 'smail' }, {});
+  }
+  @Get('email2')
+  async helloThirdPartyService3() {
+    return this.socialSharingService.send({ social: 'smail' }, {});
+  }
+  @Get('email3')
+  async helloThirdPartyService4() {
+    return this.paymentService.send({ payment: 'smail' }, {});
+  }
+  @Get('logout')
+  async logout(@Res() res) {
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+    res.clearCookie('connect.sid');
+    res.redirect('http://localhost:3000/');
   }
 }

@@ -16,12 +16,7 @@ import {
   PostgresdbModule,
   SharedService,
   UserEntity,
-  FriendRequestRepository,
   UsersRepository,
-  FriendRequestEntity,
-  MessageEntity,
-  ConversationEntity,
-  EmailVerifiedService,
   TourEntity,
   StoreEntity,
   CartEntity,
@@ -42,22 +37,16 @@ import {
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '3600s' },
+        signOptions: { expiresIn: '365d' },
       }),
       inject: [ConfigService],
     }),
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
-    SharedModule.registerRmq(
-      'PRESENCE_SERVICE',
-      process.env.RABBITMQ_PRESENCE_QUEUE,
-    ),
+    SharedModule.registerRmq('MAIL_SERVICE', process.env.RABBITMQ_MAIL_QUEUE),
     SharedModule,
     PostgresdbModule,
     TypeOrmModule.forFeature([
       UserEntity,
-      FriendRequestEntity,
-      MessageEntity,
-      ConversationEntity,
       TourEntity,
       StoreEntity,
       CartEntity,
@@ -91,10 +80,6 @@ import {
     JwtStrategy,
     UseRoleGuard,
     {
-      provide: 'EmailServiceInterface',
-      useClass: EmailVerifiedService,
-    },
-    {
       provide: 'AuthServiceInterface',
       useClass: AuthService,
     },
@@ -105,10 +90,6 @@ import {
     {
       provide: 'SharedServiceInterface',
       useClass: SharedService,
-    },
-    {
-      provide: 'FriendRequestRepositoryInterface',
-      useClass: FriendRequestRepository,
     },
   ],
 })

@@ -7,8 +7,10 @@ async function bootstrap() {
   const app = await NestFactory.create(ManagerModule);
   const configService = app.get(ConfigService);
   const sharedService = app.get(SharedService);
-  const queue = configService.get<string>('RABBITMQ_MANAGER_QUEUE');
-  app.connectMicroservice(sharedService.getRmqOptions(queue));
+  const manager_queue = configService.get<string>('RABBITMQ_MANAGER_QUEUE');
+  const tour_queue = configService.get<string>('RABBITMQ_TOUR_QUEUE');
+  app.connectMicroservice(sharedService.getRmqOptions(tour_queue));
+  app.connectMicroservice(sharedService.getRmqOptions(manager_queue));
   app
     .startAllMicroservices()
     .then(() => console.log('SERVICE Manager STARTED'));

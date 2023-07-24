@@ -1,7 +1,8 @@
 export enum TourStatus {
   AVAILABLE = 'available',
-  DOING = 'doing',
-  FULL = 'full-slot',
+  TRAVELING = 'traveling',
+  FULL = 'full slot',
+  LAST = 'out of date register',
   PRIVATE = 'private',
   DONE = 'done',
 }

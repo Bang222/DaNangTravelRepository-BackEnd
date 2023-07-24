@@ -18,9 +18,6 @@ import {
   CartRepository,
   CommentEntity,
   CommentRepository,
-  ConversationEntity,
-  FriendRequestEntity,
-  MessageEntity,
   OrderDetailEntity,
   OrderDetailRepository,
   OrderEntity,
@@ -40,6 +37,7 @@ import {
   UserRegisteredTour,
   UsersRepository,
 } from '@app/shared';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -47,6 +45,8 @@ import {
       'MANAGER_SERVICE',
       process.env.RABBITMQ_MANAGER_QUEUE,
     ),
+    SharedModule.registerRmq('TOUR_SERVICE', process.env.RABBITMQ_TOUR_QUEUE),
+    ScheduleModule.forRoot(),
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
 
     SharedModule,
@@ -72,9 +72,6 @@ import {
     }),
     TypeOrmModule.forFeature([
       UserEntity,
-      FriendRequestEntity,
-      MessageEntity,
-      ConversationEntity,
       TourEntity,
       StoreEntity,
       OrderEntity,
@@ -94,10 +91,6 @@ import {
       provide: 'TourRepositoryInterface',
       useClass: TourRepository,
     },
-    // {
-    //   provide: 'EmailServiceInterface',
-    //   useClass: EmailVerifiedService,
-    // },
     {
       provide: 'UsersRepositoryInterface',
       useClass: UsersRepository,

@@ -13,9 +13,6 @@ import { Role } from '@app/shared/models/enum/role.enum';
 import {
   CartEntity,
   CommentEntity,
-  ConversationEntity,
-  FriendRequestEntity,
-  MessageEntity,
   OrderEntity,
   StoreEntity,
   ShareExperienceEntity,
@@ -87,24 +84,4 @@ export class UserEntity {
   )
   @JoinTable()
   userRegisteredTours: UserRegisteredTourEntity[];
-  @OneToMany(
-    () => FriendRequestEntity,
-    (friendRequestEntity) => friendRequestEntity.creator,
-  )
-  friendRequestCreator: FriendRequestEntity[];
-
-  @OneToMany(
-    () => FriendRequestEntity,
-    (FriendRequestEntity) => FriendRequestEntity.receiver,
-  )
-  friendRequestReceiver: FriendRequestEntity[];
-
-  @ManyToMany(
-    () => ConversationEntity,
-    (conversationEntity) => conversationEntity.users,
-  )
-  conversations: ConversationEntity[];
-
-  @OneToMany(() => MessageEntity, (messageEntity) => messageEntity.message)
-  messages: MessageEntity[];
 }

@@ -11,7 +11,7 @@ import {
 import { OrderEntity, TourEntity } from '@app/shared';
 import { PaymentStatus } from '@app/shared/models/enum';
 
-@Entity('order-detail')
+@Entity('order detail')
 export class OrderDetailEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -11,7 +11,7 @@ import {
 import { CommentEntity, UserEntity } from '@app/shared';
 import { ReviewStatus } from '@app/shared/models/enum';
 
-@Entity('used-tour-review')
+@Entity('share experience')
 export class ShareExperienceEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -39,19 +39,18 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return this.tourService.tourHello(payload.id);
   }
-  @MessagePattern({ cmd: 'get-all-tour' })
+  @MessagePattern({ tour: 'get-all-tour' })
   async getAllStore(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
     const tourView = await this.redisService.get('tourView');
     if (tourView) {
-      console.log('cache');
       return tourView;
     }
     const setTourView = await this.tourService.getAllTours();
     await this.redisService.set('tourView', setTourView);
     return setTourView;
   }
-  @MessagePattern({ cmd: 'create-tour' })
+  @MessagePattern({ tour: 'create-tour' })
   async createTour(
     @Ctx() context: RmqContext,
     @Payload() newTourDto: NewTouristDTO,
@@ -63,7 +62,7 @@ export class ManagerController {
     );
     return this.tourService.createTour(newTourDto, storeOfUserOwner);
   }
-  @MessagePattern({ cmd: 'create-cart' })
+  @MessagePattern({ tour: 'create-cart' })
   async createCart(
     @Ctx() context: RmqContext,
     @Payload() newCartDTO: CartDto,
@@ -73,7 +72,7 @@ export class ManagerController {
     const user = await this.managerService.findUserById(payload.userId);
     return await this.tourService.createCart(newCartDTO, user);
   }
-  @MessagePattern({ cmd: 'create-content-experience' })
+  @MessagePattern({ tour: 'create-content-experience' })
   async createContentExperienceOfUser(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -132,7 +131,7 @@ export class ManagerController {
     );
   }
 
-  @MessagePattern({ cmd: 'get-experience' })
+  @MessagePattern({ tour: 'get-experience' })
   async getExperienceOfUser(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
     const getExperienceOfUserCache = await this.redisService.get(
@@ -148,7 +147,7 @@ export class ManagerController {
     );
     return getExperienceOfUser;
   }
-  @MessagePattern({ cmd: 'upvote-tour' })
+  @MessagePattern({ tour: 'upvote-tour' })
   async upvoteOfTour(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string; tourId: string },
@@ -157,7 +156,7 @@ export class ManagerController {
     return this.tourService.upvoteOfTour(payload.userId, payload.tourId);
   }
 
-  @MessagePattern({ cmd: 'upvote-experience' })
+  @MessagePattern({ tour: 'upvote-experience' })
   async upvoteOfExperienceOfUser(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string; experienceId: string },
@@ -173,7 +172,7 @@ export class ManagerController {
   //   return this.tourService.getTours();
   // }
   //-----------seller------------------
-  @MessagePattern({ cmd: 'create-store' })
+  @MessagePattern({ manager: 'create-store' })
   async createStore(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -184,7 +183,7 @@ export class ManagerController {
     console.log(user);
     return this.sellerService.createStore(newStoreDTO, user);
   }
-  @MessagePattern({ cmd: 'get-tour-to-Store' })
+  @MessagePattern({ manager: 'get-tour-to-Store' })
   async getTourToStore(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -197,7 +196,7 @@ export class ManagerController {
     await this.redisService.set('getTourOfStore', tour);
     return tour;
   }
-  @MessagePattern({ cmd: 'bill-store' })
+  @MessagePattern({ manager: 'bill-store' })
   async getBillOfEachStore(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -205,7 +204,7 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return await this.sellerService.getBillOfStore(payload.userId);
   }
-  @MessagePattern({ cmd: 'get-follower-user' })
+  @MessagePattern({ manager: 'get-follower-user' })
   async getFollowerTripRegisteredUser(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -215,7 +214,7 @@ export class ManagerController {
       payload.userId,
     );
   }
-  @MessagePattern({ cmd: 'get-bill-user' })
+  @MessagePattern({ manager: 'get-bill-user' })
   async getBillOfUser(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
@@ -223,7 +222,7 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return await this.sellerService.getBillOfUser(payload.userId);
   }
-  @MessagePattern({ cmd: 'track-user-registered-trip' })
+  @MessagePattern({ manager: 'track-user-registered-trip' })
   async getTrackUserRegisteredTourStore(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },

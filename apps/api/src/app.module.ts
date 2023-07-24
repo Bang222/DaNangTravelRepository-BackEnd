@@ -11,12 +11,16 @@ import { SharedModule } from '@app/shared';
     }),
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
     SharedModule.registerRmq(
-      'PRESENCE_SERVICE',
-      process.env.RABBITMQ_PRESENCE_QUEUE,
-    ),
-    SharedModule.registerRmq(
       'MANAGER_SERVICE',
       process.env.RABBITMQ_MANAGER_QUEUE,
+    ),
+    SharedModule.registerRmq('TOUR_SERVICE', process.env.RABBITMQ_TOUR_QUEUE),
+
+    SharedModule.registerRmq('MAIL_SERVICE', process.env.RABBITMQ_MAIL_QUEUE),
+    SharedModule.registerRmq('SHARE_SERVICE', process.env.RABBITMQ_SHARE_QUEUE),
+    SharedModule.registerRmq(
+      'PAYMENT_SERVICE',
+      process.env.RABBITMQ_PAYMENT_QUEUE,
     ),
   ],
   controllers: [AppController],

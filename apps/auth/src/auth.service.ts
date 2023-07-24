@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -11,24 +10,17 @@ import { JwtService } from '@nestjs/jwt';
 import { ExistingUserDTO, NewUserDTO } from './dto';
 import { UsersRepositoryInterface } from '@app/shared/interfaces/repository-interface/users.repository.interface';
 import { AuthServiceInterface } from './interface/auth.service.interface';
-import {
-  EmailVerifiedService,
-  FriendRequestEntity,
-  FriendRequestRepository,
-  UserEntity,
-} from '@app/shared';
 import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
+import { UserEntity } from '@app/shared';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
   constructor(
     @Inject('UsersRepositoryInterface')
     private readonly usersRepository: UsersRepositoryInterface,
-    @Inject('FriendRequestRepositoryInterface')
-    private readonly friendRequestRepository: FriendRequestRepository,
     private readonly jwtService: JwtService,
-    @Inject('EmailServiceInterface')
-    private readonly mailsService: EmailVerifiedService,
+    @Inject('MAIL_SERVICE') private emailService: ClientProxy,
   ) {}
   getHello(): string {
     return 'Hello World!';
@@ -68,30 +60,36 @@ export class AuthService implements AuthServiceInterface {
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
   }
-
   async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
     const { firstName, lastName, email, password, sex, address } = newUser;
     // console.log(firstName);
-
     const existingUser = await this.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictException('An account with that email already exists!');
+    try {
+      if (existingUser) {
+        throw new BadRequestException(
+          'An account with that email already exists!',
+        );
+      }
+      const hashedPassword = await this.hashPassword(password);
+
+      const savedUser = await this.usersRepository.save({
+        firstName,
+        lastName,
+        email,
+        sex,
+        address,
+        createdTime: new Date(),
+        password: hashedPassword,
+      });
+      delete savedUser.password;
+      // Converting Observable to Promise and awaiting the result
+      await this.emailService
+        .send({ email: 'send-email' }, { email: email })
+        .toPromise();
+      return savedUser;
+    } catch (e) {
+      throw new BadRequestException(e);
     }
-    await this.mailsService.sendEmailVerify(email);
-    const hashedPassword = await this.hashPassword(password);
-
-    const savedUser = await this.usersRepository.save({
-      firstName,
-      lastName,
-      email,
-      sex,
-      address,
-      createdTime: new Date(),
-      password: hashedPassword,
-    });
-
-    delete savedUser.password;
-    return savedUser;
   }
 
   async doesPasswordMatch(
@@ -106,7 +104,7 @@ export class AuthService implements AuthServiceInterface {
 
     const doesUserExist = !!user;
     if (!doesUserExist) return null;
-    if (user.isEmailValidated === true) return null;
+    // if (user.isEmailValidated === true) return null;
 
     const doesPasswordMatch = await this.doesPasswordMatch(
       password,
@@ -114,7 +112,6 @@ export class AuthService implements AuthServiceInterface {
     );
 
     if (!doesPasswordMatch) return null;
-
     return user;
   }
 
@@ -152,31 +149,5 @@ export class AuthService implements AuthServiceInterface {
     } catch (error) {
       throw new BadRequestException();
     }
-  }
-  async addFriend(
-    userId: string,
-    friendId: string,
-  ): Promise<FriendRequestEntity> {
-    const creator = await this.findById(userId);
-    const receiver = await this.findById(friendId);
-    return await this.friendRequestRepository.save({ creator, receiver });
-  }
-  async getFriends(userId: string): Promise<FriendRequestEntity[]> {
-    const creator = await this.findById(userId);
-    return await this.friendRequestRepository.findWithRelations({
-      where: [{ creator }, { receiver: creator }],
-      relations: ['creator', 'receiver'],
-    });
-  }
-  async getFriendsList(userId: string) {
-    const friendsRequests = await this.getFriends(userId);
-    if (!friendsRequests) return [];
-    const friends = friendsRequests.map((item) => {
-      const isUserCreator = userId === item.creator.id; // creator is user
-      const friendDetails = isUserCreator ? item.receiver : item.creator;
-      const { id, firstName, lastName, email } = friendDetails;
-      return { id, firstName, lastName, email };
-    });
-    return friends;
   }
 }
