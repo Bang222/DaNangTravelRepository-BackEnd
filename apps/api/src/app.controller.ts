@@ -136,7 +136,7 @@ export class AppController {
     @Body() bookingTourDto: BookingTourDto,
   ) {
     return this.managerService.send(
-      { cmd: 'booking-tour' },
+      { manager: 'booking-tour' },
       { ...bookingTourDto, tourId: tourId, userId: req.user?.id },
     );
   }
@@ -209,6 +209,13 @@ export class AppController {
       { userId: req.user?.id, content },
     );
   }
+  @Post('tour/comments')
+  async getCommentsByTourId(@Body('tourId') tourId: string) {
+    if (!tourId) {
+      return 'can not null';
+    }
+    return this.tourService.send({ tour: 'get-comment-by-tourId' }, { tourId });
+  }
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
@@ -232,7 +239,7 @@ export class AppController {
       endingAddress,
     } = updateTouristDto;
     return this.managerService.send(
-      { cmd: 'update-tour' },
+      { manager: 'update-tour' },
       {
         name,
         description,

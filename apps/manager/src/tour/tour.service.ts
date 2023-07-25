@@ -62,7 +62,7 @@ export class TourService {
     return await this.tourRepository.findAll({
       where: { status: TourStatus.AVAILABLE },
       order: { createdAt: 'DESC' },
-      relations: { comments: { user: true }, store: true },
+      relations: { store: true, comments: true },
       cache: true,
     });
   }
@@ -73,6 +73,18 @@ export class TourService {
   // }
   async findTourOfUserRegistered(tourId: string) {
     return await this.userRegisteredTourRepository.findOneById(tourId);
+  }
+  async getCommentOfTour(tourId: string): Promise<CommentEntity[]> {
+    try {
+      const findCommentsByTourId = await this.tourRepository.findByCondition({
+        where: { id: tourId },
+        relations: { comments: { user: true } },
+      });
+      if (!findCommentsByTourId) throw new BadRequestException('Can not found');
+      return findCommentsByTourId.comments;
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
   async createTour(
     newTourDTO: Readonly<NewTouristDTO>,
@@ -282,27 +294,24 @@ export class TourService {
       const updateUpVoteExistUserId = findTourById.upVote.filter(
         (item) => item !== userId,
       );
-      return (
-        (
-          await this.tourRepository.save({
-            ...findTourById,
-            upVote: [...updateUpVoteExistUserId],
-          })
-        ).upVote.length - 1
-      );
+      const findTour = await this.tourRepository.save({
+        ...findTourById,
+        upVote: [...updateUpVoteExistUserId],
+      });
+      return { status: findTour.upVote, total: findTour.upVote.length };
     } else {
-      const updateUpvoteExistUser = await this.tourRepository.save({
+      const findTour = await this.tourRepository.save({
         ...findTourById,
         upVote: [...findTourById.upVote, userId],
       });
-      return updateUpvoteExistUser.upVote.length - 1;
+      return { status: findTour.upVote, total: findTour.upVote.length };
     }
   }
   async upvoteOfExperienceOfUser(userId: string, experienceId: string) {
     try {
       const findExperienceOfUserById =
         await this.usedTourExperienceOfUserRepository.findOneById(experienceId);
-      console.log(findExperienceOfUserById.upVote.includes(userId));
+      // console.log(findExperienceOfUserById.upVote.includes(userId));
       if (findExperienceOfUserById.upVote.includes(userId)) {
         const updateUpVoteExistUserId = findExperienceOfUserById.upVote.filter(
           (item) => item !== userId,
@@ -311,6 +320,7 @@ export class TourService {
           ...findExperienceOfUserById,
           upVote: [...updateUpVoteExistUserId],
         });
+        console.log('oke');
         return totalUpvote.upVote.length - 1;
       } else {
         const updateUpvote = await this.usedTourExperienceOfUserRepository.save(
@@ -319,6 +329,7 @@ export class TourService {
             upVote: [...findExperienceOfUserById.upVote, userId],
           },
         );
+        console.log('oke');
         return updateUpvote.upVote.length - 1;
       }
     } catch (e) {

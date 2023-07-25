@@ -85,7 +85,15 @@ export class ManagerController {
       createExperienceDto,
     );
   }
-  @MessagePattern({ cmd: 'update-tour' })
+  @MessagePattern({ tour: 'get-comment-by-tourId' })
+  async getCommentsByTourId(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { tourId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.getCommentOfTour(payload.tourId);
+  }
+  @MessagePattern({ manager: 'update-tour' })
   async updateTourist(
     @Ctx() context: RmqContext,
     @Payload() updateTouristDto: UpdateTouristDTO,
@@ -96,7 +104,7 @@ export class ManagerController {
       ...updateTouristDto,
     });
   }
-  @MessagePattern({ cmd: 'booking-tour' })
+  @MessagePattern({ manager: 'booking-tour' })
   async bookingTour(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string; tourId: string },
