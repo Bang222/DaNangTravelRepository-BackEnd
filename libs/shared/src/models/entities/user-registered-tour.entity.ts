@@ -10,7 +10,7 @@ import {
 
 import { TourEntity, UserEntity } from '@app/shared';
 
-@Entity('user-registered-trip')
+@Entity('user registered trip')
 export class UserRegisteredTourEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

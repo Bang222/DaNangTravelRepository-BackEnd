@@ -22,7 +22,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         //     },
         //   ],
         // },
-        // entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         autoLoadEntities: true,
         synchronize: true, // production - may lose db // automatic create new colum
         // extra: { connectionLimit: 10 },

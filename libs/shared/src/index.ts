@@ -18,6 +18,10 @@ export * from './models/entities/order-detail.entity';
 export * from './models/entities/user-registered-tour.entity';
 export * from './models/entities/share-experience.entity';
 export * from './models/entities/comment.entity';
+export * from './models/entities/passenger.entity';
+export * from './models/entities/payment.entity';
+export * from './models/entities/schedule.entity';
+export * from './models/entities/keyToken.entity';
 // interface
 export * from './interfaces/service-interface/user-request.interface';
 export * from './interfaces/repository-interface/users.repository.interface';
@@ -30,6 +34,10 @@ export * from './interfaces/repository-interface/order-detail.repository.interfa
 export * from './interfaces/repository-interface/user-registered-tour.repository.interface';
 export * from './interfaces/repository-interface/share-experience.repository.interface';
 export * from './interfaces/repository-interface/comment.repository.interace';
+export * from './interfaces/repository-interface/passenger.repository.interface';
+export * from './interfaces/repository-interface/payment.repository.interface';
+export * from './interfaces/repository-interface/schedule.repository.interface';
+export * from './interfaces/repository-interface/keyToken.repository.interface';
 
 // base repository
 export * from './repository/base/base.abstract.repository';
@@ -44,3 +52,9 @@ export * from './repository/order-detail.repository';
 export * from './repository/user-registered-tour';
 export * from './repository/share-experience';
 export * from './repository/comment.repository';
+export * from './repository/payment.repository';
+export * from './repository/passenger.repository';
+export * from './repository/schedule.repository';
+export * from './repository/keyToken.repository';
+// util
+// export * from 'util/getInFoLodash';

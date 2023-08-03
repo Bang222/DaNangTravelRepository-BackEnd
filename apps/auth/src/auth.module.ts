@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './strategy/jwt-strategy';
 import { UseRoleGuard } from './guard/role.guard';
@@ -25,21 +24,19 @@ import {
   UserRegisteredTourEntity,
   ShareExperienceEntity,
   CommentEntity,
+  PaymentEntity,
+  ScheduleEntity,
+  PassengerEntity,
+  KeyTokenEntity,
+  KeyTokenRepository,
 } from '@app/shared';
+import { AuthUtilService } from './util/authUtil.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './.env',
-    }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '365d' },
-      }),
-      inject: [ConfigService],
     }),
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
     SharedModule.registerRmq('MAIL_SERVICE', process.env.RABBITMQ_MAIL_QUEUE),
@@ -55,6 +52,10 @@ import {
       UserRegisteredTourEntity,
       ShareExperienceEntity,
       CommentEntity,
+      PaymentEntity,
+      ScheduleEntity,
+      PassengerEntity,
+      KeyTokenEntity,
     ]),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
@@ -79,6 +80,7 @@ import {
     JwtGuard,
     JwtStrategy,
     UseRoleGuard,
+    AuthUtilService,
     {
       provide: 'AuthServiceInterface',
       useClass: AuthService,
@@ -90,6 +92,10 @@ import {
     {
       provide: 'SharedServiceInterface',
       useClass: SharedService,
+    },
+    {
+      provide: 'KeyTokenRepositoryInterface',
+      useClass: KeyTokenRepository,
     },
   ],
 })

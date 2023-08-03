@@ -4,7 +4,7 @@ export enum TourStatus {
   FULL = 'full slot',
   LAST = 'out of date register',
   PRIVATE = 'private',
-  DONE = 'done',
+  DONE = 'TRAVELED',
 }
 export enum StoreStatus {
   ACTIVE = 'active',

@@ -4,32 +4,18 @@ import {
   JoinColumn,
   JoinTable,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { OrderEntity, TourEntity } from '@app/shared';
-import { PaymentStatus } from '@app/shared/models/enum';
+import { PassengerEntity } from '@app/shared/models/entities/passenger.entity';
 
 @Entity('order detail')
 export class OrderDetailEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
-  firstName: string;
-
-  @Column()
-  fullName: string;
-
-  @Column()
-  email: string;
-
-  @Column()
-  phone: string;
-
-  @Column()
-  address: string;
 
   @Column({ default: 0 })
   adultPassengers: number;
@@ -43,9 +29,6 @@ export class OrderDetailEntity {
   @Column({ default: 0 })
   infantPassengers: number;
 
-  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.UNPAID })
-  paymentStatus: PaymentStatus;
-
   @OneToOne(() => OrderEntity, (order) => order.orderDetail)
   @JoinTable({ name: 'orderId' })
   order: OrderEntity;
@@ -57,4 +40,7 @@ export class OrderDetailEntity {
   tour: TourEntity;
   @Column()
   tourId: string;
+
+  @OneToMany(() => PassengerEntity, (passenger) => passenger.orderDetail)
+  passengers: PassengerEntity[];
 }

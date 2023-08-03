@@ -7,7 +7,10 @@ import {
   CommentRepositoryInterface,
   OrderDetailRepositoryInterface,
   OrderRepositoryInterface,
+  PassengerRepositoryInterface,
   RedisCacheService,
+  ScheduleEntity,
+  ScheduleRepositoryInterface,
   ShareExperienceEntity,
   ShareExperienceRepositoryInterface,
   TourEntity,
@@ -30,6 +33,7 @@ import {
 import { TourStatus } from '@app/shared/models/enum';
 import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class TourService {
@@ -50,20 +54,25 @@ export class TourService {
     private readonly orderRepository: OrderRepositoryInterface,
     @Inject('CommentRepositoryInterface')
     private readonly commentRepository: CommentRepositoryInterface,
+    @Inject('ScheduleRepositoryInterface')
+    private readonly scheduleRepository: ScheduleRepositoryInterface,
+    @Inject('PassengerRepositoryInterface')
+    private readonly passengerRepository: PassengerRepositoryInterface,
+
     private readonly sellerService: SellerService,
     private readonly redisService: RedisCacheService,
   ) {}
   async tourHello(id: number) {
-    console.log(id);
     return 'tourHello';
   }
   async getAllTours(): Promise<TourEntity[]> {
     // const currentDate = new Date();
     return await this.tourRepository.findAll({
-      where: { status: TourStatus.AVAILABLE },
+      // where: { status: TourStatus.AVAILABLE },
+      // skip ? skip : 1,
       order: { createdAt: 'DESC' },
-      relations: { store: true, comments: true },
-      cache: true,
+      relations: { store: true, comments: { user: true } },
+      take: 3,
     });
   }
   //   const kaka = await this.findOneByTourId('595dda98-c6fd-4687-9307-b88f7cc911fe')
@@ -73,6 +82,19 @@ export class TourService {
   // }
   async findTourOfUserRegistered(tourId: string) {
     return await this.userRegisteredTourRepository.findOneById(tourId);
+  }
+  async findOneByTourId(id: string): Promise<TourEntity> {
+    return await this.tourRepository.findOneById(id);
+  }
+  async findTourDetail(id: string): Promise<TourEntity> {
+    try {
+      return await this.tourRepository.findByCondition({
+        where: { id: id },
+        relations: { schedules: true, store: true, comments: true },
+      });
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
   }
   async getCommentOfTour(tourId: string): Promise<CommentEntity[]> {
     try {
@@ -86,6 +108,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+  // Readonly<NewTouristDTO>
   async createTour(
     newTourDTO: Readonly<NewTouristDTO>,
     storeOfUserOwner,
@@ -97,15 +120,24 @@ export class TourService {
       ) {
         throw new BadRequestException('you can not create Tour');
       }
-      const newTour = await this.tourRepository.save({
+      const createTour = await this.tourRepository.create({
         ...newTourDTO,
         store: storeOfUserOwner,
       });
-      const findNewTour = await this.tourRepository.findOneById(newTour.id);
+      const saveTour = await this.tourRepository.save({ ...createTour });
+      const findNewTour = await this.findOneByTourId(saveTour.id);
+      for (const scheduleDto of newTourDTO.schedules) {
+        const schedule = new ScheduleEntity();
+        schedule.day = scheduleDto.day;
+        schedule.description = scheduleDto.description;
+        schedule.imgUrl = scheduleDto.imgUrl;
+        schedule.tourId = saveTour.id;
+        await this.scheduleRepository.save({ ...schedule });
+      }
       await this.userRegisteredTourRepository.save({
-        tour: findNewTour,
+        tour: saveTour,
       });
-      return newTour;
+      return saveTour;
     } catch (e) {
       throw new BadRequestException(e);
     }
@@ -137,9 +169,6 @@ export class TourService {
     }
   }
 
-  async findOneByTourId(id: string): Promise<TourEntity> {
-    return await this.tourRepository.findOneById(id);
-  }
   async createCart(
     cartDto: CartDto,
     user: Readonly<UserEntity>,
@@ -164,42 +193,101 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+  // async implementStrategyPattern(status: string) {
+  //
+  // }
   async bookingTour(
     tourId: string,
     userId: string,
-    bookingTourDto: BookingTourDto,
+    bookingTourDto: Readonly<BookingTourDto>,
   ) {
     try {
-      const createOrder = await this.orderRepository.save({ userId: userId });
-      const findOrder = await this.orderRepository.findOneById(createOrder.id);
       const findTourById = await this.findOneByTourId(tourId);
-      const findUserById = await this.usersRepository.findOneById(userId);
       const price: number = findTourById.price;
-      if (!findTourById.status.includes(TourStatus.AVAILABLE))
-        throw new BadRequestException('can not booking');
-      const createOrderDetail = await this.orderDetailRepository.save({
-        ...bookingTourDto,
-        orderId: findOrder.id,
-        tourId: tourId,
-      });
-      const {
-        adultPassengers,
-        childPassengers,
-        toddlerPassengers,
-        infantPassengers,
-      } = createOrderDetail;
-      const totalPrice =
-        adultPassengers * price +
-        childPassengers * price +
-        toddlerPassengers * 0.7 * price;
+      const findUserById = await this.usersRepository.findOneById(userId);
 
       const quantity =
-        adultPassengers +
-        childPassengers +
-        toddlerPassengers +
-        infantPassengers;
-      if (findTourById.quantity < quantity)
-        throw new BadRequestException('Not Enough slot');
+        bookingTourDto.adultPassengers +
+        bookingTourDto.infantPassengers +
+        bookingTourDto.toddlerPassengers +
+        bookingTourDto.childPassengers;
+      if (+findTourById.quantity < quantity)
+        throw new BadRequestException('not Enough slot');
+
+      const totalPrice =
+        bookingTourDto.adultPassengers * price +
+        bookingTourDto.childPassengers * price +
+        bookingTourDto.toddlerPassengers * 0.5 * price +
+        bookingTourDto.infantPassengers * 0.15 * price;
+
+      const createOrder = await this.orderRepository.create({
+        firstName: bookingTourDto.firstName,
+        fullName: bookingTourDto.fullName,
+        email: bookingTourDto.email,
+        address: bookingTourDto.address,
+        phone: bookingTourDto.phone,
+        totalPrice: totalPrice,
+        participants: quantity,
+        userId: userId,
+      });
+      if (!findTourById.status.includes(TourStatus.AVAILABLE))
+        throw new RpcException('not Enough slot');
+      const {
+        firstName,
+        fullName,
+        email,
+        address,
+        passenger,
+        phone,
+        ...orderDetailFilter
+      } = bookingTourDto;
+      const createOrderDetail = await this.orderDetailRepository.create({
+        ...orderDetailFilter,
+        tourId: tourId,
+      });
+      const saveOder = await this.orderRepository.save({ ...createOrder });
+      const saveOrderDetail = await this.orderDetailRepository.save({
+        ...createOrderDetail,
+        orderId: saveOder.id,
+      });
+      for (const data of bookingTourDto.passenger) {
+        if (data.type === 'Adult') {
+          await this.passengerRepository.save({
+            name: data.name,
+            type: 'Adult',
+            sex: data.sex,
+            orderDetail: saveOrderDetail,
+            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : '',
+          });
+        }
+        if (data.type === 'Child') {
+          await this.passengerRepository.save({
+            name: data.name,
+            type: 'Child',
+            sex: data.sex,
+            orderDetail: saveOrderDetail,
+            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : '',
+          });
+        }
+        if (data.type === 'Toddler') {
+          await this.passengerRepository.save({
+            name: data.name,
+            type: 'Toddler',
+            sex: data.sex,
+            orderDetail: saveOrderDetail,
+            dayOfBirth: data.dayOfBirth,
+          });
+        }
+        if (data.type === 'Infant') {
+          await this.passengerRepository.save({
+            name: data.name,
+            type: 'Infant',
+            sex: data.sex,
+            orderDetail: saveOrderDetail,
+            dayOfBirth: data.dayOfBirth,
+          });
+        }
+      }
       const updateQuantity = await this.tourRepository.save({
         ...findTourById,
         quantity: +findTourById.quantity - Number(quantity),
@@ -210,11 +298,6 @@ export class TourService {
           status: TourStatus.FULL,
         });
       }
-      await this.orderRepository.save({
-        ...findOrder,
-        totalPrice: totalPrice,
-        orderDetailId: createOrderDetail.id,
-      });
       const findUserRegisteredTour =
         await this.userRegisteredTourRepository.findByCondition({
           where: { tourId },
@@ -248,7 +331,7 @@ export class TourService {
         userId,
       });
     } catch (e) {
-      throw new BadRequestException(e);
+      throw new RpcException(e);
     }
   }
   async createCommentOfTour(
@@ -256,9 +339,13 @@ export class TourService {
     tourCommentDto: TourCommentDto,
   ): Promise<CommentEntity> {
     try {
-      return await this.commentRepository.save({
+      const comment = await this.commentRepository.save({
         ...tourCommentDto,
         userId,
+      });
+      return await this.commentRepository.findByCondition({
+        where: { id: comment.id },
+        relations: { user: true },
       });
     } catch (e) {
       throw new BadRequestException(e);
@@ -298,20 +385,19 @@ export class TourService {
         ...findTourById,
         upVote: [...updateUpVoteExistUserId],
       });
-      return { status: findTour.upVote, total: findTour.upVote.length };
+      return { status: findTour.upVote, total: -1 };
     } else {
       const findTour = await this.tourRepository.save({
         ...findTourById,
         upVote: [...findTourById.upVote, userId],
       });
-      return { status: findTour.upVote, total: findTour.upVote.length };
+      return { status: findTour.upVote, total: 1 };
     }
   }
   async upvoteOfExperienceOfUser(userId: string, experienceId: string) {
     try {
       const findExperienceOfUserById =
         await this.usedTourExperienceOfUserRepository.findOneById(experienceId);
-      // console.log(findExperienceOfUserById.upVote.includes(userId));
       if (findExperienceOfUserById.upVote.includes(userId)) {
         const updateUpVoteExistUserId = findExperienceOfUserById.upVote.filter(
           (item) => item !== userId,
@@ -320,7 +406,6 @@ export class TourService {
           ...findExperienceOfUserById,
           upVote: [...updateUpVoteExistUserId],
         });
-        console.log('oke');
         return totalUpvote.upVote.length - 1;
       } else {
         const updateUpvote = await this.usedTourExperienceOfUserRepository.save(
@@ -329,7 +414,6 @@ export class TourService {
             upVote: [...findExperienceOfUserById.upVote, userId],
           },
         );
-        console.log('oke');
         return updateUpvote.upVote.length - 1;
       }
     } catch (e) {
@@ -338,7 +422,7 @@ export class TourService {
   }
   // automatic update Status
   // @Cron('0 14 * * *')
-  @Cron(' 0 14 * * *')
+  @Cron(' * 0 * * *')
   async updateStatusTourAutomatic() {
     const currentDate = new Date();
     // eslint-disable-next-line prefer-const

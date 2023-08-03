@@ -1,4 +1,4 @@
-import { Controller, Inject } from '@nestjs/common';
+import {Controller, Inject, UseFilters} from '@nestjs/common';
 import { ManagerService } from './manager.service';
 import { RedisCacheService, SharedServiceInterface } from '@app/shared';
 import {
@@ -31,13 +31,13 @@ export class ManagerController {
     private readonly sellerService: SellerService,
   ) {}
   //tourService--------------------------
-  @MessagePattern({ cmd: 'tour' })
+  @MessagePattern({ cmd: 'tour-by-id' })
   async tourHello(
     @Ctx() context: RmqContext,
-    @Payload() payload: { id: number },
+    @Payload() payload: { tourId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return this.tourService.tourHello(payload.id);
+    return this.tourService.findTourDetail(payload.tourId);
   }
   @MessagePattern({ tour: 'get-all-tour' })
   async getAllStore(@Ctx() context: RmqContext) {
@@ -53,14 +53,14 @@ export class ManagerController {
   @MessagePattern({ tour: 'create-tour' })
   async createTour(
     @Ctx() context: RmqContext,
-    @Payload() newTourDto: NewTouristDTO,
+    @Payload() data: any,
     @Payload() payload: { userId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
     const storeOfUserOwner = await this.sellerService.findOneStoreById(
       payload.userId,
     );
-    return this.tourService.createTour(newTourDto, storeOfUserOwner);
+    return this.tourService.createTour(JSON.parse(data.data), storeOfUserOwner);
   }
   @MessagePattern({ tour: 'create-cart' })
   async createCart(
@@ -112,7 +112,7 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     const { userId, tourId } = payload;
-    return this.tourService.bookingTour(tourId, userId, bookingTourDto);
+    return this.tourService.bookingTour(tourId, userId, { ...bookingTourDto });
   }
   @MessagePattern({ cmd: 'create-comment-tour' })
   async createCommentTour(
@@ -121,7 +121,6 @@ export class ManagerController {
     @Payload() tourCommentDto: TourCommentDto,
   ) {
     this.sharedService.acknowledgeMessage(context);
-    console.log(tourCommentDto.content);
     return this.tourService.createCommentOfTour(payload.userId, tourCommentDto);
   }
 
@@ -188,7 +187,6 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     const user = await this.managerService.findUserById(payload.userId);
-    console.log(user);
     return this.sellerService.createStore(newStoreDTO, user);
   }
   @MessagePattern({ manager: 'get-tour-to-Store' })

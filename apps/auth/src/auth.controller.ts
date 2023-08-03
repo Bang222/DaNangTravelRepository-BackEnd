@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   Ctx,
@@ -8,7 +8,6 @@ import {
 } from '@nestjs/microservices';
 import { SharedService } from '@app/shared';
 import { ExistingUserDTO, NewUserDTO } from './dto';
-import { JwtGuard } from './guard/jwt.guard';
 
 @Controller()
 export class AuthController {
@@ -22,10 +21,39 @@ export class AuthController {
   getHello(): string {
     return this.authService.getHello();
   }
+  @MessagePattern({ cmd: 'refreshToken' })
+  async handleRefreshToken(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { refreshToken: string; userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.authService.handleRefreshToken(
+      payload.userId,
+      payload.refreshToken,
+    );
+  }
+  @MessagePattern({ cmd: 'sign-token' })
+  async signToken(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.authService.signTokenUsingPrivateKeyAndPublishKey(
+      payload.userId,
+    );
+  }
   @MessagePattern({ cmd: 'get-users' })
   async getUser(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
     return this.authService.getUsers();
+  }
+  @MessagePattern({ cmd: 'log-out' })
+  async logOut(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return this.authService.logOut(payload.userId);
   }
   @MessagePattern({ cmd: 'get-user' })
   async getUserById(
@@ -35,12 +63,12 @@ export class AuthController {
     this.sharedService.acknowledgeMessage(context);
     return this.authService.getUserById(user.id);
   }
-  @MessagePattern({ cmd: 'register' }) // getup API gateway
+  @MessagePattern({ cmd: 'register' })
   async register(@Ctx() context: RmqContext, @Payload() newUser: NewUserDTO) {
     this.sharedService.acknowledgeMessage(context);
     return await this.authService.register(newUser);
   }
-  @MessagePattern({ cmd: 'login' }) // getup API gateway
+  @MessagePattern({ cmd: 'login' })
   async login(
     @Ctx() context: RmqContext,
     @Payload() existingUser: ExistingUserDTO,
@@ -49,13 +77,12 @@ export class AuthController {
     return await this.authService.login(existingUser);
   }
   @MessagePattern({ cmd: 'verify-jwt' })
-  @UseGuards(JwtGuard)
   async verifyJwt(
     @Ctx() context: RmqContext,
-    @Payload() payload: { jwt: string },
+    @Payload() payload: { jwt: string; userId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.authService.verifyJwt(payload.jwt);
+    return await this.authService.verifyJwt(payload.jwt, payload.userId);
   }
   @MessagePattern({ cmd: 'decode-jwt' })
   async decodeJwt(
@@ -63,7 +90,6 @@ export class AuthController {
     @Payload() payload: { jwt: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
-
     return await this.authService.getUserFromHeader(payload.jwt);
   }
 }

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ManagerModule } from './manager.module';
 import { ConfigService } from '@nestjs/config';
 import { SharedService } from '@app/shared';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(ManagerModule);
@@ -14,6 +15,11 @@ async function bootstrap() {
   app
     .startAllMicroservices()
     .then(() => console.log('SERVICE Manager STARTED'));
+  // app.use(
+  //   compression({
+  //     threshold: 100 * 1000,
+  //   }),
+  // );
   await app.listen(8080);
 }
 bootstrap();

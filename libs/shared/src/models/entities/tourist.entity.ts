@@ -17,6 +17,7 @@ import {
   StoreEntity,
   UserRegisteredTourEntity,
 } from '@app/shared';
+import { ScheduleEntity } from '@app/shared/models/entities/schedule.entity';
 
 @Entity('tour')
 export class TourEntity {
@@ -50,8 +51,8 @@ export class TourEntity {
   @Column()
   quantity: number;
 
-  @Column({ nullable: true })
-  imageUrl: string;
+  @Column('text', { array: true, default: [] })
+  imageUrl: string[];
 
   @Column({ default: '{0}', nullable: true, type: 'text', array: true })
   upVote: string[];
@@ -82,6 +83,9 @@ export class TourEntity {
 
   @OneToMany(() => CommentEntity, (comment) => comment.tourist)
   comments: CommentEntity[];
+
+  @OneToMany(() => ScheduleEntity, (schedule) => schedule.tour)
+  schedules: ScheduleEntity[];
 
   // @AfterInsert()
   // async queueTaskAfterInsert() {

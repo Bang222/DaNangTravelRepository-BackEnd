@@ -32,10 +32,9 @@ export class UserInterceptor implements NestInterceptor {
 
     const [, jwt] = authHeaderParts;
 
-    return this.authService.send<UserJwt>({ cmd: 'decode-jwt' }, { jwt }).pipe(
-      switchMap(({ user }) => {
-        //create New Observable
-        request.user = user;
+    return this.authService.send({ cmd: 'decode-jwt' }, { jwt }).pipe(
+      switchMap((decode) => {
+        request.user = decode.data;
         return next.handle();
       }),
       catchError(() => next.handle()),

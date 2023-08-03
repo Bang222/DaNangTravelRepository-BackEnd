@@ -36,6 +36,12 @@ import {
   UserRegisteredTourEntity,
   UserRegisteredTour,
   UsersRepository,
+  PaymentEntity,
+  ScheduleEntity,
+  PassengerEntity,
+  PassengerRepository,
+  PaymentRepository,
+  ScheduleRepository,
 } from '@app/shared';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -80,6 +86,9 @@ import { ScheduleModule } from '@nestjs/schedule';
       OrderDetailEntity,
       ShareExperienceEntity,
       CommentEntity,
+      PaymentEntity,
+      ScheduleEntity,
+      PassengerEntity,
     ]),
   ],
   controllers: [ManagerController],
@@ -126,6 +135,22 @@ import { ScheduleModule } from '@nestjs/schedule';
     {
       provide: 'CommentRepositoryInterface',
       useClass: CommentRepository,
+    },
+    {
+      provide: 'PassengerRepositoryInterface',
+      useClass: PassengerRepository,
+    },
+    {
+      provide: 'PaymentRepositoryInterface',
+      useClass: PaymentRepository,
+    },
+    {
+      provide: 'ScheduleRepositoryInterface',
+      useClass: ScheduleRepository,
+    },
+    {
+      provide: 'PassengerRepositoryInterface',
+      useClass: PassengerRepository,
     },
   ],
 })

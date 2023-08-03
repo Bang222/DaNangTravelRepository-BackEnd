@@ -31,22 +31,31 @@ export class RolesGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers['authorization'];
+    const CLIENT_ID = 'x-client-id';
+
+    const userId = request.headers[CLIENT_ID];
+    if (!userId) return false;
 
     if (!authHeader) return false;
 
     const authHeaderParts = authHeader.split(' ');
 
     if (authHeaderParts.length !== 2) return false;
-
     const [, jwt] = authHeaderParts;
-    return this.authService.send<UserJwt>({ cmd: 'decode-jwt' }, { jwt }).pipe(
-      switchMap(({ user }) => {
-        //complete observable and create new one
-        return of(requiredRoles.some((role) => user.role?.includes(role)));
-      }),
-      catchError(() => {
-        throw new UnauthorizedException();
-      }),
-    );
+
+    return this.authService
+      .send({ cmd: 'verify-jwt' }, { jwt, userId: userId })
+      .pipe(
+        switchMap((decode) => {
+          //complete observable and create new one
+          // console.log('ROLES',decode.data.role)
+          return of(
+            requiredRoles.some((role) => decode.data.role?.includes(role)),
+          );
+        }),
+        catchError(() => {
+          throw new UnauthorizedException();
+        }),
+      );
   }
 }

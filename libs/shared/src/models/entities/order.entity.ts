@@ -10,17 +10,43 @@ import {
 } from 'typeorm';
 
 import { OrderDetailEntity, UserEntity } from '@app/shared';
+import { PaymentEntity } from '@app/shared/models/entities/payment.entity';
 
 @Entity('order')
 export class OrderEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  firstName: string;
+
+  @Column()
+  fullName: string;
+
+  @Column()
+  email: string;
+
+  @Column()
+  phone: string;
+
+  @Column()
+  address: string;
+
   @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({ nullable: true })
+  participants: number; // Number of participants in the booking
+
+  @Column({ nullable: true })
   totalPrice: number;
+
+  @Column({
+    type: 'enum',
+    enum: ['PENDING', 'PAID50%', 'CONFIRMED', 'CANCELLED'],
+    default: 'PENDING',
+  })
+  status: string; // Booking status
 
   @ManyToOne(() => UserEntity, (user) => user.orders)
   @JoinColumn({ name: 'userId' })
@@ -33,4 +59,7 @@ export class OrderEntity {
   orderDetail: OrderDetailEntity;
   @Column({ nullable: true })
   orderDetailId: string;
+
+  @OneToMany(() => PaymentEntity, (payment) => payment.order)
+  payments: PaymentEntity[];
 }

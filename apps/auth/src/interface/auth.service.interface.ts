@@ -1,6 +1,5 @@
 import { UserEntity } from '@app/shared/models/entities/user.entity';
 import { ExistingUserDTO, NewUserDTO } from '../dto';
-import { UserJwt } from '@app/shared/interfaces/service-interface/user-jwt.interface';
 
 export interface AuthServiceInterface {
   getHello(): string;
@@ -10,12 +9,13 @@ export interface AuthServiceInterface {
   findById(id: string): Promise<UserEntity>;
   hashPassword(password: string): Promise<string>;
   register(newUser: Readonly<NewUserDTO>): Promise<UserEntity>;
-  doesPasswordMatch(password: string, hashedPassword: string): Promise<boolean>;
   validateUser(email: string, password: string): Promise<UserEntity>;
   login(existingUser: Readonly<ExistingUserDTO>): Promise<{
-    token: string;
+    token: any;
     user: UserEntity;
   }>;
-  verifyJwt(jwt: string): Promise<{ user: UserEntity; exp: number }>;
-  getUserFromHeader(jwt: string): Promise<UserJwt>;
+  // : Promise<{ user: UserEntity; exp: number }>
+  verifyJWT(jwt: string, userId: string);
+  signJWT(data: any, privateKey: any);
+  getUserFromHeader(jwt: string);
 }
