@@ -13,12 +13,12 @@ import {
   CartDto,
   CreateExperienceDto,
   ExperienceCommentDto,
-  NewTouristDTO,
   TourCommentDto,
   UpdateTouristDTO,
 } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
+import Redis from 'ioredis';
 
 @Controller()
 export class ManagerController {
@@ -29,6 +29,7 @@ export class ManagerController {
     private readonly sharedService: SharedServiceInterface,
     private readonly tourService: TourService,
     private readonly sellerService: SellerService,
+    private readonly redisService1: RedisService,
   ) {}
   //tourService--------------------------
   @MessagePattern({ cmd: 'tour-by-id' })

@@ -117,7 +117,6 @@ export class AuthService implements AuthServiceInterface {
   }
   async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
     const { firstName, lastName, email, password, sex, address } = newUser;
-    console.log(firstName);
     const existingUser = await this.findByEmail(email);
     try {
       if (existingUser) {

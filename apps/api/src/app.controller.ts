@@ -11,8 +11,6 @@ import {
   Res,
   UseGuards,
   UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
@@ -33,9 +31,9 @@ import {
 import { NewStoreDTO } from '../../manager/src/seller/dto';
 import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interceptor';
 import { Throttle } from '@nestjs/throttler';
+import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 
-
-@Throttle(9, 15)
+@Throttle(30, 60)
 @Controller()
 export class AppController {
   constructor(
@@ -96,7 +94,6 @@ export class AppController {
   }
   @Post('tour/upvote')
   @UseGuards(AuthGuard, UseRoleGuard)
-  @Throttle(2, 10)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
   @UseInterceptors(UserInterceptor)
   async upvoteOfTour(@Req() req: UserRequest, @Body('tourId') tourId: string) {
@@ -193,9 +190,9 @@ export class AppController {
     }
     return this.managerService.send({ cmd: 'tour-by-id' }, { tourId });
   }
-
+  @Throttle(30, 60)
+  @UseGuards(ThrottlerBehindProxyGuard)
   @Get('tour/all')
-  // @UseInterceptors(UserInterceptor)
   async getAllTour() {
     return this.tourService.send({ tour: 'get-all-tour' }, {});
   }

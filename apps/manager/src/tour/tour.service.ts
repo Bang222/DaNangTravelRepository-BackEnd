@@ -60,7 +60,6 @@ export class TourService {
     private readonly passengerRepository: PassengerRepositoryInterface,
 
     private readonly sellerService: SellerService,
-    private readonly redisService: RedisCacheService,
   ) {}
   async tourHello(id: number) {
     return 'tourHello';
@@ -232,6 +231,8 @@ export class TourService {
       });
       if (!findTourById.status.includes(TourStatus.AVAILABLE))
         throw new RpcException('not Enough slot');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       const {
         firstName,
         fullName,
