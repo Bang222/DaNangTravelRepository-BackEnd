@@ -58,12 +58,14 @@ export class TourService {
     private readonly scheduleRepository: ScheduleRepositoryInterface,
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
-
     private readonly sellerService: SellerService,
+    private readonly redisService: RedisCacheService,
   ) {}
+
   async tourHello(id: number) {
     return 'tourHello';
   }
+
   async getAllTours(): Promise<TourEntity[]> {
     // const currentDate = new Date();
     return await this.tourRepository.findAll({
@@ -71,20 +73,18 @@ export class TourService {
       // skip ? skip : 1,
       order: { createdAt: 'DESC' },
       relations: { store: true, comments: { user: true } },
-      take: 3,
+      // take: 3,
     });
   }
-  //   const kaka = await this.findOneByTourId('595dda98-c6fd-4687-9307-b88f7cc911fe')
-  //   return (
-  //     kaka.lastRegisterDate <= currentDate && currentDate <= kaka.startDate
-  //   );
-  // }
+
   async findTourOfUserRegistered(tourId: string) {
     return await this.userRegisteredTourRepository.findOneById(tourId);
   }
+
   async findOneByTourId(id: string): Promise<TourEntity> {
     return await this.tourRepository.findOneById(id);
   }
+
   async findTourDetail(id: string): Promise<TourEntity> {
     try {
       return await this.tourRepository.findByCondition({
@@ -95,6 +95,7 @@ export class TourService {
       throw new BadRequestException(err);
     }
   }
+
   async getCommentOfTour(tourId: string): Promise<CommentEntity[]> {
     try {
       const findCommentsByTourId = await this.tourRepository.findByCondition({
@@ -107,6 +108,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   // Readonly<NewTouristDTO>
   async createTour(
     newTourDTO: Readonly<NewTouristDTO>,
@@ -136,7 +138,11 @@ export class TourService {
       await this.userRegisteredTourRepository.save({
         tour: saveTour,
       });
-      return saveTour;
+      const findTourById = await this.tourRepository.findByCondition({
+        where: { id: saveTour.id },
+        relations: { store: true, comments: { user: true } },
+      });
+      return findTourById;
     } catch (e) {
       throw new BadRequestException(e);
     }
@@ -168,16 +174,49 @@ export class TourService {
     }
   }
 
+  async getCartByUserId(userId: string) {
+    return await this.cartRepository.findWithRelations({
+      where: { userId: userId },
+      relations: { tour: true },
+    });
+  }
+  async deleteCartByUserId(userId: string) {
+    const findCart = await this.cartRepository.findWithRelations({
+      where: { userId: userId },
+    });
+    if (!findCart) return 'can not found';
+    return await this.cartRepository.removeCondition({
+      where: { userId: userId },
+    });
+  }
+  async deleteAElementCartByUserIdAndTourId(userId: string, tourId: string) {
+    try {
+      const findTourById = await this.findOneByTourId(tourId);
+      if (!findTourById) return { msg: 'can not found' };
+      const cart = await this.cartRepository.findByCondition({
+        relations: { tour: true },
+        where: { userId: userId, tourId: tourId },
+      });
+      if (!cart) return { msg: 'can not found' };
+      return await this.cartRepository.remove(cart);
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+
   async createCart(
     cartDto: CartDto,
     user: Readonly<UserEntity>,
   ): Promise<CartEntity> {
     try {
       const tour = await this.findOneByTourId(cartDto.tourId);
+      if (!tour) throw new BadRequestException('can not found Tour');
       const cartFromDb = await this.cartRepository.findByCondition({
         relations: ['tour', 'user'],
         where: [{ tour: { id: cartDto?.tourId }, user: { id: user?.id } }],
       });
+      // if (cartFromDb.tourId === cartDto.tourId)
+      //   throw new BadRequestException('You Added to Cart');
       if (!cartFromDb) {
         return await this.cartRepository.save({
           tour: tour,
@@ -192,6 +231,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   // async implementStrategyPattern(status: string) {
   //
   // }
@@ -202,9 +242,13 @@ export class TourService {
   ) {
     try {
       const findTourById = await this.findOneByTourId(tourId);
+      if (!findTourById) {
+        throw new BadRequestException('can not found');
+      }
+      if (findTourById.status !== TourStatus.AVAILABLE)
+        throw new BadRequestException('Registration is over');
       const price: number = findTourById.price;
       const findUserById = await this.usersRepository.findOneById(userId);
-
       const quantity =
         bookingTourDto.adultPassengers +
         bookingTourDto.infantPassengers +
@@ -216,7 +260,7 @@ export class TourService {
       const totalPrice =
         bookingTourDto.adultPassengers * price +
         bookingTourDto.childPassengers * price +
-        bookingTourDto.toddlerPassengers * 0.5 * price +
+        bookingTourDto.toddlerPassengers * 0.7 * price +
         bookingTourDto.infantPassengers * 0.15 * price;
 
       const createOrder = await this.orderRepository.create({
@@ -251,6 +295,10 @@ export class TourService {
         ...createOrderDetail,
         orderId: saveOder.id,
       });
+      const updateOrderId = await this.orderRepository.save({
+        ...saveOder,
+        orderDetailId: saveOrderDetail.id,
+      });
       for (const data of bookingTourDto.passenger) {
         if (data.type === 'Adult') {
           await this.passengerRepository.save({
@@ -258,7 +306,7 @@ export class TourService {
             type: 'Adult',
             sex: data.sex,
             orderDetail: saveOrderDetail,
-            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : '',
+            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : Number(''),
           });
         }
         if (data.type === 'Child') {
@@ -267,7 +315,7 @@ export class TourService {
             type: 'Child',
             sex: data.sex,
             orderDetail: saveOrderDetail,
-            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : '',
+            dayOfBirth: data.dayOfBirth ? data.dayOfBirth : Number(''),
           });
         }
         if (data.type === 'Toddler') {
@@ -311,7 +359,7 @@ export class TourService {
         });
       }
       const findTourInCart = await this.cartRepository.findByCondition({
-        where: { tourId },
+        where: { tourId, userId },
       });
       if (findTourInCart) {
         await this.cartRepository.remove({ ...findTourInCart });
@@ -321,6 +369,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   async createContentExperienceOfUser(
     userId: string,
     createExperienceDto: CreateExperienceDto,
@@ -335,6 +384,7 @@ export class TourService {
       throw new RpcException(e);
     }
   }
+
   async createCommentOfTour(
     userId: string,
     tourCommentDto: TourCommentDto,
@@ -352,6 +402,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   async createCommentOfExperienceOfUser(
     userId: string,
     experienceCommentDto: ExperienceCommentDto,
@@ -365,6 +416,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   async getExperienceOfUser() {
     try {
       const findExperienceOfUser =
@@ -376,6 +428,7 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   async upvoteOfTour(userId: string, tourId: string) {
     const findTourById = await this.findOneByTourId(tourId);
     if (findTourById.upVote.includes(userId)) {
@@ -395,6 +448,7 @@ export class TourService {
       return { status: findTour.upVote, total: 1 };
     }
   }
+
   async upvoteOfExperienceOfUser(userId: string, experienceId: string) {
     try {
       const findExperienceOfUserById =
@@ -421,19 +475,14 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+
   // automatic update Status
   // @Cron('0 14 * * *')
-  @Cron(' * 0 * * *')
+  @Cron('0 0 * * *')
   async updateStatusTourAutomatic() {
     const currentDate = new Date();
-    // eslint-disable-next-line prefer-const
-    let getAllTour;
     try {
-      let tourCache = await this.redisService.get('tourView');
-      if (tourCache) {
-        tourCache = getAllTour;
-      }
-      getAllTour = await this.tourRepository.findAll({
+      const getAllTour = await this.tourRepository.findAll({
         where: [
           { status: TourStatus.LAST },
           { status: TourStatus.TRAVELING },
@@ -463,5 +512,6 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
+  // @Cron('0 14 * * *') auto send mail
   // @Cron('0 14 * * *')
 }

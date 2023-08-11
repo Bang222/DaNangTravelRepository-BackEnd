@@ -123,7 +123,7 @@ export class BookingTourDto {
       name: string;
       type: string;
       sex: string;
-      dayOfBirth?: string;
+      dayOfBirth?: number;
     },
   ];
 }

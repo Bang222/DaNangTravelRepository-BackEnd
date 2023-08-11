@@ -24,7 +24,7 @@ export class PassengerEntity {
   sex: string;
 
   @Column({ nullable: true })
-  dayOfBirth: string;
+  dayOfBirth: number;
 
   @ManyToOne(() => OrderDetailEntity, (orderDetail) => orderDetail.passengers)
   orderDetail: OrderDetailEntity;

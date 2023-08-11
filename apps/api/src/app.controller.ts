@@ -32,8 +32,10 @@ import { NewStoreDTO } from '../../manager/src/seller/dto';
 import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interceptor';
 import { Throttle } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
+import { catchError, of } from 'rxjs';
 
 @Throttle(30, 60)
+@UseGuards(ThrottlerBehindProxyGuard)
 @Controller()
 export class AppController {
   constructor(
@@ -47,7 +49,8 @@ export class AppController {
     @Inject('TOUR_SERVICE')
     private tourService: ClientProxy,
   ) {}
-  // MANAGER----------------------------------------
+
+  // MANAGER---------------------------------------
   @Post('experience/create/comment')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -61,6 +64,7 @@ export class AppController {
       { userId: req.user?.id, ...experienceCommentDto },
     );
   }
+
   @Post('tour/create/comment')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -74,6 +78,7 @@ export class AppController {
       { userId: req.user?.id, ...tourCommentDto },
     );
   }
+
   @Post('experience/create')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -88,10 +93,12 @@ export class AppController {
       { userId: req.user?.id, content, anonymous },
     );
   }
+
   @Get('experience/all')
   async getReview() {
     return this.tourService.send({ tour: 'get-experience' }, {});
   }
+
   @Post('tour/upvote')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -102,6 +109,7 @@ export class AppController {
       { userId: req?.user.id, tourId },
     );
   }
+
   @Post('experience/upvote')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -115,6 +123,7 @@ export class AppController {
       { userId: req?.user.id, experienceId },
     );
   }
+
   @Get('user/track-trip')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER)
@@ -125,6 +134,7 @@ export class AppController {
       { userId: req.user?.id },
     );
   }
+
   @Post('booking/:id')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER)
@@ -151,9 +161,10 @@ export class AppController {
     );
   }
 
+  @Throttle(5, 10)
   @Get('user/order-history')
-  @UseGuards(AuthGuard, UseRoleGuard)
-  @Roles(Role.USER)
+  @UseGuards(AuthGuard, UseRoleGuard, ThrottlerBehindProxyGuard)
+  @Roles(Role.USER, Role.SELLER, Role.PREMIUM, Role.ADMIN)
   @UseInterceptors(UserInterceptor)
   async getBillUser(@Req() req: UserRequest) {
     return this.managerService.send(
@@ -161,6 +172,7 @@ export class AppController {
       { userId: req.user?.id },
     );
   }
+
   @Get('store/bill')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER, Role.PREMIUM)
@@ -171,14 +183,49 @@ export class AppController {
       { userId: req.user?.id },
     );
   }
+
+  @UseGuards(AuthGuard)
+  @UseInterceptors(UserInterceptor)
+  @Post('delete-cart-by-id')
+  async deleteOneValueCartByTourIdOfUserId(
+    @Body() tourIdDTO: CartDto,
+    @Req() req,
+  ) {
+    const { tourId } = tourIdDTO;
+    const userId = req.headers['x-client-id'];
+    return this.tourService.send(
+      { tour: 'delete-cart-by-id' },
+      { tourId, userId: userId },
+    );
+  }
+  @UseGuards(AuthGuard)
+  @Post('delete-all-cart')
+  async deleteAllValueCartByUserId(@Req() req) {
+    const userId = req.headers['x-client-id'];
+    return this.tourService.send(
+      { tour: 'delete-all-cart-by-userId' },
+      { userId: userId },
+    );
+  }
+
   @UseGuards(AuthGuard)
   @UseInterceptors(UserInterceptor)
   @Post('cart')
-  async getAllStore(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
+  async addToCart(@Body() newCartDTO: CartDto, @Req() req: UserRequest) {
     const { tourId } = newCartDTO;
     return this.tourService.send(
       { tour: 'create-cart' },
       { tourId, userId: req.user?.id },
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('get-cart')
+  async getCartByUserId(@Req() req) {
+    const userId = req.headers['x-client-id'];
+    return this.tourService.send(
+      { tour: 'get-cart-by-userId' },
+      { userId: userId },
     );
   }
 
@@ -190,6 +237,7 @@ export class AppController {
     }
     return this.managerService.send({ cmd: 'tour-by-id' }, { tourId });
   }
+
   @Throttle(30, 60)
   @UseGuards(ThrottlerBehindProxyGuard)
   @Get('tour/all')
@@ -210,6 +258,7 @@ export class AppController {
       { userId: req.user?.id, content },
     );
   }
+
   @Post('tour/comments')
   async getCommentsByTourId(@Body('tourId') tourId: string) {
     if (!tourId) {
@@ -294,12 +343,14 @@ export class AppController {
       },
     );
   }
+
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Get('user-detail')
   async getUserId(@Req() req: UserRequest) {
     return this.authService.send({ cmd: 'get-user' }, { id: req.user?.id });
   }
+
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
   @UseInterceptors(UserInterceptor)
@@ -326,32 +377,42 @@ export class AppController {
       {},
     );
   }
+
   @UseGuards(AuthGuard)
   @Post('auth')
   async postUser() {
     return this.authService.send({ cmd: 'post-user' }, {});
   }
+
   @Post('auth/register')
   async register(@Body() newUser: NewUserDTO) {
     const { firstName, lastName, email, password, sex, address } = newUser;
-    return this.authService.send(
-      { cmd: 'register' },
-      {
-        firstName,
-        lastName,
-        email,
-        password,
-        sex,
-        address,
-      },
-    );
+    return this.authService
+      .send(
+        { cmd: 'register' },
+        {
+          firstName,
+          lastName,
+          email,
+          password,
+          sex,
+          address,
+        },
+      )
+      .pipe(
+        catchError((err) => {
+          return of(err);
+        }),
+      );
   }
+
   @UseInterceptors(CookieResInterceptor)
   @Post('auth/login')
   async login(@Body() existingUserDTO: ExistingUserDTO) {
     const { email, password } = existingUserDTO;
     return this.authService.send({ cmd: 'login' }, { email, password });
   }
+
   @Post('add-friend/:friendId')
   async addFriend(
     @Req() req: UserRequest,
@@ -365,6 +426,7 @@ export class AppController {
       { userId: req.user.id, friendId },
     );
   }
+
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Post('store/create')
@@ -378,6 +440,7 @@ export class AppController {
       { name, slogan, userId: req.user.id },
     );
   }
+
   //THIRD Party SERVICE
   @Get('validate-email')
   async validateTokenRegister(@Query('token') jwt: string, @Res() response) {
@@ -385,22 +448,24 @@ export class AppController {
       .send({ email: 'validate-email' }, { token: jwt })
       .toPromise();
     response.cookie('token', data.accessToken);
-    return response.redirect('http://localhost:3000/');
+    return response.redirect('http://localhost:3000/login');
   }
+
   @Get('email1')
   async helloThirdPartyService2() {
     return this.emailService.send({ email: 'smail' }, {});
   }
+
   @Get('email2')
   async helloThirdPartyService3() {
     return this.socialSharingService.send({ social: 'smail' }, {});
   }
+
   @Get('email3')
   async helloThirdPartyService4() {
     return this.paymentService.send({ payment: 'smail' }, {});
   }
-  // @UseInterceptors(UserInterceptor)
-  // @UseGuards(AuthGuard)
+
   @Post('refresh-token')
   async refreshToken(@Req() req) {
     const userId = req.headers['x-client-id'];
@@ -411,6 +476,7 @@ export class AppController {
       { refreshToken: refreshToken, userId: userId },
     );
   }
+
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() req) {

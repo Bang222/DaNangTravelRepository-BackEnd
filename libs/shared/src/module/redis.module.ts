@@ -19,9 +19,8 @@ const _Secconds = 5000;
       isGlobal: true,
       inject: [ConfigService],
     }),
-
   ],
   providers: [RedisCacheService],
-  exports: [RedisCacheService],
+  exports: [RedisCacheService, CacheModule],
 })
 export class RedisModule {}
