@@ -13,7 +13,7 @@ export class CartEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true, default: true })
+  @Column({ default: true })
   isActive: boolean;
 
   @CreateDateColumn({ nullable: true })

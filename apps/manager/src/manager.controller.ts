@@ -1,4 +1,4 @@
-import {Controller, Inject, UseFilters} from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 import { ManagerService } from './manager.service';
 import { RedisCacheService, SharedServiceInterface } from '@app/shared';
 import {
@@ -18,7 +18,6 @@ import {
 } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
-import Redis from 'ioredis';
 
 @Controller()
 export class ManagerController {
@@ -29,7 +28,6 @@ export class ManagerController {
     private readonly sharedService: SharedServiceInterface,
     private readonly tourService: TourService,
     private readonly sellerService: SellerService,
-    private readonly redisService1: RedisService,
   ) {}
   //tourService--------------------------
   @MessagePattern({ cmd: 'tour-by-id' })
@@ -48,7 +46,9 @@ export class ManagerController {
       return tourView;
     }
     const setTourView = await this.tourService.getAllTours();
-    await this.redisService.set('tourView', setTourView);
+    const randomNumber = Math.floor(Math.random() * 2000);
+    const ttl = randomNumber + 12000;
+    await this.redisService.set('tourView', setTourView, ttl);
     return setTourView;
   }
   @MessagePattern({ tour: 'create-tour' })
@@ -61,7 +61,15 @@ export class ManagerController {
     const storeOfUserOwner = await this.sellerService.findOneStoreById(
       payload.userId,
     );
-    return this.tourService.createTour(JSON.parse(data.data), storeOfUserOwner);
+    const value = await this.tourService.createTour(
+      JSON.parse(data.data),
+      storeOfUserOwner,
+    );
+    const dataRedis = await this.redisService.get('tourView');
+    const newDataRedis =
+      typeof dataRedis === 'object' ? { ...dataRedis, value } : { value };
+    await this.redisService.set('tourView', newDataRedis);
+    return value;
   }
   @MessagePattern({ tour: 'create-cart' })
   async createCart(
@@ -73,6 +81,34 @@ export class ManagerController {
     const user = await this.managerService.findUserById(payload.userId);
     return await this.tourService.createCart(newCartDTO, user);
   }
+  @MessagePattern({ tour: 'get-cart-by-userId' })
+  async getCartByUserId(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.getCartByUserId(payload.userId);
+  }
+  @MessagePattern({ tour: 'delete-cart-by-id' })
+  async deleteOneValueCartByTourIdOfUserId(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string; tourId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.deleteAElementCartByUserIdAndTourId(
+      payload.userId,
+      payload.tourId,
+    );
+  }
+  @MessagePattern({ tour: 'delete-all-cart-by-userId' })
+  async deleteAllValueByUserId(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.deleteCartByUserId(payload.userId);
+  }
+
   @MessagePattern({ tour: 'create-content-experience' })
   async createContentExperienceOfUser(
     @Ctx() context: RmqContext,

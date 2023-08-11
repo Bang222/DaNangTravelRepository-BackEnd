@@ -11,15 +11,6 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
-  // app.use((err, req, res) => {
-  //   const statusCode = err.status || 500;
-  //   return res.status(statusCode).json({
-  //     status: 'err',
-  //     code: statusCode,
-  //     stack: err.stack,
-  //     message: err.message || 'code sai',
-  //   });
-  // });
   app.use(
     compression({
       threshold: 100 * 1000,

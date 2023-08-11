@@ -44,7 +44,7 @@ import {
   ScheduleRepository,
 } from '@app/shared';
 import { ScheduleModule } from '@nestjs/schedule';
-import {RedisService} from "nestjs-redis";
+import { RedisService } from 'nestjs-redis';
 
 @Module({
   imports: [
@@ -97,7 +97,6 @@ import {RedisService} from "nestjs-redis";
     ManagerService,
     TourService,
     SellerService,
-    RedisService,
     {
       provide: 'TourRepositoryInterface',
       useClass: TourRepository,
