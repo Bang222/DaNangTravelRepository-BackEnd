@@ -12,7 +12,7 @@ export interface AuthServiceInterface {
   validateUser(email: string, password: string): Promise<UserEntity>;
   login(existingUser: Readonly<ExistingUserDTO>): Promise<{
     token: any;
-    user: UserEntity;
+    user: any;
   }>;
   // : Promise<{ user: UserEntity; exp: number }>
   verifyJWT(jwt: string, userId: string);

@@ -42,20 +42,20 @@ import {
   PassengerRepository,
   PaymentRepository,
   ScheduleRepository,
+  KeyTokenRepository,
+  KeyTokenEntity,
 } from '@app/shared';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RedisService } from 'nestjs-redis';
-
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     SharedModule.registerRmq(
       'MANAGER_SERVICE',
       process.env.RABBITMQ_MANAGER_QUEUE,
     ),
     SharedModule.registerRmq('TOUR_SERVICE', process.env.RABBITMQ_TOUR_QUEUE),
-    ScheduleModule.forRoot(),
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
-
+    SharedModule.registerRmq('MAIL_SERVICE', process.env.RABBITMQ_MAIL_QUEUE),
     SharedModule,
     PostgresdbModule,
     RedisModule,
@@ -90,6 +90,7 @@ import { RedisService } from 'nestjs-redis';
       PaymentEntity,
       ScheduleEntity,
       PassengerEntity,
+      KeyTokenEntity,
     ]),
   ],
   controllers: [ManagerController],
@@ -97,6 +98,10 @@ import { RedisService } from 'nestjs-redis';
     ManagerService,
     TourService,
     SellerService,
+    {
+      provide: 'KeyTokenRepositoryInterface',
+      useClass: KeyTokenRepository,
+    },
     {
       provide: 'TourRepositoryInterface',
       useClass: TourRepository,

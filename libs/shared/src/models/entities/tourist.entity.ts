@@ -51,7 +51,10 @@ export class TourEntity {
   @Column()
   quantity: number;
 
-  @Column('text', { array: true, default: [] })
+  @Column()
+  baseQuantity: number;
+
+  @Column('text', { nullable: true, array: true, default: [] })
   imageUrl: string[];
 
   @Column({ default: '{0}', nullable: true, type: 'text', array: true })
@@ -86,10 +89,4 @@ export class TourEntity {
 
   @OneToMany(() => ScheduleEntity, (schedule) => schedule.tour)
   schedules: ScheduleEntity[];
-
-  // @AfterInsert()
-  // async queueTaskAfterInsert() {
-  //   // Here, you can queue the task using the Queue instance you injected in the service
-  //   await this.queue.add('find-all', this); // Assuming you have a Bull queue named 'process_task'
-  // }
 }

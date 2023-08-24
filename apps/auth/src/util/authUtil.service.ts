@@ -15,6 +15,7 @@ export class AuthUtilService {
       expiresIn: '365 days',
     });
   }
+
   async accessToken(data: any, privateKey: string) {
     return sign({ data }, privateKey, {
       algorithm: 'RS256',

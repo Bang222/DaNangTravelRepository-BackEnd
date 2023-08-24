@@ -10,6 +10,7 @@ import {
   UserEntity,
   UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
+  KeyTokenRepositoryInterface,
 } from '@app/shared';
 import { NewStoreDTO } from './dto';
 import { Role } from '@app/shared/models/enum';
@@ -33,6 +34,8 @@ export class SellerService {
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')
     private readonly orderRepository: OrderRepositoryInterface,
+    @Inject('KeyTokenRepositoryInterface')
+    private readonly keyTokenRepository: KeyTokenRepositoryInterface,
   ) {}
   async findAllStore() {
     return await this.storeRepository.findWithRelations({
@@ -69,6 +72,10 @@ export class SellerService {
       ...user,
       role: Role.SELLER,
     });
+    const findKey = await this.keyTokenRepository.findByCondition({
+      where: { userId: user.id },
+    });
+    await this.keyTokenRepository.remove(findKey);
     return await this.storeRepository.save({ name, slogan, user });
   }
   async getTourEachStore(userId: string): Promise<StoreEntity> {
@@ -76,8 +83,38 @@ export class SellerService {
     if (!OwnerDetail) return null;
     return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
+      relations: {
+        tours: {
+          comments: true,
+          schedules: true,
+          orderDetails: { passengers: true },
+        },
+      },
+    });
+  }
+  async getAllTourOfStore(userId: string) {
+    const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail) return null;
+    const store = await this.storeRepository.findByCondition({
+      where: { id: OwnerDetail.store?.id },
+      relations: {
+        tours: {
+          comments: true,
+          schedules: true,
+          orderDetails: { passengers: true, order: true },
+        },
+      },
+    });
+    return store.tours.reverse();
+  }
+  async findTourOfStore(userId: string) {
+    const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail) return null;
+    const store = await this.storeRepository.findByCondition({
+      where: { id: OwnerDetail.store?.id },
       relations: { tours: true },
     });
+    return store.tours;
   }
   async trackUserRegistered(userId: string): Promise<StoreEntity> {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
@@ -96,7 +133,6 @@ export class SellerService {
     });
   }
   async getUserRegisteredTour(tourId: string) {
-    //oke
     try {
       const UsersRegisterTour =
         await this.userRegisteredTourRepository.findByCondition({

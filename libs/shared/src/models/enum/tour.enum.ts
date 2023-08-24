@@ -5,6 +5,7 @@ export enum TourStatus {
   LAST = 'out of date register',
   PRIVATE = 'private',
   DONE = 'TRAVELED',
+  Delete = 'delete',
 }
 export enum StoreStatus {
   ACTIVE = 'active',
@@ -19,4 +20,6 @@ export enum ReviewStatus {
   OPEN = 'open',
   CLOSE = 'close',
   NOTYET = 'not yet',
+  POST = 'POST',
+  EXPERIENCE = 'EXPERIENCE',
 }

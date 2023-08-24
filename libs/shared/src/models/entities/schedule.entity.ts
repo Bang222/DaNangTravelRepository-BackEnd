@@ -16,9 +16,12 @@ export class ScheduleEntity {
   day: number;
 
   @Column()
-  description: string;
+  title: string;
 
   @Column()
+  description: string;
+
+  @Column({ nullable: true })
   imgUrl: string;
 
   @ManyToOne(() => TourEntity, (tour) => tour.schedules)

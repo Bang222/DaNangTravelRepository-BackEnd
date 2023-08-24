@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthGuard, SharedModule } from '@app/shared';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CloudinaryService } from '../../third-party-service/src/cloudinary/cloudinary.service';
+import { CloudinaryProvider } from '../../third-party-service/src/cloudinary/cloudinary.provider';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { APP_GUARD } from '@nestjs/core';
   ],
   controllers: [AppController],
   providers: [
+    CloudinaryService,
+    CloudinaryProvider,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

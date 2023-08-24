@@ -9,6 +9,8 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -33,8 +35,10 @@ import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interc
 import { Throttle } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 import { catchError, of } from 'rxjs';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../../third-party-service/src/cloudinary/cloudinary.service';
 
-@Throttle(30, 60)
+@Throttle(60, 60)
 @UseGuards(ThrottlerBehindProxyGuard)
 @Controller()
 export class AppController {
@@ -48,6 +52,7 @@ export class AppController {
     private paymentService: ClientProxy,
     @Inject('TOUR_SERVICE')
     private tourService: ClientProxy,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   // MANAGER---------------------------------------
@@ -83,14 +88,29 @@ export class AppController {
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
   @UseInterceptors(UserInterceptor)
+  @UseInterceptors(FileInterceptor('file'))
   async createReview(
     @Req() req: UserRequest,
     @Body() createExperienceDto: CreateExperienceDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    const { content, anonymous } = createExperienceDto;
+    if (!file) {
+      throw new Error('can not found');
+    }
+    const image = await this.cloudinaryService.uploadFile(file);
+    if (!image) {
+      throw new Error('can not found');
+    }
+    const { content, anonymous, title } = createExperienceDto;
     return this.tourService.send(
       { tour: 'create-content-experience' },
-      { userId: req.user?.id, content, anonymous },
+      {
+        userId: req.user?.id,
+        content,
+        anonymous,
+        imgUrl: image.secure_url,
+        title,
+      },
     );
   }
 
@@ -109,6 +129,23 @@ export class AppController {
       { userId: req?.user.id, tourId },
     );
   }
+  @Post('tour/delete')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async tourDeleteById(
+    @Req() req: UserRequest,
+    @Body('tourId') tourId: string,
+  ) {
+    if (!tourId) {
+      throw new BadRequestException('tourId is required');
+    }
+    const userId = req.headers['x-client-id'];
+    return this.tourService.send(
+      { tour: 'delete-tour-by-id' },
+      { tourId, userId },
+    );
+  }
 
   @Post('experience/upvote')
   @UseGuards(AuthGuard, UseRoleGuard)
@@ -118,6 +155,9 @@ export class AppController {
     @Req() req: UserRequest,
     @Body('experienceId') experienceId: string,
   ) {
+    if (!experienceId) {
+      return new BadRequestException('can not found');
+    }
     return this.tourService.send(
       { tour: 'upvote-experience' },
       { userId: req?.user.id, experienceId },
@@ -137,7 +177,7 @@ export class AppController {
 
   @Post('booking/:id')
   @UseGuards(AuthGuard, UseRoleGuard)
-  @Roles(Role.USER)
+  @Roles(Role.USER, Role.ADMIN, Role.PREMIUM, Role.SELLER)
   @UseInterceptors(UserInterceptor)
   async bookingTour(
     @Req() req: UserRequest,
@@ -233,7 +273,7 @@ export class AppController {
   @Post('tour-by-id')
   async getTourById(@Body('tourId') tourId: string) {
     if (!tourId) {
-      return 'can not null id';
+      return new BadRequestException('can not null Id');
     }
     return this.managerService.send({ cmd: 'tour-by-id' }, { tourId });
   }
@@ -312,29 +352,21 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
+  @UseInterceptors(FilesInterceptor('files[]', 10))
   @Post('tour/create')
   async createTour(
     @Body() newTouristDTO: NewTouristDTO,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() req: UserRequest,
   ) {
-    if (!req?.user) {
-      return 'you can not allow to do that';
+    if (files.length === 0) {
+      throw new Error('can not found');
     }
-    // const {
-    //   name,
-    //   description,
-    //   price,
-    //   quantity,
-    //   address,
-    //   imageUrl,
-    //   startDate,
-    //   endDate,
-    //   lastRegisterDate,
-    //   startAddress,
-    //   endingAddress,
-    // } = newTouristDTO;
-    // console.log('api', JSON.stringify(newTouristDTO));
-    const data = JSON.stringify(newTouristDTO);
+    const images = await this.cloudinaryService.uploadFiles(files);
+    if (images?.length === 0) {
+      throw new Error('can not found');
+    }
+    const data = JSON.stringify({ ...newTouristDTO, imageUrl: images });
     return this.tourService.send(
       { tour: 'create-tour' },
       {
@@ -406,27 +438,19 @@ export class AppController {
       );
   }
 
-  @UseInterceptors(CookieResInterceptor)
   @Post('auth/login')
   async login(@Body() existingUserDTO: ExistingUserDTO) {
     const { email, password } = existingUserDTO;
     return this.authService.send({ cmd: 'login' }, { email, password });
   }
 
-  @Post('add-friend/:friendId')
-  async addFriend(
-    @Req() req: UserRequest,
-    @Param('friendId') friendId: string,
-  ) {
-    if (!req?.user) {
-      throw new BadRequestException();
+  @Post('auth/login/google')
+  async loginGoogle(@Body('accessToken') accessToken: string) {
+    if (!accessToken) {
+      return new BadRequestException('can not found token ID');
     }
-    return this.authService.send(
-      { cmd: 'add-friend' },
-      { userId: req.user.id, friendId },
-    );
+    return this.authService.send({ cmd: 'login-google' }, { accessToken });
   }
-
   @UseInterceptors(UserInterceptor)
   @UseGuards(AuthGuard)
   @Post('store/create')

@@ -38,8 +38,9 @@ export class NewTouristDTO {
   description: string;
   @IsNotEmpty()
   price: number;
-  @IsNotEmpty()
   quantity: number;
+  @IsNotEmpty()
+  baseQuantity: number;
   imageUrl?: string[];
   @IsNotEmpty()
   lastRegisterDate: Date;
@@ -57,13 +58,7 @@ export class NewTouristDTO {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => ScheduleDto)
-  schedules: [
-    {
-      day: number;
-      description: string;
-      imgUrl: string;
-    },
-  ];
+  schedules: ScheduleDto[];
 }
 export class UpdateTouristDTO {
   name?: string;
@@ -91,12 +86,6 @@ export class PassengerDto {
   sex: string;
   dayOfBirth?: Date;
 }
-type passengerType = {
-  ADULT: 'Adult';
-  Infant: 'Infant';
-  Toddler: 'Toddler';
-  Child: 'Child';
-};
 export class BookingTourDto {
   @IsEmail()
   @IsNotEmpty()
@@ -133,10 +122,13 @@ export class ScheduleDto {
   day: number;
 
   @IsNotEmpty()
-  description: string;
+  title: string;
 
   @IsNotEmpty()
-  imgUrl: string;
+  description: string;
+
+  // @IsNotEmpty()
+  imgUrl?: string;
 }
 export class TourCommentDto {
   @IsNotEmpty()
@@ -153,5 +145,9 @@ export class ExperienceCommentDto {
 export class CreateExperienceDto {
   @IsNotEmpty()
   content: string;
+  @IsNotEmpty()
+  title: string;
+  imgUrl: string;
+
   anonymous?: boolean;
 }

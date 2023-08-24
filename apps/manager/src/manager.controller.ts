@@ -209,6 +209,14 @@ export class ManagerController {
     const { userId, experienceId } = payload;
     return this.tourService.upvoteOfExperienceOfUser(userId, experienceId);
   }
+  @MessagePattern({ tour: 'delete-tour-by-id' })
+  async deleteTourById(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { tourId: string; userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.deleteTour(payload.tourId, payload.userId);
+  }
 
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {
@@ -231,12 +239,12 @@ export class ManagerController {
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
   ) {
-    const getTourOfStore = await this.redisService.get('getTourOfStore');
+    const getTourOfStore = await this.redisService.get('getAllTourOfStore');
     if (getTourOfStore) {
       return getTourOfStore;
     }
-    const tour = await this.sellerService.getTourEachStore(payload.userId);
-    await this.redisService.set('getTourOfStore', tour);
+    const tour = await this.sellerService.getAllTourOfStore(payload.userId);
+    await this.redisService.set('getAllTourOfStore', tour);
     return tour;
   }
   @MessagePattern({ manager: 'bill-store' })

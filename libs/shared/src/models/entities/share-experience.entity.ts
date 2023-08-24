@@ -21,12 +21,17 @@ export class ShareExperienceEntity {
 
   @CreateDateColumn()
   createdAt: Date;
+  @Column({ nullable: true })
+  title: string;
 
   @Column({ default: false })
   anonymous: boolean;
 
   @Column({ default: '{0}', nullable: true, type: 'text', array: true })
   upVote: string[];
+
+  @Column({ nullable: true })
+  imgUrl: string;
 
   @Column({ type: 'enum', enum: ReviewStatus, default: ReviewStatus.NOTYET })
   status: ReviewStatus;

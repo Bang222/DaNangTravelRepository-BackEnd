@@ -33,7 +33,7 @@ import {
 import { TourStatus } from '@app/shared/models/enum';
 import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class TourService {
@@ -58,6 +58,7 @@ export class TourService {
     private readonly scheduleRepository: ScheduleRepositoryInterface,
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
+    @Inject('MAIL_SERVICE') private emailService: ClientProxy,
     private readonly sellerService: SellerService,
     private readonly redisService: RedisCacheService,
   ) {}
@@ -69,7 +70,7 @@ export class TourService {
   async getAllTours(): Promise<TourEntity[]> {
     // const currentDate = new Date();
     return await this.tourRepository.findAll({
-      // where: { status: TourStatus.AVAILABLE },
+      where: { status: TourStatus.AVAILABLE },
       // skip ? skip : 1,
       order: { createdAt: 'DESC' },
       relations: { store: true, comments: { user: true } },
@@ -95,7 +96,27 @@ export class TourService {
       throw new BadRequestException(err);
     }
   }
-
+  async deleteTour(tourId: string, userId: string) {
+    const findTourById = await this.findOneByTourId(tourId);
+    if (!findTourById) return new BadRequestException('can not found Tour');
+    if (findTourById.baseQuantity !== findTourById.quantity) {
+      return new BadRequestException('user bought can not delete');
+    }
+    const findTourOfStore = await this.sellerService.findTourOfStore(userId);
+    const tourExists = findTourOfStore.some(
+      (tour) => tour.id === findTourById.id,
+    );
+    if (!tourExists) throw new BadRequestException('You have not a owner');
+    try {
+      const updateStatus = await this.tourRepository.save({
+        ...findTourById,
+        status: TourStatus.Delete,
+      });
+      return updateStatus;
+    } catch (errors) {
+      throw new BadRequestException('delete tour', errors);
+    }
+  }
   async getCommentOfTour(tourId: string): Promise<CommentEntity[]> {
     try {
       const findCommentsByTourId = await this.tourRepository.findByCondition({
@@ -116,13 +137,14 @@ export class TourService {
   ): Promise<TourEntity> {
     try {
       if (
-        newTourDTO.quantity * newTourDTO.price === 0 &&
+        newTourDTO.baseQuantity * newTourDTO.price === 0 ||
         newTourDTO.startDate >= new Date(Date.now())
       ) {
         throw new BadRequestException('you can not create Tour');
       }
       const createTour = await this.tourRepository.create({
         ...newTourDTO,
+        quantity: newTourDTO.baseQuantity,
         store: storeOfUserOwner,
       });
       const saveTour = await this.tourRepository.save({ ...createTour });
@@ -130,6 +152,7 @@ export class TourService {
       for (const scheduleDto of newTourDTO.schedules) {
         const schedule = new ScheduleEntity();
         schedule.day = scheduleDto.day;
+        schedule.title = scheduleDto.title;
         schedule.description = scheduleDto.description;
         schedule.imgUrl = scheduleDto.imgUrl;
         schedule.tourId = saveTour.id;
@@ -223,9 +246,7 @@ export class TourService {
           user: user,
         });
       } else {
-        return await this.cartRepository.save({
-          ...cartFromDb,
-        });
+        throw new BadRequestException('This tour having in cart');
       }
     } catch (e) {
       throw new BadRequestException(e);
@@ -364,6 +385,21 @@ export class TourService {
       if (findTourInCart) {
         await this.cartRepository.remove({ ...findTourInCart });
       }
+      const configData = {
+        id: findTourById.id,
+        tourName: findTourById.name,
+        TotalPrice: saveOder.totalPrice,
+        participants: saveOder.participants,
+        startDay: findTourById.startDate,
+        endDate: findTourById.endDate,
+      };
+      await this.emailService
+        .send(
+          { email: 'send-booking' },
+          { email: bookingTourDto.email, data: configData },
+        )
+        .toPromise();
+      await this.redisService.del('getAllTourOfStore');
       return 'booking success';
     } catch (e) {
       throw new BadRequestException(e);
@@ -381,7 +417,7 @@ export class TourService {
         userId,
       });
     } catch (e) {
-      throw new RpcException(e);
+      return e;
     }
   }
 
@@ -422,6 +458,7 @@ export class TourService {
       const findExperienceOfUser =
         await this.usedTourExperienceOfUserRepository.findAll({
           relations: { comments: { user: true }, user: true },
+          order: { createdAt: 'DESC' },
         });
       return findExperienceOfUser;
     } catch (e) {
@@ -452,7 +489,12 @@ export class TourService {
   async upvoteOfExperienceOfUser(userId: string, experienceId: string) {
     try {
       const findExperienceOfUserById =
-        await this.usedTourExperienceOfUserRepository.findOneById(experienceId);
+        await this.usedTourExperienceOfUserRepository.findByCondition({
+          where: { id: experienceId },
+        });
+      if (!findExperienceOfUserById) {
+        return new BadRequestException('can not found');
+      }
       if (findExperienceOfUserById.upVote.includes(userId)) {
         const updateUpVoteExistUserId = findExperienceOfUserById.upVote.filter(
           (item) => item !== userId,
@@ -472,7 +514,7 @@ export class TourService {
         return updateUpvote.upVote.length - 1;
       }
     } catch (e) {
-      throw new BadRequestException(e);
+      return new BadRequestException('can not found');
     }
   }
 
@@ -503,7 +545,6 @@ export class TourService {
             status: TourStatus.TRAVELING,
           });
         }
-        //Ending
         if (currentDate > x.endDate) {
           await this.tourRepository.save({ ...x, status: TourStatus.DONE });
         }

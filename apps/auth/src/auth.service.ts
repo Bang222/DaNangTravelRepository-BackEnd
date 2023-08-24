@@ -15,6 +15,8 @@ import { KeyTokenRepositoryInterface, UserEntity } from '@app/shared';
 import { ClientProxy } from '@nestjs/microservices';
 import * as crypto from 'crypto';
 import { AuthUtilService } from './util/authUtil.service';
+import axios from 'axios';
+import { UserInfoGoogle } from './dto/auth-google-login.dto';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
@@ -184,16 +186,53 @@ export class AuthService implements AuthServiceInterface {
       findKey.privateKey,
     );
   }
+  async validateGoogle(accessToken: string) {
+    console.log(accessToken);
+    const userInfo = await axios.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+    if (!userInfo) return new BadRequestException('Error TK');
+    return userInfo.data as UserInfoGoogle;
+  }
+  async loginGoogle(userInfo: UserInfoGoogle) {
+    try {
+      const findUserByEmail = await this.usersRepository.findByCondition({
+        where: { email: userInfo.email },
+      });
+      if (!findUserByEmail)
+        return new BadRequestException(
+          'can not found email Please Register your email',
+        );
+      delete findUserByEmail.password;
+      const accessAndRefresh = await this.signTokenUsingPrivateKeyAndPublishKey(
+        findUserByEmail.id,
+      );
+      const user = await this.usersRepository.findByCondition({
+        where: { id: findUserByEmail.id },
+        relations: { store: true },
+      });
+      return { token: accessAndRefresh, user };
+    } catch (e) {
+      return e;
+    }
+  }
 
   async login(existingUser: Readonly<ExistingUserDTO>) {
     try {
       const { email, password } = existingUser;
-      const user = await this.validateUser(email, password);
-      if (!user) throw new UnauthorizedException('Please Register!!');
-      delete user.password;
+      const baseUser = await this.validateUser(email, password);
+      if (!baseUser) throw new UnauthorizedException('Please Register!!');
+      delete baseUser.password;
       const accessAndRefresh = await this.signTokenUsingPrivateKeyAndPublishKey(
-        user.id,
+        baseUser.id,
       );
+      const user = await this.usersRepository.findByCondition({
+        where: { id: baseUser.id },
+        relations: { store: true },
+      });
       return { token: accessAndRefresh, user };
     } catch (err) {
       throw new UnauthorizedException(err);
