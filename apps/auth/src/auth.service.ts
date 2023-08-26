@@ -76,7 +76,7 @@ export class AuthService implements AuthServiceInterface {
       });
       return { token: token, user: findUser };
     } catch (e) {
-      throw new ForbiddenException(e);
+      return e;
     }
   }
 
@@ -143,23 +143,8 @@ export class AuthService implements AuthServiceInterface {
         .toPromise();
       return savedUser;
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
-  }
-  async validateUser(email: string, password: string): Promise<UserEntity> {
-    const user = await this.findByEmail(email);
-
-    const doesUserExist = !!user;
-    if (!doesUserExist) return null;
-    // if (user.isEmailValidated === true) return null;
-
-    const doesPasswordMatch = await this.authUtil.doesPasswordMatch(
-      password,
-      user.password,
-    );
-
-    if (!doesPasswordMatch) return null;
-    return user;
   }
   async signTokenUsingPrivateKeyAndPublishKey(userId: string) {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -187,7 +172,6 @@ export class AuthService implements AuthServiceInterface {
     );
   }
   async validateGoogle(accessToken: string) {
-    console.log(accessToken);
     const userInfo = await axios.get(
       'https://www.googleapis.com/oauth2/v3/userinfo',
       {
@@ -219,13 +203,28 @@ export class AuthService implements AuthServiceInterface {
       return e;
     }
   }
+  async validateUser(email: string, password: string): Promise<UserEntity> {
+    const user = await this.findByEmail(email);
+    const doesUserExist = !!user;
+    if (!doesUserExist) throw new Error('Please Register!!');
+    // if (user.isEmailValidated === true) return null;
+
+    const doesPasswordMatch = await this.authUtil.doesPasswordMatch(
+      password,
+      user.password,
+    );
+    if (!doesPasswordMatch) throw new Error("Password doesn't match");
+    return user;
+  }
 
   async login(existingUser: Readonly<ExistingUserDTO>) {
     try {
       const { email, password } = existingUser;
       const baseUser = await this.validateUser(email, password);
-      if (!baseUser) throw new UnauthorizedException('Please Register!!');
       delete baseUser.password;
+      if (!baseUser) {
+        throw new Error('Please Register!!');
+      }
       const accessAndRefresh = await this.signTokenUsingPrivateKeyAndPublishKey(
         baseUser.id,
       );
@@ -235,7 +234,7 @@ export class AuthService implements AuthServiceInterface {
       });
       return { token: accessAndRefresh, user };
     } catch (err) {
-      throw new UnauthorizedException(err);
+      return { error: err.message };
     }
   }
   async verifyJwt(jwt: string, userId: string) {
@@ -248,7 +247,7 @@ export class AuthService implements AuthServiceInterface {
       if (!decoded) throw new BadRequestException('can not valid token');
       return decoded;
     } catch (error) {
-      throw new UnauthorizedException();
+      return error;
     }
   }
   async getUserFromHeader(jwt: string) {

@@ -5,6 +5,7 @@ import {
   Get,
   Inject,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -31,14 +32,13 @@ import {
   UpdateTouristDTO,
 } from '../../manager/src/tour/dtos';
 import { NewStoreDTO } from '../../manager/src/seller/dto';
-import { CookieResInterceptor } from '@app/shared/interceptors/cookie-res.interceptor';
 import { Throttle } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 import { catchError, of } from 'rxjs';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../../third-party-service/src/cloudinary/cloudinary.service';
 
-@Throttle(60, 60)
+@Throttle(30, 60)
 @UseGuards(ThrottlerBehindProxyGuard)
 @Controller()
 export class AppController {
@@ -117,6 +117,10 @@ export class AppController {
   @Get('experience/all')
   async getReview() {
     return this.tourService.send({ tour: 'get-experience' }, {});
+  }
+  @Get('experience/page=:page')
+  async getReviewPage(@Param('page', ParseIntPipe) page: string) {
+    return this.tourService.send({ tour: 'get-experience-page' }, { page });
   }
 
   @Post('tour/upvote')
@@ -278,11 +282,11 @@ export class AppController {
     return this.managerService.send({ cmd: 'tour-by-id' }, { tourId });
   }
 
-  @Throttle(30, 60)
+  @Throttle(200, 60)
   @UseGuards(ThrottlerBehindProxyGuard)
-  @Get('tour/all')
-  async getAllTour() {
-    return this.tourService.send({ tour: 'get-all-tour' }, {});
+  @Get('tour/all/page=:currentPage')
+  async getAllTour(@Param('currentPage', ParseIntPipe) currentPage: number) {
+    return this.tourService.send({ tour: 'get-all-tour' }, { currentPage });
   }
 
   @UseInterceptors(UserInterceptor)
@@ -386,14 +390,17 @@ export class AppController {
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER)
   @UseInterceptors(UserInterceptor)
-  @Get('store/list-tour')
-  async getTourToStore(@Req() req: UserRequest) {
+  @Get('store/list-tour/page=:currentPage')
+  async getTourToStore(
+    @Req() req: UserRequest,
+    @Param('currentPage', ParseIntPipe) currentPage: number,
+  ) {
     if (!req?.user) {
       return 'you can not allow to do that';
     }
     return this.managerService.send(
       { manager: 'get-tour-to-Store' },
-      { userId: req.user?.id },
+      { userId: req.user?.id, currentPage },
     );
   }
 

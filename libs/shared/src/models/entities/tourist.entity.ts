@@ -2,7 +2,7 @@ import {
   AfterInsert,
   Column,
   CreateDateColumn,
-  Entity,
+  Entity, JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -71,6 +71,9 @@ export class TourEntity {
 
   @ManyToOne(() => StoreEntity, (store) => store.tours)
   store: StoreEntity;
+  @JoinColumn({ name: 'storeId' })
+  @Column({ nullable: true })
+  storeId: string
 
   @OneToMany(() => CartEntity, (carts) => carts.tour)
   carts: CartEntity[];

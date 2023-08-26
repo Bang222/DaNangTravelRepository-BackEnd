@@ -11,8 +11,9 @@ export interface AuthServiceInterface {
   register(newUser: Readonly<NewUserDTO>): Promise<UserEntity>;
   validateUser(email: string, password: string): Promise<UserEntity>;
   login(existingUser: Readonly<ExistingUserDTO>): Promise<{
-    token: any;
-    user: any;
+    token?: any;
+    user?: any;
+    error?: string;
   }>;
   // : Promise<{ user: UserEntity; exp: number }>
   verifyJWT(jwt: string, userId: string);

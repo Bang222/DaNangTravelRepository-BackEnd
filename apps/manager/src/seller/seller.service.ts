@@ -64,19 +64,23 @@ export class SellerService {
     user: Readonly<UserEntity>,
   ): Promise<StoreEntity> {
     const { name, slogan } = newStoreDTO;
-    const userExistsStore = await this.findOwnerIdOfAllStore();
-    if (userExistsStore.includes(user.id)) {
-      throw new Error('You have store');
+    try {
+      const userExistsStore = await this.findOwnerIdOfAllStore();
+      if (userExistsStore.includes(user.id)) {
+        throw new Error('You have store');
+      }
+      await this.usersRepository.save({
+        ...user,
+        role: Role.SELLER,
+      });
+      const findKey = await this.keyTokenRepository.findByCondition({
+        where: { userId: user.id },
+      });
+      await this.keyTokenRepository.remove(findKey);
+      return await this.storeRepository.save({ name, slogan, user });
+    } catch (e) {
+      return e;
     }
-    await this.usersRepository.save({
-      ...user,
-      role: Role.SELLER,
-    });
-    const findKey = await this.keyTokenRepository.findByCondition({
-      where: { userId: user.id },
-    });
-    await this.keyTokenRepository.remove(findKey);
-    return await this.storeRepository.save({ name, slogan, user });
   }
   async getTourEachStore(userId: string): Promise<StoreEntity> {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
@@ -107,6 +111,25 @@ export class SellerService {
     });
     return store.tours.reverse();
   }
+  // pageCurrent: number
+  async getTourOfStorePage(userId: string, currentPage: number) {
+    const itemsPerPage = 10;
+    const skip = (currentPage - 1) * itemsPerPage;
+    const OwnerDetail = await this.findOwnerIdByUserId(userId);
+    if (!OwnerDetail) return null;
+    const findTourToStore = await this.tourRepository.findWithRelations({
+      where: { storeId: OwnerDetail.store.id },
+      order: { createdAt: 'DESC' },
+      relations: {
+        comments: true,
+        schedules: true,
+        orderDetails: { passengers: true, order: true },
+      },
+      skip: skip,
+      take: itemsPerPage,
+    });
+    return findTourToStore;
+  }
   async findTourOfStore(userId: string) {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
     if (!OwnerDetail) return null;
@@ -126,7 +149,7 @@ export class SellerService {
   }
   async selectBillOfStore(userId: string) {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
-    if (!OwnerDetail) return null;
+    if (!OwnerDetail) throw new Error('can not found');
     return await this.storeRepository.findByCondition({
       where: { id: OwnerDetail.store?.id },
       relations: { tours: { orderDetails: { order: true } } },
@@ -148,10 +171,10 @@ export class SellerService {
   async getBillOfStore(userId: string) {
     try {
       const getTourOfStore = await this.selectBillOfStore(userId);
-      if (!getTourOfStore) return null;
+      if (!getTourOfStore) throw new Error(' can not found');
       return getTourOfStore.tours.map((item) => item.orderDetails);
     } catch (e) {
-      throw new Error(e);
+      return e;
     }
   }
   async getBillOfUser(userId: string) {
@@ -163,7 +186,7 @@ export class SellerService {
       if (!findUser) return null;
       return findUser.orders;
     } catch (e) {
-      throw new Error(e);
+      return e;
     }
   }
   async getFollowerTripRegisteredUser(userId: string) {

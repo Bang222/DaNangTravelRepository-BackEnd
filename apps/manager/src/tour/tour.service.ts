@@ -34,6 +34,7 @@ import { TourStatus } from '@app/shared/models/enum';
 import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TourService {
@@ -67,14 +68,15 @@ export class TourService {
     return 'tourHello';
   }
 
-  async getAllTours(): Promise<TourEntity[]> {
-    // const currentDate = new Date();
+  async getAllTours(currentPage: number): Promise<TourEntity[]> {
+    const itemsPerPage = 3;
+    const skip = (currentPage - 1) * itemsPerPage;
     return await this.tourRepository.findAll({
       where: { status: TourStatus.AVAILABLE },
-      // skip ? skip : 1,
+      skip: skip,
       order: { createdAt: 'DESC' },
       relations: { store: true, comments: { user: true } },
-      // take: 3,
+      take: itemsPerPage,
     });
   }
 
@@ -114,7 +116,7 @@ export class TourService {
       });
       return updateStatus;
     } catch (errors) {
-      throw new BadRequestException('delete tour', errors);
+      return errors;
     }
   }
   async getCommentOfTour(tourId: string): Promise<CommentEntity[]> {
@@ -126,7 +128,7 @@ export class TourService {
       if (!findCommentsByTourId) throw new BadRequestException('Can not found');
       return findCommentsByTourId.comments;
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -167,7 +169,7 @@ export class TourService {
       });
       return findTourById;
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -193,7 +195,7 @@ export class TourService {
       });
       return updateTour;
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -249,7 +251,7 @@ export class TourService {
         throw new BadRequestException('This tour having in cart');
       }
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -295,7 +297,7 @@ export class TourService {
         userId: userId,
       });
       if (!findTourById.status.includes(TourStatus.AVAILABLE))
-        throw new RpcException('not Enough slot');
+        throw new RpcException('Err');
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
       const {
@@ -402,7 +404,7 @@ export class TourService {
       await this.redisService.del('getAllTourOfStore');
       return 'booking success';
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -435,7 +437,7 @@ export class TourService {
         relations: { user: true },
       });
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -449,7 +451,7 @@ export class TourService {
         userId,
       });
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
 
@@ -462,27 +464,47 @@ export class TourService {
         });
       return findExperienceOfUser;
     } catch (e) {
-      throw new BadRequestException(e);
+      return e;
     }
   }
-
+  async getExperienceOfUserPage(currentPage: number) {
+    try {
+      const itemsPerPage = 3;
+      const skip = (currentPage - 1) * itemsPerPage;
+      const findExperienceOfUser =
+        await this.usedTourExperienceOfUserRepository.findAll({
+          relations: { comments: { user: true }, user: true },
+          skip: skip,
+          order: { createdAt: 'DESC' },
+          take: itemsPerPage,
+        });
+      return findExperienceOfUser;
+    } catch (e) {
+      return e;
+    }
+  }
   async upvoteOfTour(userId: string, tourId: string) {
-    const findTourById = await this.findOneByTourId(tourId);
-    if (findTourById.upVote.includes(userId)) {
-      const updateUpVoteExistUserId = findTourById.upVote.filter(
-        (item) => item !== userId,
-      );
-      const findTour = await this.tourRepository.save({
-        ...findTourById,
-        upVote: [...updateUpVoteExistUserId],
-      });
-      return { status: findTour.upVote, total: -1 };
-    } else {
-      const findTour = await this.tourRepository.save({
-        ...findTourById,
-        upVote: [...findTourById.upVote, userId],
-      });
-      return { status: findTour.upVote, total: 1 };
+    try {
+      const findTourById = await this.findOneByTourId(tourId);
+      if (!findTourById) throw new NotFoundError('Can not found Tour');
+      if (findTourById.upVote.includes(userId)) {
+        const updateUpVoteExistUserId = findTourById.upVote.filter(
+          (item) => item !== userId,
+        );
+        const findTour = await this.tourRepository.save({
+          ...findTourById,
+          upVote: [...updateUpVoteExistUserId],
+        });
+        return { status: findTour.upVote, total: -1 };
+      } else {
+        const findTour = await this.tourRepository.save({
+          ...findTourById,
+          upVote: [...findTourById.upVote, userId],
+        });
+        return { status: findTour.upVote, total: 1 };
+      }
+    } catch (e) {
+      return e;
     }
   }
 
@@ -503,7 +525,7 @@ export class TourService {
           ...findExperienceOfUserById,
           upVote: [...updateUpVoteExistUserId],
         });
-        return totalUpvote.upVote.length - 1;
+        return { status: totalUpvote.upVote, total: -1 };
       } else {
         const updateUpvote = await this.usedTourExperienceOfUserRepository.save(
           {
@@ -511,10 +533,10 @@ export class TourService {
             upVote: [...findExperienceOfUserById.upVote, userId],
           },
         );
-        return updateUpvote.upVote.length - 1;
+        return { status: updateUpvote.upVote, total: 1 };
       }
     } catch (e) {
-      return new BadRequestException('can not found');
+      return e;
     }
   }
 

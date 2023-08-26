@@ -39,17 +39,23 @@ export class ManagerController {
     return this.tourService.findTourDetail(payload.tourId);
   }
   @MessagePattern({ tour: 'get-all-tour' })
-  async getAllStore(@Ctx() context: RmqContext) {
+  async getAllStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { currentPage: number },
+  ) {
     this.sharedService.acknowledgeMessage(context);
-    const tourView = await this.redisService.get('tourView');
-    if (tourView) {
-      return tourView;
+    const cachedTourView = await this.redisService.get('tourViewPage');
+
+    if (cachedTourView) {
+      return cachedTourView;
     }
-    const setTourView = await this.tourService.getAllTours();
-    const randomNumber = Math.floor(Math.random() * 2000);
-    const ttl = randomNumber + 12000;
-    await this.redisService.set('tourView', setTourView, ttl);
-    return setTourView;
+
+    const updatedTourView = await this.tourService.getAllTours(
+      payload.currentPage,
+    );
+
+    await this.redisService.set('tourViewPage', updatedTourView);
+    return updatedTourView;
   }
   @MessagePattern({ tour: 'create-tour' })
   async createTour(
@@ -179,17 +185,26 @@ export class ManagerController {
   async getExperienceOfUser(@Ctx() context: RmqContext) {
     this.sharedService.acknowledgeMessage(context);
     const getExperienceOfUserCache = await this.redisService.get(
-      'getExperienceOfUserCache',
+      'getExperienceOfUserCachePage',
     );
     if (getExperienceOfUserCache) {
       return getExperienceOfUserCache;
     }
     const getExperienceOfUser = await this.tourService.getExperienceOfUser();
     await this.redisService.set(
-      'getExperienceOfUserCache',
+      'getExperienceOfUserCachePage',
       getExperienceOfUser,
     );
     return getExperienceOfUser;
+  }
+
+  @MessagePattern({ tour: 'get-experience-page' })
+  async getExperiencePage(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { page: number },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.getExperienceOfUserPage(payload.page);
   }
   @MessagePattern({ tour: 'upvote-tour' })
   async upvoteOfTour(
@@ -237,13 +252,16 @@ export class ManagerController {
   @MessagePattern({ manager: 'get-tour-to-Store' })
   async getTourToStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { userId: string },
+    @Payload() payload: { userId: string; currentPage: number },
   ) {
     const getTourOfStore = await this.redisService.get('getAllTourOfStore');
     if (getTourOfStore) {
       return getTourOfStore;
     }
-    const tour = await this.sellerService.getAllTourOfStore(payload.userId);
+    const tour = await this.sellerService.getTourOfStorePage(
+      payload.userId,
+      payload.currentPage,
+    );
     await this.redisService.set('getAllTourOfStore', tour);
     return tour;
   }
