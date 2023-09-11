@@ -9,3 +9,11 @@ export interface configDataSendMail {
     endDate: Date;
   };
 }
+export interface dataSendMailBefore3days {
+  tourId: string;
+  tourName: string;
+  email: string;
+  particular: number;
+  startDay: Date;
+  endDate: Date;
+}

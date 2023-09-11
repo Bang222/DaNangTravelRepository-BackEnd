@@ -46,6 +46,11 @@ import {
   KeyTokenEntity,
 } from '@app/shared';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SendMailService } from '../../third-party-service/src/send-mail/send-mail.service';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthUtilService } from '../../auth/src/util/authUtil.service';
+import { AuthService } from '../../auth/src/auth.service';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -57,6 +62,14 @@ import { ScheduleModule } from '@nestjs/schedule';
     SharedModule.registerRmq('AUTH_SERVICE', process.env.RABBITMQ_AUTH_QUEUE),
     SharedModule.registerRmq('MAIL_SERVICE', process.env.RABBITMQ_MAIL_QUEUE),
     SharedModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '365d' },
+      }),
+      inject: [ConfigService],
+    }),
     PostgresdbModule,
     RedisModule,
     CacheModule.register(),
@@ -98,6 +111,15 @@ import { ScheduleModule } from '@nestjs/schedule';
     ManagerService,
     TourService,
     SellerService,
+    AuthUtilService,
+    {
+      provide: 'AuthServiceInterface',
+      useClass: AuthService,
+    },
+    {
+      provide: 'SendMailServiceInterface',
+      useClass: SendMailService,
+    },
     {
       provide: 'KeyTokenRepositoryInterface',
       useClass: KeyTokenRepository,

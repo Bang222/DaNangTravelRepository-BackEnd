@@ -64,7 +64,10 @@ export class AuthService implements AuthServiceInterface {
       if (keyUser.refreshToken !== refreshToken) {
         return { msg: 'the Account already login exists' };
       }
-      const findUser = await this.getUserById(userId);
+      const findUser = await this.usersRepository.findByCondition({
+        where: { id: userId },
+        relations: { store: true },
+      });
       const token = await this.authUtil.createTokenPair(
         findUser,
         keyUser.privateKey,

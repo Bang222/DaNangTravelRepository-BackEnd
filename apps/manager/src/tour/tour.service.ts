@@ -35,6 +35,8 @@ import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
+import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
+import { dataSendMailBefore3days } from '../../../third-party-service/src/send-mail/dto';
 
 @Injectable()
 export class TourService {
@@ -59,6 +61,8 @@ export class TourService {
     private readonly scheduleRepository: ScheduleRepositoryInterface,
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
+    @Inject('SendMailServiceInterface')
+    private readonly sendMailServiceInterface: SendMailServiceInterface,
     @Inject('MAIL_SERVICE') private emailService: ClientProxy,
     private readonly sellerService: SellerService,
     private readonly redisService: RedisCacheService,
@@ -69,7 +73,7 @@ export class TourService {
   }
 
   async getAllTours(currentPage: number): Promise<TourEntity[]> {
-    const itemsPerPage = 3;
+    const itemsPerPage = 4;
     const skip = (currentPage - 1) * itemsPerPage;
     return await this.tourRepository.findAll({
       where: { status: TourStatus.AVAILABLE },
@@ -295,6 +299,7 @@ export class TourService {
         totalPrice: totalPrice,
         participants: quantity,
         userId: userId,
+        status: 'CONFIRMED',
       });
       if (!findTourById.status.includes(TourStatus.AVAILABLE))
         throw new RpcException('Err');
@@ -469,7 +474,7 @@ export class TourService {
   }
   async getExperienceOfUserPage(currentPage: number) {
     try {
-      const itemsPerPage = 3;
+      const itemsPerPage = 4;
       const skip = (currentPage - 1) * itemsPerPage;
       const findExperienceOfUser =
         await this.usedTourExperienceOfUserRepository.findAll({
@@ -542,8 +547,9 @@ export class TourService {
 
   // automatic update Status
   // @Cron('0 14 * * *')
-  @Cron('0 0 * * *')
-  async updateStatusTourAutomatic() {
+  // @Cron('0 0 * * *')
+  @Cron('* 0 * * * *')
+  async updateStatusTourAutomatic(): Promise<void> {
     const currentDate = new Date();
     try {
       const getAllTour = await this.tourRepository.findAll({
@@ -554,7 +560,6 @@ export class TourService {
           { status: TourStatus.AVAILABLE },
         ],
       });
-
       for (const x of getAllTour) {
         // nằm trong khoảng thời gian từ cuối đăng kí đến khi bắt đầu
         if (x.lastRegisterDate <= currentDate && currentDate < x.startDate) {
@@ -575,6 +580,53 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
-  // @Cron('0 14 * * *') auto send mail
+  @Cron('* 14 * * * *')
+  async autoSendMailingToOrder(): Promise<void> {
+    const currentDate = new Date();
+    const getAllTourOutOfRegister = await this.tourRepository.findWithRelations(
+      {
+        where: { status: TourStatus.LAST },
+        relations: {
+          orderDetails: { order: true },
+        },
+      },
+    );
+    if (!currentDate) {
+      throw new BadRequestException('can not found');
+    }
+    const dataSendMail: dataSendMailBefore3days[] = [];
+    for (const tour of getAllTourOutOfRegister) {
+      const startDay = new Date(tour.startDate);
+      const differenceInMilliseconds: number =
+        Number(startDay) - Number(currentDate);
+      const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+      if (differenceInDays <= 3) {
+        const emailContactUserOrdered = getAllTourOutOfRegister.map((tour) =>
+          tour.orderDetails.map((orderDetail) => {
+            const data = {
+              tourName: tour.name,
+              tourId: tour.id,
+              email: orderDetail.order.email,
+              particular: orderDetail.order.participants,
+              startDay: tour.startDate,
+              endDate: tour.endDate,
+            };
+            return dataSendMail.push({ ...data });
+          }),
+        );
+      }
+    }
+    for (const data of dataSendMail) {
+      await this.sendMailServiceInterface.sendMailUserBefore3Days(
+        data.tourId,
+        data.tourName,
+        data.email,
+        data.particular,
+        data.startDay,
+        data.endDate,
+      );
+    }
+  }
+  // }
   // @Cron('0 14 * * *')
 }

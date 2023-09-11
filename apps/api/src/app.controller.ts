@@ -118,6 +118,7 @@ export class AppController {
   async getReview() {
     return this.tourService.send({ tour: 'get-experience' }, {});
   }
+  @Throttle(200, 60)
   @Get('experience/page=:page')
   async getReviewPage(@Param('page', ParseIntPipe) page: string) {
     return this.tourService.send({ tour: 'get-experience-page' }, { page });
@@ -150,7 +151,6 @@ export class AppController {
       { tourId, userId },
     );
   }
-
   @Post('experience/upvote')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -481,6 +481,24 @@ export class AppController {
     response.cookie('token', data.accessToken);
     return response.redirect('http://localhost:3000/login');
   }
+  @Get('payment')
+  @UseGuards(AuthGuard)
+  async paymentPayPal() {
+    try {
+      return { data: process.env.CLIENT_ID_PAYPAL };
+    } catch (e) {
+      return e;
+    }
+  }
+  // @Get('payment')
+  // @UseGuards(AuthGuard)
+  // async paymentPayPal() {
+  //   try {
+  //     return { data: process.env.CLIENT_ID_PAYPAL };
+  //   } catch (e) {
+  //     return e;
+  //   }
+  // }
 
   @Get('email1')
   async helloThirdPartyService2() {

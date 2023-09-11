@@ -19,7 +19,7 @@ export class AuthUtilService {
   async accessToken(data: any, privateKey: string) {
     return sign({ data }, privateKey, {
       algorithm: 'RS256',
-      expiresIn: '10 days',
+      expiresIn: '3600s',
     });
   }
   async createToken(userId: string, publicKey: string, privateKey: string) {
