@@ -54,6 +54,43 @@ export class AppController {
     private tourService: ClientProxy,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
+  //Search-----------------------------------
+  @Throttle(200, 60)
+  @Get('tour/page=:currentPage/search=')
+  @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
+  async searchTour(
+    @Query('name') tourName: string,
+    @Query('start') startAddress: string,
+    @Query('min') minPrice: number,
+    @Query('max') maxPrice: number,
+    @Query('start-day') startDay: Date,
+    @Query('end-day') endDay: Date,
+    @Param('currentPage', ParseIntPipe) currentPage: number,
+  ) {
+    return this.managerService.send(
+      { tour: 'search-tour' },
+      {
+        tourName,
+        startAddress,
+        minPrice,
+        maxPrice,
+        startDay,
+        endDay,
+        currentPage,
+      },
+    );
+  }
+  @Throttle(200, 60)
+  @Get('experience/page=:page/search=')
+  async searchExperience(
+    @Param('page', ParseIntPipe) page: string,
+    @Query('title') title: string,
+  ) {
+    return this.managerService.send(
+      { tour: 'search-experience' },
+      { title, page },
+    );
+  }
 
   // MANAGER---------------------------------------
   @Post('experience/create/comment')
@@ -185,6 +222,7 @@ export class AppController {
   @UseInterceptors(UserInterceptor)
   async bookingTour(
     @Req() req: UserRequest,
+
     @Param('id') tourId: string,
     @Body() bookingTourDto: BookingTourDto,
   ) {

@@ -36,7 +36,7 @@ import { Cron } from '@nestjs/schedule';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
 import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
-import { dataSendMailBefore3days } from '../../../third-party-service/src/send-mail/dto';
+import { Between, ILike, Like } from 'typeorm';
 
 @Injectable()
 export class TourService {
@@ -544,11 +544,87 @@ export class TourService {
       return e;
     }
   }
+  // @Cron('2 * * * * *')
+  // titleTour: string
+  async searchTour(
+    tourName: string | null = null,
+    startAddress: string | null = null,
+    minPrice: number | null = 1,
+    maxPrice: number | null = 99999999,
+    startDay: Date | null = null,
+    endDay: Date | null = null,
+    currentPage: number,
+  ) {
+    try {
+      const itemsPerPage = 3;
+      const skip = (currentPage - 1) * itemsPerPage;
 
+      const whereCondition: any = { status: TourStatus.AVAILABLE };
+      if (tourName) {
+        whereCondition.name = ILike(`%${tourName}%`);
+      }
+      if (startAddress) {
+        whereCondition.startAddress = ILike(`%${startAddress}%`);
+      }
+      if (startDay) {
+        whereCondition.startDate = startDay;
+      }
+      if (endDay) {
+        whereCondition.endDate = endDay;
+      }
+      // console.log('maxPrice', maxPrice)
+      if (minPrice !== null && maxPrice !== null) {
+        whereCondition.price = Between(minPrice, maxPrice);
+      }
+      const tours = await this.tourRepository.findAll({
+        where: whereCondition,
+        skip: skip,
+        order: { createdAt: 'DESC' },
+        relations: { store: true, comments: { user: true } },
+        take: itemsPerPage,
+      });
+
+      return tours;
+    } catch (e) {
+      console.error(e);
+      return 'An error occurred while searching for tours';
+    }
+  }
+  async searchExperience(title: string | null = null, page: number) {
+    const itemsPerPage = 3;
+    const skip = (page - 1) * itemsPerPage;
+    const whereCondition: any = {};
+    if (title) {
+      whereCondition.title = ILike(`%${title}%`);
+    }
+    const getExperience = await this.usedTourExperienceOfUserRepository.findAll(
+      {
+        where: whereCondition,
+        relations: { comments: { user: true }, user: true },
+        order: { createdAt: 'DESC' },
+        skip: skip,
+        take: itemsPerPage,
+      },
+    );
+    return getExperience;
+  }
+  // async filterByPrice(price: string) {
+  //   // titleTour = 'ThaiLand';
+  //   try {
+  //     return await this.tourRepository.findAll({
+  //       where: {
+  //         // status: TourStatus.AVAILABLE,
+  //         name: Like(`%${tourName}%`),
+  //       },
+  //     });
+  //   } catch (e) {
+  //     return e;
+  //   }
+  // }
   // automatic update Status
   // @Cron('0 14 * * *')
   // @Cron('0 0 * * *')
-  @Cron('* 0 * * * *')
+  @Cron('* 0 * * *')
   async updateStatusTourAutomatic(): Promise<void> {
     const currentDate = new Date();
     try {
@@ -580,7 +656,8 @@ export class TourService {
       throw new BadRequestException(e);
     }
   }
-  @Cron('* 14 * * * *')
+  @Cron('0 14 * * *')
+  // @Cron('12 * * * * *')
   async autoSendMailingToOrder(): Promise<void> {
     const currentDate = new Date();
     const getAllTourOutOfRegister = await this.tourRepository.findWithRelations(
@@ -594,39 +671,43 @@ export class TourService {
     if (!currentDate) {
       throw new BadRequestException('can not found');
     }
-    const dataSendMail: dataSendMailBefore3days[] = [];
+    // Array to store promises
+    const sendMailPromises: Promise<void>[] = [];
+
     for (const tour of getAllTourOutOfRegister) {
       const startDay = new Date(tour.startDate);
       const differenceInMilliseconds: number =
         Number(startDay) - Number(currentDate);
       const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
-      if (differenceInDays <= 3) {
-        const emailContactUserOrdered = getAllTourOutOfRegister.map((tour) =>
-          tour.orderDetails.map((orderDetail) => {
-            const data = {
-              tourName: tour.name,
-              tourId: tour.id,
-              email: orderDetail.order.email,
-              particular: orderDetail.order.participants,
-              startDay: tour.startDate,
-              endDate: tour.endDate,
-            };
-            return dataSendMail.push({ ...data });
-          }),
-        );
+      if (Math.floor(differenceInDays) <= 3) {
+        tour.orderDetails.map((orderDetail) => {
+          const data = {
+            tourName: tour.name,
+            tourId: tour.id,
+            email: orderDetail.order.email,
+            particular: orderDetail.order.participants,
+            startDay: tour.startDate,
+            endDate: tour.endDate,
+          };
+          // Push the promise to the array
+          sendMailPromises.push(
+            this.sendMailServiceInterface.sendMailUserBefore3Days(
+              data.tourId,
+              data.tourName,
+              data.email,
+              data.particular,
+              data.startDay,
+              data.endDate,
+            ),
+          );
+        });
       }
     }
-    for (const data of dataSendMail) {
-      await this.sendMailServiceInterface.sendMailUserBefore3Days(
-        data.tourId,
-        data.tourName,
-        data.email,
-        data.particular,
-        data.startDay,
-        data.endDate,
-      );
-    }
+
+    // Wait for all email sending promises to complete
+    await Promise.all(sendMailPromises);
+
+    // The emails have been sent
+    console.log('All emails sent successfully');
   }
-  // }
-  // @Cron('0 14 * * *')
 }

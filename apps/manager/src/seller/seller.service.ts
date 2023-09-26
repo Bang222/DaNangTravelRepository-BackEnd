@@ -117,6 +117,11 @@ export class SellerService {
     const skip = (currentPage - 1) * itemsPerPage;
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
     if (!OwnerDetail) return null;
+    const totalPage = (
+      await this.tourRepository.findAll({
+        where: { storeId: OwnerDetail.store.id },
+      })
+    ).length;
     const findTourToStore = await this.tourRepository.findWithRelations({
       where: { storeId: OwnerDetail.store.id },
       order: { createdAt: 'DESC' },
@@ -128,7 +133,7 @@ export class SellerService {
       skip: skip,
       take: itemsPerPage,
     });
-    return findTourToStore;
+    return { findTourToStore: findTourToStore, pages: totalPage };
   }
   async findTourOfStore(userId: string) {
     const OwnerDetail = await this.findOwnerIdByUserId(userId);
@@ -172,7 +177,9 @@ export class SellerService {
     try {
       const getTourOfStore = await this.selectBillOfStore(userId);
       if (!getTourOfStore) throw new Error(' can not found');
-      return getTourOfStore.tours.map((item) => item.orderDetails);
+      return getTourOfStore.tours.filter((tour) => {
+        return tour.orderDetails.length > 0;
+      });
     } catch (e) {
       return e;
     }

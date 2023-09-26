@@ -233,6 +233,46 @@ export class ManagerController {
     return await this.tourService.deleteTour(payload.tourId, payload.userId);
   }
 
+  @MessagePattern({ tour: 'search-tour' })
+  async searchManyTourByName(
+    @Ctx() context: RmqContext,
+    @Payload()
+    payload: {
+      tourName: string;
+      minPrice: number;
+      maxPrice: number;
+      startAddress: string;
+      startDay: Date;
+      endDay: Date;
+      currentPage: number;
+    },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.searchTour(
+      payload.tourName,
+      payload.startAddress,
+      payload.minPrice,
+      payload.maxPrice,
+      payload.startDay,
+      payload.endDay,
+      payload.currentPage
+    );
+  }
+  @MessagePattern({ tour: 'search-experience' })
+  async searchExperiencesByTitle(
+    @Ctx() context: RmqContext,
+    @Payload()
+    payload: {
+      title?: string;
+      page: number;
+    },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.tourService.searchExperience(
+      payload?.title,
+      payload.page,
+    );
+  }
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {
   //   this.sharedService.acknowledgeMessage(context);

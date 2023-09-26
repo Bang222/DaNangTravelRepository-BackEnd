@@ -66,4 +66,5 @@ export abstract class BaseAbstractRepository<T extends HasId>
   public async preload(entity: DeepPartial<T>): Promise<T> {
     return await this.entity.preload(entity);
   }
+  // search
 }

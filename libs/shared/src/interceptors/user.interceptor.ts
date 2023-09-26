@@ -10,8 +10,6 @@ import { ClientProxy } from '@nestjs/microservices';
 
 import { Observable, catchError, switchMap } from 'rxjs';
 
-import { UserJwt } from '../interfaces/service-interface/user-jwt.interface';
-
 @Injectable()
 export class UserInterceptor implements NestInterceptor {
   constructor(
