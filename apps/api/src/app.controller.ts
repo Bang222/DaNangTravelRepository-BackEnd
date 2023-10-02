@@ -232,14 +232,14 @@ export class AppController {
     );
   }
 
-  @Get('store/user-registered')
+  @Get('store/data-each-month')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER, Role.PREMIUM)
-  @UseInterceptors(UserInterceptor)
-  async getTrackUserRegisteredTourStore(@Req() req: UserRequest) {
+  async(@Req() req) {
+    const userId = req.headers['x-client-id'];
     return this.managerService.send(
-      { manager: 'track-user-registered-trip' },
-      { userId: req.user?.id },
+      { manager: 'data-each-month-store' },
+      { userId: userId },
     );
   }
 
@@ -255,14 +255,32 @@ export class AppController {
     );
   }
 
-  @Get('store/bill')
+  @Get('store/bill/page=:page')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.SELLER, Role.PREMIUM)
   @UseInterceptors(UserInterceptor)
-  async getBillStore(@Req() req: UserRequest) {
+  async getBillStore(
+    @Req() req: UserRequest,
+    @Param('page', ParseIntPipe) page: number,
+  ) {
     return this.managerService.send(
       { manager: 'bill-store' },
-      { userId: req.user?.id },
+      { userId: req.user?.id, page: page },
+    );
+  }
+
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.SELLER, Role.PREMIUM)
+  @Get('store/dash-board/data/month=:month')
+  async StatisticalDataDashBoard(
+    @Req() req,
+    @Param('month', ParseIntPipe) month: number,
+  ) {
+    const userId = req.headers['x-client-id'];
+    if (!userId) throw new BadRequestException('can not find');
+    return this.managerService.send(
+      { manager: 'StatisticalDataDashBoard' },
+      { userId: userId, month: month },
     );
   }
 
@@ -358,34 +376,11 @@ export class AppController {
     @Param('id') tourId: string,
     @Body() updateTouristDto: UpdateTouristDTO,
   ) {
-    const {
-      name,
-      description,
-      price,
-      quantity,
-      address,
-      imageUrl,
-      startDate,
-      endDate,
-      lastRegisterDate,
-      startAddress,
-      endingAddress,
-    } = updateTouristDto;
     return this.managerService.send(
       { manager: 'update-tour' },
       {
-        name,
-        description,
-        price,
-        quantity,
-        address,
-        imageUrl,
-        startDate,
-        endDate,
-        lastRegisterDate,
-        tourId,
-        startAddress,
-        endingAddress,
+        ...updateTouristDto,
+        tourId: tourId,
         userId: req?.user.id,
       },
     );
@@ -402,11 +397,11 @@ export class AppController {
     @Req() req: UserRequest,
   ) {
     if (files.length === 0) {
-      throw new Error('can not found');
+      return Error('can not found');
     }
     const images = await this.cloudinaryService.uploadFiles(files);
     if (images?.length === 0) {
-      throw new Error('can not found');
+      return Error('can not found');
     }
     const data = JSON.stringify({ ...newTouristDTO, imageUrl: images });
     return this.tourService.send(

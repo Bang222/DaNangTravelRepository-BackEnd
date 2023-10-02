@@ -63,15 +63,10 @@ export class NewTouristDTO {
 export class UpdateTouristDTO {
   name?: string;
   description?: string;
-  price?: number;
-  quantity?: number;
-  imageUrl?: string[];
+  baseQuantity?: number;
   lastRegisterDate?: Date;
-  address?: string;
-  startDate?: Date;
-  endDate?: Date;
-  endingAddress?: string;
-  startAddress?: string;
+  @Type(() => ScheduleDto)
+  schedules?: ScheduleDto[];
 }
 export class CartDto {
   @IsNotEmpty()

@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { OrderDetailEntity, UserEntity } from '@app/shared';
+import { OrderDetailEntity, StoreEntity, UserEntity } from '@app/shared';
 import { PaymentEntity } from '@app/shared/models/entities/payment.entity';
 
 @Entity('order')
@@ -53,6 +53,12 @@ export class OrderEntity {
   user: UserEntity;
   @Column()
   userId: string;
+
+  @ManyToOne(() => StoreEntity, (store) => store.orders)
+  @JoinColumn({ name: 'storeId' })
+  store: StoreEntity;
+  @Column()
+  storeId: string;
 
   @OneToOne(() => OrderDetailEntity, (orderDetail) => orderDetail.order)
   @JoinColumn({ name: 'orderDetailId' })

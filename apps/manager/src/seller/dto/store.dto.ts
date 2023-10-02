@@ -7,3 +7,7 @@ export class NewStoreDTO {
   @IsNotEmpty()
   slogan: string;
 }
+export class DataEachMonthDashBoardDTO {
+  totalIncome: number;
+  month: number;
+}

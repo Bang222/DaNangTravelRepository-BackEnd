@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {BadRequestException, Inject, Injectable} from '@nestjs/common';
 
 import {
   CartEntity,
@@ -30,13 +30,13 @@ import {
   UpdateTouristDTO,
 } from './dtos';
 
-import { TourStatus } from '@app/shared/models/enum';
-import { SellerService } from '../seller/seller.service';
-import { Cron } from '@nestjs/schedule';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { NotFoundError } from 'rxjs';
-import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
-import { Between, ILike, Like } from 'typeorm';
+import {TourStatus} from '@app/shared/models/enum';
+import {SellerService} from '../seller/seller.service';
+import {Cron} from '@nestjs/schedule';
+import {ClientProxy, RpcException} from '@nestjs/microservices';
+import {NotFoundError} from 'rxjs';
+import {SendMailServiceInterface} from '../../../third-party-service/src/interface/email/send-mail.service.interface';
+import {Between, ILike} from 'typeorm';
 
 @Injectable()
 export class TourService {
@@ -150,7 +150,7 @@ export class TourService {
       }
       const createTour = await this.tourRepository.create({
         ...newTourDTO,
-        quantity: newTourDTO.baseQuantity,
+        quantity: 0,
         store: storeOfUserOwner,
       });
       const saveTour = await this.tourRepository.save({ ...createTour });
@@ -181,23 +181,53 @@ export class TourService {
     tourId: string,
     userId: string,
     updateTouristDto: UpdateTouristDTO,
-  ): Promise<TourEntity> {
+  ): Promise<string> {
     try {
       const findTourNeedUpdate = await this.findOneByTourId(tourId);
-      if (!findTourNeedUpdate) {
+      const findSchedule = await this.scheduleRepository.findWithRelations({
+        where: { tourId: tourId },
+        order: { day: 'ASC' },
+      });
+      let scheduleCount = 0;
+      if (!findTourNeedUpdate || !findSchedule) {
         throw new BadRequestException('Tour Not Exists');
       }
       const checkTourOfStore = await this.sellerService.getTourEachStore(
         userId,
       );
-      if (!checkTourOfStore.tours.includes(findTourNeedUpdate)) {
+      if (
+        checkTourOfStore.tours.every(
+          (tour) => tour.id !== findTourNeedUpdate.id,
+        )
+      ) {
         throw new BadRequestException('You not A Store owner');
       }
-      const updateTour = await this.tourRepository.save({
-        ...findTourNeedUpdate,
-        ...updateTouristDto,
-      });
-      return updateTour;
+      if (updateTouristDto.baseQuantity < findTourNeedUpdate.quantity) {
+        throw new BadRequestException('can not smalless bought');
+      } else {
+        const updateTour = await this.tourRepository.save({
+          ...findTourNeedUpdate,
+          baseQuantity: updateTouristDto.baseQuantity,
+          lastRegisterDate: updateTouristDto.lastRegisterDate,
+          name: updateTouristDto.name,
+          description: updateTouristDto.description,
+          status: TourStatus.AVAILABLE,
+        });
+      }
+      for (const scheduleDto of updateTouristDto.schedules) {
+        const scheduleUpdate = new ScheduleEntity();
+        scheduleUpdate.day = scheduleDto.day;
+        scheduleUpdate.title = scheduleDto.title;
+        scheduleUpdate.description = scheduleDto.description;
+        scheduleUpdate.imgUrl = scheduleDto.imgUrl;
+        scheduleUpdate.tourId = findTourNeedUpdate.id;
+        await this.scheduleRepository.save({
+          ...findSchedule[scheduleCount],
+          ...scheduleUpdate,
+        });
+        scheduleCount++;
+      }
+      return 'oke';
     } catch (e) {
       return e;
     }
@@ -281,7 +311,7 @@ export class TourService {
         bookingTourDto.infantPassengers +
         bookingTourDto.toddlerPassengers +
         bookingTourDto.childPassengers;
-      if (+findTourById.quantity < quantity)
+      if (findTourById.baseQuantity - +findTourById.quantity < quantity)
         throw new BadRequestException('not Enough slot');
 
       const totalPrice =
@@ -299,6 +329,7 @@ export class TourService {
         totalPrice: totalPrice,
         participants: quantity,
         userId: userId,
+        storeId: findTourById.storeId,
         status: 'CONFIRMED',
       });
       if (!findTourById.status.includes(TourStatus.AVAILABLE))
@@ -367,9 +398,9 @@ export class TourService {
       }
       const updateQuantity = await this.tourRepository.save({
         ...findTourById,
-        quantity: +findTourById.quantity - Number(quantity),
+        quantity: +findTourById.quantity + Number(quantity),
       });
-      if (updateQuantity.quantity < 1) {
+      if (updateQuantity.baseQuantity - updateQuantity.quantity < 1) {
         await this.tourRepository.save({
           ...updateQuantity,
           status: TourStatus.FULL,
@@ -572,7 +603,6 @@ export class TourService {
       if (endDay) {
         whereCondition.endDate = endDay;
       }
-      // console.log('maxPrice', maxPrice)
       if (minPrice !== null && maxPrice !== null) {
         whereCondition.price = Between(minPrice, maxPrice);
       }

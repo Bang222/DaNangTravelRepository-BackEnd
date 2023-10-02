@@ -6,7 +6,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { TourEntity, UserEntity } from '@app/shared';
+import { OrderEntity, TourEntity, UserEntity } from '@app/shared';
 import { StoreStatus } from '@app/shared/models/enum';
 
 @Entity('store')
@@ -38,4 +38,7 @@ export class StoreEntity {
 
   @OneToMany(() => TourEntity, (tours) => tours.store) // specify inverse side as a second parameter
   tours: TourEntity[];
+
+  @OneToMany(() => OrderEntity, (orders) => orders.store) // specify inverse side as a second parameter
+  orders: TourEntity[];
 }

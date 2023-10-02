@@ -255,7 +255,7 @@ export class ManagerController {
       payload.maxPrice,
       payload.startDay,
       payload.endDay,
-      payload.currentPage
+      payload.currentPage,
     );
   }
   @MessagePattern({ tour: 'search-experience' })
@@ -308,10 +308,13 @@ export class ManagerController {
   @MessagePattern({ manager: 'bill-store' })
   async getBillOfEachStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { userId: string },
+    @Payload() payload: { userId: string; page: number },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.sellerService.getBillOfStore(payload.userId);
+    return await this.sellerService.getBillOfStore(
+      payload.userId,
+      payload.page,
+    );
   }
   @MessagePattern({ manager: 'get-follower-user' })
   async getFollowerTripRegisteredUser(
@@ -331,14 +334,23 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return await this.sellerService.getBillOfUser(payload.userId);
   }
-  @MessagePattern({ manager: 'track-user-registered-trip' })
-  async getTrackUserRegisteredTourStore(
+  @MessagePattern({ manager: 'data-each-month-store' })
+  async getDataIncomeEachMonth(
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.sellerService.getTrackUserRegisteredTourStore(
+    return await this.sellerService.getDataIncomeEachMonth(payload.userId);
+  }
+  @MessagePattern({ manager: 'StatisticalDataDashBoard' })
+  async getStatisticalDataDashBoard(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string; month: number },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.sellerService.getStatisticalDataDashBoard(
       payload.userId,
+      payload.month,
     );
   }
 }
