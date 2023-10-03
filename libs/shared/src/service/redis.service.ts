@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import * as Redis from 'ioredis';
 
 @Injectable()
 export class RedisCacheService {
@@ -14,7 +13,7 @@ export class RedisCacheService {
     return await this.cache.get(key);
   }
   async set(key: string, value: any, ttl?: number) {
-    const seconds = ttl || 5;
+    const seconds = ttl ?? 10000;
     console.log(`set ${key} from Redis`);
     await this.cache.set(key, value, seconds);
   }

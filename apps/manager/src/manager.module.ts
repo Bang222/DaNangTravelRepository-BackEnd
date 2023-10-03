@@ -50,6 +50,7 @@ import { SendMailService } from '../../third-party-service/src/send-mail/send-ma
 import { JwtModule } from '@nestjs/jwt';
 import { AuthUtilService } from '../../auth/src/util/authUtil.service';
 import { AuthService } from '../../auth/src/auth.service';
+import {AdminService} from "./admin/admin.service";
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { AuthService } from '../../auth/src/auth.service';
   providers: [
     ManagerService,
     TourService,
+    AdminService,
     SellerService,
     AuthUtilService,
     {

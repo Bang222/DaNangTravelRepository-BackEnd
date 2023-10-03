@@ -18,6 +18,7 @@ import {
 } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
 import { NewStoreDTO } from './seller/dto';
+import { AdminService } from './admin/admin.service';
 
 @Controller()
 export class ManagerController {
@@ -28,6 +29,7 @@ export class ManagerController {
     private readonly sharedService: SharedServiceInterface,
     private readonly tourService: TourService,
     private readonly sellerService: SellerService,
+    private readonly adminService: AdminService,
   ) {}
   //tourService--------------------------
   @MessagePattern({ cmd: 'tour-by-id' })
@@ -39,12 +41,14 @@ export class ManagerController {
     return this.tourService.findTourDetail(payload.tourId);
   }
   @MessagePattern({ tour: 'get-all-tour' })
-  async getAllStore(
+  async getAllTourOfStore(
     @Ctx() context: RmqContext,
     @Payload() payload: { currentPage: number },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    const cachedTourView = await this.redisService.get('tourViewPage');
+    const cachedTourView = await this.redisService.get(
+      `tourViewPagePage=${payload.currentPage}`,
+    );
 
     if (cachedTourView) {
       return cachedTourView;
@@ -54,7 +58,10 @@ export class ManagerController {
       payload.currentPage,
     );
 
-    await this.redisService.set('tourViewPage', updatedTourView);
+    await this.redisService.set(
+      `tourViewPagePage=${payload.currentPage}`,
+      updatedTourView,
+    );
     return updatedTourView;
   }
   @MessagePattern({ tour: 'create-tour' })
@@ -248,7 +255,14 @@ export class ManagerController {
     },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.tourService.searchTour(
+    const condition = `searchDataTourName:${payload?.tourName}EndDate:${payload?.endDay}
+    startDay:${payload.startDay}min:${payload.minPrice}max:${payload.maxPrice}startAddress:${payload.startAddress}
+    currentPage:${payload.currentPage}`;
+    const getDataSearchTourRedis = await this.redisService.get(condition);
+    if (getDataSearchTourRedis) {
+      return getDataSearchTourRedis;
+    }
+    const dataSearchTour = await this.tourService.searchTour(
       payload.tourName,
       payload.startAddress,
       payload.minPrice,
@@ -257,6 +271,8 @@ export class ManagerController {
       payload.endDay,
       payload.currentPage,
     );
+    await this.redisService.set(condition, dataSearchTour, 10000);
+    return dataSearchTour;
   }
   @MessagePattern({ tour: 'search-experience' })
   async searchExperiencesByTitle(
@@ -268,10 +284,17 @@ export class ManagerController {
     },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.tourService.searchExperience(
+    const condition = `title${payload.title}page${payload.page}`;
+    const getDataExperience = await this.redisService.get(condition);
+    if (getDataExperience) {
+      return getDataExperience;
+    }
+    const dataExperiences = await this.tourService.searchExperience(
       payload?.title,
       payload.page,
     );
+    await this.redisService.set(condition, dataExperiences);
+    return dataExperiences;
   }
   // @MessagePattern({ cmd: 'get-tours' })
   // async getAllTour(@Ctx() context: RmqContext) {
@@ -294,7 +317,9 @@ export class ManagerController {
     @Ctx() context: RmqContext,
     @Payload() payload: { userId: string; currentPage: number },
   ) {
-    const getTourOfStore = await this.redisService.get('getAllTourOfStore');
+    const getTourOfStore = await this.redisService.get(
+      `getAllTourOfStoreCurrentPay:${payload.currentPage}userID:${payload.userId}`,
+    );
     if (getTourOfStore) {
       return getTourOfStore;
     }
@@ -302,7 +327,10 @@ export class ManagerController {
       payload.userId,
       payload.currentPage,
     );
-    await this.redisService.set('getAllTourOfStore', tour);
+    await this.redisService.set(
+      `getAllTourOfStoreCurrentPay:${payload.currentPage}userID:${payload.userId}`,
+      tour,
+    );
     return tour;
   }
   @MessagePattern({ manager: 'bill-store' })
@@ -311,10 +339,22 @@ export class ManagerController {
     @Payload() payload: { userId: string; page: number },
   ) {
     this.sharedService.acknowledgeMessage(context);
-    return await this.sellerService.getBillOfStore(
-      payload.userId,
-      payload.page,
+    const getBillOfStore = await this.redisService.get(
+      `getBilOfStore:${payload.page}userID:${payload.userId}`,
     );
+    if (getBillOfStore) {
+      return getBillOfStore;
+    } else {
+      const dataBillOfStore = await this.sellerService.getBillOfStore(
+        payload.userId,
+        payload.page,
+      );
+      await this.redisService.set(
+        `getBilOfStore:${payload.page}userID:${payload.userId}`,
+        dataBillOfStore,
+      );
+      return dataBillOfStore;
+    }
   }
   @MessagePattern({ manager: 'get-follower-user' })
   async getFollowerTripRegisteredUser(
@@ -352,5 +392,16 @@ export class ManagerController {
       payload.userId,
       payload.month,
     );
+  }
+  @MessagePattern({ admin: 'get-all-store-admin' })
+  async getAllStore(@Ctx() context: RmqContext) {
+    this.sharedService.acknowledgeMessage(context);
+    const cachedTourView = await this.redisService.get('getAllStore');
+    if (cachedTourView) {
+      return cachedTourView;
+    }
+    const getAllStore = await this.adminService.getAllStore();
+    await this.redisService.set('getAllStore', getAllStore);
+    return getAllStore;
   }
 }

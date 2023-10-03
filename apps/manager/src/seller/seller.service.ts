@@ -13,9 +13,9 @@ import {
   UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
-import {DataEachMonthDashBoardDTO, NewStoreDTO} from './dto';
+import { DataEachMonthDashBoardDTO, NewStoreDTO } from './dto';
 import { Role } from '@app/shared/models/enum';
-import { Between, Equal, MoreThanOrEqual } from 'typeorm';
+import { Between } from 'typeorm';
 
 @Injectable()
 export class SellerService {
@@ -198,7 +198,7 @@ export class SellerService {
       const orders = await this.orderRepository.findWithRelations({
         where: { storeId: findStoreById.id },
         relations: { orderDetail: { tour: true, passengers: true } },
-        order:{createdAt: 'DESC'},
+        order: { createdAt: 'DESC' },
         skip: skip,
         take: itemsPerPage,
       });

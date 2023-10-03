@@ -1,4 +1,4 @@
-import {BadRequestException, Inject, Injectable} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 
 import {
   CartEntity,
@@ -30,13 +30,13 @@ import {
   UpdateTouristDTO,
 } from './dtos';
 
-import {TourStatus} from '@app/shared/models/enum';
-import {SellerService} from '../seller/seller.service';
-import {Cron} from '@nestjs/schedule';
-import {ClientProxy, RpcException} from '@nestjs/microservices';
-import {NotFoundError} from 'rxjs';
-import {SendMailServiceInterface} from '../../../third-party-service/src/interface/email/send-mail.service.interface';
-import {Between, ILike} from 'typeorm';
+import { TourStatus } from '@app/shared/models/enum';
+import { SellerService } from '../seller/seller.service';
+import { Cron } from '@nestjs/schedule';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { NotFoundError } from 'rxjs';
+import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
+import { Between, ILike } from 'typeorm';
 
 @Injectable()
 export class TourService {
