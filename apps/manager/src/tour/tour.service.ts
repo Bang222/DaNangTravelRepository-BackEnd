@@ -13,6 +13,7 @@ import {
   ScheduleRepositoryInterface,
   ShareExperienceEntity,
   ShareExperienceRepositoryInterface,
+  StoreEntity,
   TourEntity,
   TourRepositoryInterface,
   UserEntity,
@@ -37,6 +38,8 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
 import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
 import { Between, ILike } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { USER } from '@app/shared/models/seeds/base';
 
 @Injectable()
 export class TourService {
@@ -617,7 +620,7 @@ export class TourService {
       return tours;
     } catch (e) {
       console.error(e);
-      return 'An error occurred while searching for tours';
+      return 'failed';
     }
   }
   async searchExperience(title: string | null = null, page: number) {
@@ -638,22 +641,6 @@ export class TourService {
     );
     return getExperience;
   }
-  // async filterByPrice(price: string) {
-  //   // titleTour = 'ThaiLand';
-  //   try {
-  //     return await this.tourRepository.findAll({
-  //       where: {
-  //         // status: TourStatus.AVAILABLE,
-  //         name: Like(`%${tourName}%`),
-  //       },
-  //     });
-  //   } catch (e) {
-  //     return e;
-  //   }
-  // }
-  // automatic update Status
-  // @Cron('0 14 * * *')
-  // @Cron('0 0 * * *')
   @Cron('* 0 * * *')
   async updateStatusTourAutomatic(): Promise<void> {
     const currentDate = new Date();

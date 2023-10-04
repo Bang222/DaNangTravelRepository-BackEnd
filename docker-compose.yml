@@ -85,7 +85,17 @@ services:
       - '5432:5432'
     volumes:
       - data:/var/lib/postgresql/data
-
+#  postgres-replication:
+#    image: postgres
+#    container_name: postgres-replication
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER_SLAVE}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_SLAVE}
+#      POSTGRES_DB: ${POSTGRES_DB_SLAVE}
+#    ports:
+#      - '5433:5432' # Change the host port if necessary
+#    volumes:
+#      - data-replication:/var/lib/postgresql/data
   postgres_admin:
     image: dpage/pgadmin4
     depends_on:
@@ -105,3 +115,4 @@ services:
      - ./redis/data:/data
 volumes:
   data:
+  # Add this volume for the replication database

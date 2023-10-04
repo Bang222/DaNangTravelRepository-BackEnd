@@ -15,13 +15,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import {ClientProxy} from '@nestjs/microservices';
-import {ExistingUserDTO, NewUserDTO} from '../../auth/src/dto';
-import {AuthGuard, UserRequest} from '@app/shared';
-import {UserInterceptor} from '@app/shared/interceptors/user.interceptor';
-import {Roles} from '../../auth/src/decorator/roles.decorator';
-import {Role} from '@app/shared/models/enum';
-import {UseRoleGuard} from '../../auth/src/guard/role.guard';
+import { ClientProxy } from '@nestjs/microservices';
+import { ExistingUserDTO, NewUserDTO } from '../../auth/src/dto';
+import { AuthGuard, UserRequest } from '@app/shared';
+import { UserInterceptor } from '@app/shared/interceptors/user.interceptor';
+import { Roles } from '../../auth/src/decorator/roles.decorator';
+import { Role } from '@app/shared/models/enum';
+import { UseRoleGuard } from '../../auth/src/guard/role.guard';
 import {
   BookingTourDto,
   CartDto,
@@ -31,12 +31,12 @@ import {
   TourCommentDto,
   UpdateTouristDTO,
 } from '../../manager/src/tour/dtos';
-import {NewStoreDTO} from '../../manager/src/seller/dto';
-import {Throttle} from '@nestjs/throttler';
-import {ThrottlerBehindProxyGuard} from './throttler-behind-proxy.guard';
-import {catchError, of} from 'rxjs';
-import {FileInterceptor, FilesInterceptor} from '@nestjs/platform-express';
-import {CloudinaryService} from '../../third-party-service/src/cloudinary/cloudinary.service';
+import { NewStoreDTO } from '../../manager/src/seller/dto';
+import { Throttle } from '@nestjs/throttler';
+import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
+import { catchError, of } from 'rxjs';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../../third-party-service/src/cloudinary/cloudinary.service';
 
 @Throttle(30, 60)
 @UseGuards(ThrottlerBehindProxyGuard)
@@ -91,11 +91,11 @@ export class AppController {
       { title, page },
     );
   }
-  @Get('admin/get-all-store')
-  // @UseGuards(AuthGuard, UseRoleGuard)
-  // @Roles(Role.SELLER)
-  async getAllStore() {
-    return this.managerService.send({ admin: 'get-all-store-admin' }, {});
+  @Get('admin/get-all-store/page=:page')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async getAllStore(@Param('page', ParseIntPipe) page: number) {
+    return this.managerService.send({ admin: 'get-all-store-admin' }, { page });
   }
   // MANAGER---------------------------------------
   @Post('experience/create/comment')
@@ -162,7 +162,7 @@ export class AppController {
   }
   @Throttle(200, 60)
   @Get('experience/page=:page')
-  async getReviewPage(@Param('page', ParseIntPipe) page: string) {
+  async getReviewPage(@Param('page', ParseIntPipe) page: number) {
     return this.tourService.send({ tour: 'get-experience-page' }, { page });
   }
 

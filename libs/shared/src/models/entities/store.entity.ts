@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   OneToMany,
@@ -19,6 +20,9 @@ export class StoreEntity {
 
   @Column()
   slogan: string;
+
+  @CreateDateColumn({ default: new Date() })
+  createdAt: Date;
 
   @Column({
     default:

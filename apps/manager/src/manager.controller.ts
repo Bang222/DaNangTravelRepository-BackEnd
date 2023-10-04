@@ -394,14 +394,18 @@ export class ManagerController {
     );
   }
   @MessagePattern({ admin: 'get-all-store-admin' })
-  async getAllStore(@Ctx() context: RmqContext) {
+  async getAllStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { page: number },
+  ) {
+    const key = `getAllStore${payload.page}`;
     this.sharedService.acknowledgeMessage(context);
-    const cachedTourView = await this.redisService.get('getAllStore');
+    const cachedTourView = await this.redisService.get(key);
     if (cachedTourView) {
       return cachedTourView;
     }
-    const getAllStore = await this.adminService.getAllStore();
-    await this.redisService.set('getAllStore', getAllStore);
+    const getAllStore = await this.adminService.getAllStore(payload.page);
+    await this.redisService.set(key, getAllStore);
     return getAllStore;
   }
 }

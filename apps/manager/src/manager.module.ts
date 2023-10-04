@@ -10,6 +10,7 @@ import { ManagerController } from './manager.controller';
 import { SellerService } from './seller/seller.service';
 import { TourService } from './tour/tour.service';
 import { ManagerService } from './manager.service';
+import { BaseDataService } from './basedata/baseData.service';
 
 import { CacheModule } from '@nestjs/cache-manager';
 
@@ -50,7 +51,7 @@ import { SendMailService } from '../../third-party-service/src/send-mail/send-ma
 import { JwtModule } from '@nestjs/jwt';
 import { AuthUtilService } from '../../auth/src/util/authUtil.service';
 import { AuthService } from '../../auth/src/auth.service';
-import {AdminService} from "./admin/admin.service";
+import { AdminService } from './admin/admin.service';
 
 @Module({
   imports: [
@@ -114,6 +115,7 @@ import {AdminService} from "./admin/admin.service";
     AdminService,
     SellerService,
     AuthUtilService,
+    BaseDataService,
     {
       provide: 'AuthServiceInterface',
       useClass: AuthService,
