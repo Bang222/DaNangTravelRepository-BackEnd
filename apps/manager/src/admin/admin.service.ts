@@ -1,5 +1,5 @@
-import {Inject, Injectable} from '@nestjs/common';
-import {StoreEntity, StoreRepositoryInterface} from "@app/shared";
+import { Inject, Injectable } from '@nestjs/common';
+import { StoreEntity, StoreRepositoryInterface } from '@app/shared';
 
 @Injectable()
 export class AdminService {
@@ -8,8 +8,18 @@ export class AdminService {
     private readonly storeRepository: StoreRepositoryInterface,
   ) {}
 
-  async getAllStore(): Promise<StoreEntity[]> {
-    const getAllStore = await this.storeRepository.findAll();
-    return getAllStore;
+  async getAllStore(page: number): Promise<StoreEntity[]> {
+    try {
+      const itemsPerPage = 10;
+      const skip = (page - 1) * itemsPerPage;
+      const getAllStore = await this.storeRepository.findWithRelations({
+        skip: skip,
+        take: itemsPerPage,
+        order: { createdAt: 'DESC' },
+      });
+      return getAllStore;
+    } catch (e) {
+      return e;
+    }
   }
 }
