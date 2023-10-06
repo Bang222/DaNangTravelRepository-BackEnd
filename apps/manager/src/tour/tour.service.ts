@@ -53,6 +53,7 @@ export class TourService {
     @Inject('ShareExperienceRepositoryInterface')
     private readonly usedTourExperienceOfUserRepository: ShareExperienceRepositoryInterface,
     @Inject('UserRegisteredTourRepositoryInterface')
+    @Inject('UserRegisteredTourRepositoryInterface')
     private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
@@ -314,8 +315,10 @@ export class TourService {
         bookingTourDto.infantPassengers +
         bookingTourDto.toddlerPassengers +
         bookingTourDto.childPassengers;
-      if (findTourById.baseQuantity - +findTourById.quantity < quantity)
+      if (+findTourById.baseQuantity - +findTourById.quantity < quantity) {
+        console.log(+findTourById.baseQuantity - +findTourById.quantity);
         throw new BadRequestException('not Enough slot');
+      }
 
       const totalPrice =
         bookingTourDto.adultPassengers * price +

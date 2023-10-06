@@ -299,7 +299,7 @@ export class SellerService {
       const totalTours = findTourById.length;
       const totalOrder = findOrderStore.length;
       const totalLike = findTourById.reduce(
-        (acc, cur) => acc + cur.upVote.length,
+        (acc, cur) => acc + cur.upVote.length - 1,
         0,
       );
       const totalComments = findTourById.reduce(

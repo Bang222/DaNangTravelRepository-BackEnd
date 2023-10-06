@@ -91,11 +91,46 @@ export class AppController {
       { title, page },
     );
   }
-  @Get('admin/get-all-store/page=:page')
+  @Get('admin/get-all-store/page=:page/month=:month')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
-  async getAllStore(@Param('page', ParseIntPipe) page: number) {
-    return this.managerService.send({ admin: 'get-all-store-admin' }, { page });
+  async getAllStore(
+    @Param('page', ParseIntPipe) page: number,
+    @Param('month', ParseIntPipe) month: number,
+  ) {
+    try {
+      if (month > 12) {
+        throw new BadRequestException({ message: 'can not found' });
+      }
+      return this.managerService.send(
+        { admin: 'get-all-store-admin' },
+        { page, month },
+      );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Post('admin/confirm-payment')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async confirmPayment(
+    @Body('storeId') storeId: number,
+    @Body('month') month: Date,
+  ) {
+    if (!storeId) {
+      throw new BadRequestException({ message: 'month or storeId null' });
+    }
+    try {
+      // if (month.getMonth() > 12) {
+      //   throw new BadRequestException({ message: 'can not found' });
+      // }
+      return this.managerService.send(
+        { admin: 'confirm-payment-admin' },
+        { storeId, month },
+      );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
   // MANAGER---------------------------------------
   @Post('experience/create/comment')

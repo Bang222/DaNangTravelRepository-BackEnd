@@ -65,7 +65,4 @@ export class OrderEntity {
   orderDetail: OrderDetailEntity;
   @Column({ nullable: true })
   orderDetailId: string;
-
-  @OneToMany(() => PaymentEntity, (payment) => payment.order)
-  payments: PaymentEntity[];
 }

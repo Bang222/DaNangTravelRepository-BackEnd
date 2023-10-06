@@ -44,15 +44,15 @@ export class BaseDataService {
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
   ) {}
-  async onModuleInit() {
-    try {
-      console.log('Data seeding started');
-      await Promise.all([this.userData(), this.store()]);
-      console.log('Data seeding completed');
-    } catch (error) {
-      console.error('Data seeding error:', error);
-    }
-  }
+  // async onModuleInit() {
+  //   try {
+  //     console.log('Data seeding started');
+  //     await Promise.all([this.userData(), this.store()]);
+  //     console.log('Data seeding completed');
+  //   } catch (error) {
+  //     console.error('Data seeding error:', error);
+  //   }
+  // }
   async userData() {
     try {
       const password = await bcrypt.hash('123', 10);
@@ -215,7 +215,7 @@ export class BaseDataService {
             'Pick-up point:\n' +
             ' \n' +
             'Hotel',
-            'Hoi An Ancient town is located in Viet Nam’s central Quang Nam Province, on the north bank near the mouth of the Thu Bon River. The inscribed property comprises 30 ha and it has a buffer zone of 280 ha. It  is an exceptionally well-preserved example of a small-scale trading port active the 15th to 19th centuries  which traded widely, both with the countries of Southeast and East Asia and with the rest of the world. Its decline in the later 19th century ensured that it has retained its traditional urban tissue to a remarkable degree.\n' +
+          'Hoi An Ancient town is located in Viet Nam’s central Quang Nam Province, on the north bank near the mouth of the Thu Bon River. The inscribed property comprises 30 ha and it has a buffer zone of 280 ha. It  is an exceptionally well-preserved example of a small-scale trading port active the 15th to 19th centuries  which traded widely, both with the countries of Southeast and East Asia and with the rest of the world. Its decline in the later 19th century ensured that it has retained its traditional urban tissue to a remarkable degree.\n' +
             '\n' +
             'The town reflects a fusion of indigenous and foreign cultures (principally Chinese and Japanese with later European influences) that combined to produce this unique survival. ',
           'Breakfast at hotel\n' +
@@ -269,11 +269,11 @@ export class BaseDataService {
             name: nameTour[randomNameTour],
             description: description[randomNameTour],
             baseQuantity: 30,
-            quantity: 30,
+            quantity: 0,
             lastRegisterDate: lastRegisterDate,
             startDate: startDate,
             endDate: endDate,
-            price: price[randomNameTour] * 100000,
+            price: price[randomNameTour] * 1000000,
             address: 'Da Nang',
             startAddress: AddressRandom[randomNameTour],
             endingAddress: AddressRandom[randomNameTour],

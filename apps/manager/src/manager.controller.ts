@@ -396,16 +396,30 @@ export class ManagerController {
   @MessagePattern({ admin: 'get-all-store-admin' })
   async getAllStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { page: number },
+    @Payload() payload: { page: number; month: number },
   ) {
-    const key = `getAllStore${payload.page}`;
+    const key = `getAllStore=${payload.page}month=${payload.month}`;
     this.sharedService.acknowledgeMessage(context);
     const cachedTourView = await this.redisService.get(key);
     if (cachedTourView) {
       return cachedTourView;
     }
-    const getAllStore = await this.adminService.getAllStore(payload.page);
+    const getAllStore = await this.adminService.getAllStore(
+      payload.page,
+      payload.month,
+    );
     await this.redisService.set(key, getAllStore);
     return getAllStore;
+  }
+  @MessagePattern({ admin: 'confirm-payment-admin' })
+  async confirmedPayment(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { month: Date; storeId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.adminService.confirmedPayment(
+      payload.storeId,
+      payload.month,
+    );
   }
 }

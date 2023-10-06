@@ -16,7 +16,8 @@ async function bootstrap() {
       threshold: 100 * 1000,
     }),
   );
-  app.use(helmet()); // ngăn chặn trang thứ 3 vào cookie và chặn k có thấy header những thông tin nhạy cảm như code bằng gì
+  // ngăn chặn trang thứ 3 vào cookie và chặn k có thấy header những thông tin nhạy cảm như code bằng gì
+  app.use(helmet());
   await app.listen(5000);
 }
 bootstrap();

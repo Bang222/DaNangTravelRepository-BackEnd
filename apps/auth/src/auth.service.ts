@@ -1,22 +1,16 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import {BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException,} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-import { decode, sign, verify } from 'jsonwebtoken';
-import { ExistingUserDTO, NewUserDTO } from './dto';
-import { UsersRepositoryInterface } from '@app/shared/interfaces/repository-interface/users.repository.interface';
-import { AuthServiceInterface } from './interface/auth.service.interface';
-import { KeyTokenRepositoryInterface, UserEntity } from '@app/shared';
-import { ClientProxy } from '@nestjs/microservices';
+import {decode, sign, verify} from 'jsonwebtoken';
+import {ExistingUserDTO, NewUserDTO} from './dto';
+import {UsersRepositoryInterface} from '@app/shared/interfaces/repository-interface/users.repository.interface';
+import {AuthServiceInterface} from './interface/auth.service.interface';
+import {KeyTokenRepositoryInterface, UserEntity} from '@app/shared';
+import {ClientProxy} from '@nestjs/microservices';
 import * as crypto from 'crypto';
-import { AuthUtilService } from './util/authUtil.service';
+import {AuthUtilService} from './util/authUtil.service';
 import axios from 'axios';
-import { UserInfoGoogle } from './dto/auth-google-login.dto';
+import {UserInfoGoogle} from './dto/auth-google-login.dto';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
@@ -256,17 +250,22 @@ export class AuthService implements AuthServiceInterface {
   async getUserFromHeader(jwt: string) {
     if (!jwt) return;
     try {
-      const decoded = decode(jwt);
-      return decoded;
+      return decode(jwt);
     } catch (error) {
-      throw new BadRequestException();
+      return error;
     }
   }
+
   async logOut(userId: string) {
-    const findKeyToken = await this.keyTokenRepository.findByCondition({
-      where: { userId: userId },
-    });
-    if (!findKeyToken) return { msg: 'can not found' };
-    return await this.keyTokenRepository.remove({ ...findKeyToken });
+    try {
+      const findKeyToken = await this.keyTokenRepository.findByCondition({
+        where: { userId: userId },
+      });
+      if (!findKeyToken)
+        throw new BadRequestException({ msg: 'can not found' });
+      return await this.keyTokenRepository.remove({ ...findKeyToken });
+    } catch (e) {
+      return e;
+    }
   }
 }

@@ -1,21 +1,30 @@
 // payment.entity.ts
 
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { OrderEntity } from '@app/shared';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { StoreEntity } from '@app/shared/models/entities/store.entity';
 
 @Entity('payment')
 export class PaymentEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => OrderEntity, (order) => order.payments)
-  order: OrderEntity;
+  @Column({ default: false })
+  isPaymentConfirmed: boolean;
 
+  @CreateDateColumn({ default: new Date() })
+  createAt: Date;
+
+  @ManyToOne(() => StoreEntity, (store) => store.orders)
+  @JoinColumn({ name: 'storeId' })
+  store: StoreEntity;
   @Column()
-  amount: number;
-
-  @Column()
-  paymentDate: Date;
-
+  storeId: string;
   // Other relevant columns, e.g., paymentMethod, transactionId, etc.
 }
