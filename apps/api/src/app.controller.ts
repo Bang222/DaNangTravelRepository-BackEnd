@@ -91,19 +91,29 @@ export class AppController {
       { title, page },
     );
   }
-  @Get('admin/get-all-store/page=:page/month=:month')
+  @Get('admin/get-all-store/page=:page')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
-  async getAllStore(
+  async getAllStore(@Param('page', ParseIntPipe) page: number) {
+    try {
+      return this.managerService.send(
+        { admin: 'get-all-store-admin' },
+        { page },
+      );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Get('admin/get-profit-store/page=:page/month=:month')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async getProfitStore(
     @Param('page', ParseIntPipe) page: number,
     @Param('month', ParseIntPipe) month: number,
   ) {
     try {
-      if (month > 12) {
-        throw new BadRequestException({ message: 'can not found' });
-      }
       return this.managerService.send(
-        { admin: 'get-all-store-admin' },
+        { admin: 'get-profit-admin' },
         { page, month },
       );
     } catch (e) {
@@ -115,18 +125,15 @@ export class AppController {
   @Roles(Role.ADMIN)
   async confirmPayment(
     @Body('storeId') storeId: number,
-    @Body('month') month: Date,
+    @Body('profit', ParseIntPipe) profit: number,
   ) {
     if (!storeId) {
       throw new BadRequestException({ message: 'month or storeId null' });
     }
     try {
-      // if (month.getMonth() > 12) {
-      //   throw new BadRequestException({ message: 'can not found' });
-      // }
       return this.managerService.send(
         { admin: 'confirm-payment-admin' },
-        { storeId, month },
+        { storeId, profit },
       );
     } catch (e) {
       throw new BadRequestException(e);

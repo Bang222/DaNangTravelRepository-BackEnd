@@ -63,6 +63,29 @@ export abstract class BaseAbstractRepository<T extends HasId>
     }
     return null; // Return null if no entity found matching the condition
   }
+  public async count(filterCondition?: FindManyOptions<T>): Promise<number> {
+    if (filterCondition) {
+      return await this.entity.count(filterCondition);
+    } else {
+      return await this.entity.count(); // Count all rows if no filter condition is provided
+    }
+  }
+  public async calculateTotal(
+    columnName: string,
+    filterCondition?: FindManyOptions<T>,
+  ): Promise<number> {
+    const queryBuilder = this.entity.createQueryBuilder();
+
+    if (filterCondition) {
+      queryBuilder.where(filterCondition.where);
+    }
+
+    const total = await queryBuilder
+      .select(`SUM(${columnName})`, 'total')
+      .getRawOne();
+
+    return total.total || 0; // Return the sum or 0 if no records are found
+  }
   public async preload(entity: DeepPartial<T>): Promise<T> {
     return await this.entity.preload(entity);
   }

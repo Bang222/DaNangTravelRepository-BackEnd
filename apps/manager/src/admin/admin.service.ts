@@ -1,10 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  PaymentRepositoryInterface,
-  StoreRepositoryInterface,
-  TourRepositoryInterface,
-} from '@app/shared';
-import { Between } from 'typeorm';
+import {Inject, Injectable} from '@nestjs/common';
+import {PaymentRepositoryInterface, StoreRepositoryInterface, TourRepositoryInterface,} from '@app/shared';
+import {Between} from 'typeorm';
 
 @Injectable()
 export class AdminService {
@@ -17,15 +13,46 @@ export class AdminService {
     private readonly paymentRepository: PaymentRepositoryInterface,
   ) {}
 
-  async confirmedPayment(storeId: string, month: Date) {
-    const currentDay = new Date();
-    return await this.paymentRepository.save({
+  async confirmedPayment(storeId: string, profit: number) {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Check if a payment has already been confirmed for the current month and year
+    const existingPayment = await this.paymentRepository.findByCondition({
+      where: {
+        storeId: storeId,
+        isPaymentConfirmed: true,
+        month: currentMonth,
+        year: currentYear,
+      },
+    });
+
+    if (existingPayment) {
+      return { isPaymentConfirmed: existingPayment.isPaymentConfirmed };
+    }
+    const newPayment = this.paymentRepository.create({
       isPaymentConfirmed: true,
       storeId: storeId,
-      // month: new Date(month),
+      totalProfit: profit,
+      month: currentMonth,
+      year: currentYear,
     });
+    await this.paymentRepository.save(await newPayment);
+    return newPayment;
   }
-  async getAllStore(page: number, month: number): Promise<any> {
+  async getAllStore(page: number) {
+    const itemsPerPage = 10;
+    const skip = (page - 1) * itemsPerPage;
+    const countStore = await this.storeRepository.count();
+    const data = await this.storeRepository.findWithRelations({
+      skip: skip,
+      take: itemsPerPage,
+      order: { createdAt: 'DESC' },
+    });
+    return { data, totalStore: countStore };
+  }
+  async getProfit(page: number, month: number): Promise<any> {
     try {
       const itemsPerPage = 10;
       const skip = (page - 1) * itemsPerPage;
@@ -47,7 +74,7 @@ export class AdminService {
         await this.storeRepository.findWithRelations({
           skip: skip,
           take: itemsPerPage,
-          order: { createdAt: 'DESC' },
+          // order: { createdAt: 'DESC' },
           relations: { orders: true, payments: true },
           where: {
             orders: {
@@ -61,14 +88,13 @@ export class AdminService {
             },
           },
         });
-      const storesWithTotalPrice = dataTotalIncomeTrackingMonth.map((store) => {
+      return dataTotalIncomeTrackingMonth.map((store) => {
         const totalOrderPrice = store.orders.reduce(
           (total, order) => total + order.totalPrice,
           0,
         );
         return { ...store, totalOrderPrice };
       });
-      return storesWithTotalPrice;
     } catch (e) {
       return e;
     }
