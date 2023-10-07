@@ -18,8 +18,14 @@ export class PaymentEntity {
   @Column({ default: false })
   isPaymentConfirmed: boolean;
 
-  @CreateDateColumn({ default: new Date() })
-  createAt: Date;
+  @Column({ nullable: true })
+  totalProfit: number;
+
+  @Column({ nullable: true })
+  month: number;
+
+  @Column({ nullable: true })
+  year: number;
 
   @ManyToOne(() => StoreEntity, (store) => store.orders)
   @JoinColumn({ name: 'storeId' })

@@ -13,4 +13,9 @@ export interface BaseInterfaceRepository<T> {
   removeCondition(filterCondition: FindOneOptions<T>): Promise<T[]>;
   findWithRelations(relations: FindManyOptions<T>): Promise<T[]>;
   preload(entityLike: DeepPartial<T>): Promise<T>;
+  count(filterCondition?: FindManyOptions<T>): Promise<number>;
+  calculateTotal(
+    columnName: string,
+    filterCondition?: FindManyOptions<T>,
+  ): Promise<number>;
 }

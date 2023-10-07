@@ -396,30 +396,45 @@ export class ManagerController {
   @MessagePattern({ admin: 'get-all-store-admin' })
   async getAllStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { page: number; month: number },
+    @Payload() payload: { page: number },
   ) {
-    const key = `getAllStore=${payload.page}month=${payload.month}`;
+    const key = `getAllStorePage=${payload.page}`;
     this.sharedService.acknowledgeMessage(context);
     const cachedTourView = await this.redisService.get(key);
     if (cachedTourView) {
       return cachedTourView;
     }
-    const getAllStore = await this.adminService.getAllStore(
+    const getAllStore = await this.adminService.getAllStore(payload.page);
+    await this.redisService.set(key, getAllStore);
+    return getAllStore;
+  }
+  @MessagePattern({ admin: 'get-profit-admin' })
+  async getProfitStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { page: number; month: number },
+  ) {
+    const key = `getProfitStore=${payload.page}month=${payload.month}`;
+    this.sharedService.acknowledgeMessage(context);
+    const cachedTourView = await this.redisService.get(key);
+    if (cachedTourView) {
+      return cachedTourView;
+    }
+    const getProfitStore = await this.adminService.getProfit(
       payload.page,
       payload.month,
     );
-    await this.redisService.set(key, getAllStore);
-    return getAllStore;
+    await this.redisService.set(key, getProfitStore);
+    return getProfitStore;
   }
   @MessagePattern({ admin: 'confirm-payment-admin' })
   async confirmedPayment(
     @Ctx() context: RmqContext,
-    @Payload() payload: { month: Date; storeId: string },
+    @Payload() payload: { storeId: string; profit: number },
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.adminService.confirmedPayment(
       payload.storeId,
-      payload.month,
+      payload.profit,
     );
   }
 }
