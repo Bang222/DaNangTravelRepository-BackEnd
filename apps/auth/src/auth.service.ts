@@ -1,16 +1,23 @@
-import {BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException,} from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-import {decode, sign, verify} from 'jsonwebtoken';
-import {ExistingUserDTO, NewUserDTO} from './dto';
-import {UsersRepositoryInterface} from '@app/shared/interfaces/repository-interface/users.repository.interface';
-import {AuthServiceInterface} from './interface/auth.service.interface';
-import {KeyTokenRepositoryInterface, UserEntity} from '@app/shared';
-import {ClientProxy} from '@nestjs/microservices';
+import { decode, sign, verify } from 'jsonwebtoken';
+import { ExistingUserDTO, NewUserDTO } from './dto';
+import { UsersRepositoryInterface } from '@app/shared/interfaces/repository-interface/users.repository.interface';
+import { AuthServiceInterface } from './interface/auth.service.interface';
+import { KeyTokenRepositoryInterface, UserEntity } from '@app/shared';
+import { ClientProxy } from '@nestjs/microservices';
 import * as crypto from 'crypto';
-import {AuthUtilService} from './util/authUtil.service';
+import { AuthUtilService } from './util/authUtil.service';
 import axios from 'axios';
-import {UserInfoGoogle} from './dto/auth-google-login.dto';
+import { UserInfoGoogle } from './dto/auth-google-login.dto';
+import { Role } from '@app/shared/models/enum';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
@@ -90,6 +97,7 @@ export class AuthService implements AuthServiceInterface {
   async findByEmail(email: string): Promise<UserEntity> {
     return this.usersRepository.findByCondition({
       where: { email },
+      relations: { store: true },
       select: [
         'id',
         'firstName',
@@ -100,6 +108,7 @@ export class AuthService implements AuthServiceInterface {
         'phone',
         'email',
         'sex',
+        'isActive',
         'password',
         'role',
         'isEmailValidated',
@@ -180,13 +189,9 @@ export class AuthService implements AuthServiceInterface {
   }
   async loginGoogle(userInfo: UserInfoGoogle) {
     try {
-      const findUserByEmail = await this.usersRepository.findByCondition({
-        where: { email: userInfo.email },
-      });
-      if (!findUserByEmail)
-        return new BadRequestException(
-          'can not found email Please Register your email',
-        );
+      const findUserByEmail = await this.validateUserLoginGoogle(
+        userInfo.email,
+      );
       delete findUserByEmail.password;
       const accessAndRefresh = await this.signTokenUsingPrivateKeyAndPublishKey(
         findUserByEmail.id,
@@ -200,17 +205,31 @@ export class AuthService implements AuthServiceInterface {
       return e;
     }
   }
+  async validateUserLoginGoogle(email: string): Promise<UserEntity> {
+    const user = await this.findByEmail(email);
+    if (!user) throw new BadRequestException('Please Register!!');
+    if (user.isEmailValidated === false)
+      throw new BadRequestException('Please Validate Email!!');
+    if (!user.isActive)
+      throw new BadRequestException('Your Account is Banned!!!');
+    return user;
+  }
   async validateUser(email: string, password: string): Promise<UserEntity> {
     const user = await this.findByEmail(email);
     const doesUserExist = !!user;
-    if (!doesUserExist) throw new Error('Please Register!!');
-    // if (user.isEmailValidated === true) return null;
-
     const doesPasswordMatch = await this.authUtil.doesPasswordMatch(
       password,
       user.password,
     );
     if (!doesPasswordMatch) throw new Error("Password doesn't match");
+    if (user.role === Role.ADMIN) {
+      return user;
+    }
+    if (!doesUserExist) throw new BadRequestException('Please Register!!');
+    if (!user.isEmailValidated)
+      throw new BadRequestException('Please Validate Email!!');
+    if (!user.isActive)
+      throw new BadRequestException('Your Account is Banned!!!');
     return user;
   }
 

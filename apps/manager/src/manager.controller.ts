@@ -130,10 +130,11 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     const { userId } = payload;
-    return await this.tourService.createContentExperienceOfUser(
+    const data = await this.tourService.createContentExperienceOfUser(
       userId,
       createExperienceDto,
     );
+    return data;
   }
   @MessagePattern({ tour: 'get-comment-by-tourId' })
   async getCommentsByTourId(
@@ -407,6 +408,21 @@ export class ManagerController {
     const getAllStore = await this.adminService.getAllStore(payload.page);
     await this.redisService.set(key, getAllStore);
     return getAllStore;
+  }
+  @MessagePattern({ admin: 'get-all-user' })
+  async getAllUsers(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { page: number },
+  ) {
+    const key = `getAllUserPage=${payload.page}`;
+    this.sharedService.acknowledgeMessage(context);
+    const cachedTourView = await this.redisService.get(key);
+    if (cachedTourView) {
+      return cachedTourView;
+    }
+    const getAllUsers = await this.adminService.getAllUsers(payload.page);
+    await this.redisService.set(key, getAllUsers);
+    return getAllUsers;
   }
   @MessagePattern({ admin: 'get-profit-admin' })
   async getProfitStore(

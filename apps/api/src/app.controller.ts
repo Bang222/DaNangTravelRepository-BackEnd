@@ -104,6 +104,16 @@ export class AppController {
       throw new BadRequestException(e);
     }
   }
+  @Get('admin/get-all-user/page=:page')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async getAllUsers(@Param('page', ParseIntPipe) page: number) {
+    try {
+      return this.managerService.send({ admin: 'get-all-user' }, { page });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
   @Get('admin/get-profit-store/page=:page/month=:month')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)

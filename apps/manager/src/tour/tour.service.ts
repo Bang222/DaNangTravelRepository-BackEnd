@@ -13,7 +13,6 @@ import {
   ScheduleRepositoryInterface,
   ShareExperienceEntity,
   ShareExperienceRepositoryInterface,
-  StoreEntity,
   TourEntity,
   TourRepositoryInterface,
   UserEntity,
@@ -31,15 +30,13 @@ import {
   UpdateTouristDTO,
 } from './dtos';
 
-import { TourStatus } from '@app/shared/models/enum';
+import { StoreStatus, TourStatus } from '@app/shared/models/enum';
 import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
 import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
 import { Between, ILike } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { USER } from '@app/shared/models/seeds/base';
 
 @Injectable()
 export class TourService {
@@ -307,7 +304,7 @@ export class TourService {
         throw new BadRequestException('can not found');
       }
       if (findTourById.status !== TourStatus.AVAILABLE)
-        throw new BadRequestException('Registration is over');
+        throw new BadRequestException('Time Registration is over');
       const price: number = findTourById.price;
       const findUserById = await this.usersRepository.findOneById(userId);
       const quantity =
@@ -339,7 +336,7 @@ export class TourService {
         status: 'CONFIRMED',
       });
       if (!findTourById.status.includes(TourStatus.AVAILABLE))
-        throw new RpcException('Err');
+        throw new BadRequestException('Err');
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
       const {
@@ -437,6 +434,7 @@ export class TourService {
         startDay: findTourById.startDate,
         endDate: findTourById.endDate,
       };
+      console.log(configData);
       await this.emailService
         .send(
           { email: 'send-booking' },
@@ -446,7 +444,7 @@ export class TourService {
       await this.redisService.del('getAllTourOfStore');
       return 'booking success';
     } catch (e) {
-      return e;
+      return { message: e };
     }
   }
 
@@ -596,7 +594,12 @@ export class TourService {
       const itemsPerPage = 3;
       const skip = (currentPage - 1) * itemsPerPage;
 
-      const whereCondition: any = { status: TourStatus.AVAILABLE };
+      const whereCondition: any = {
+        status: TourStatus.AVAILABLE,
+        store: {
+          isActive: StoreStatus.ACTIVE,
+        },
+      };
       if (tourName) {
         whereCondition.name = ILike(`%${tourName}%`);
       }
@@ -613,10 +616,10 @@ export class TourService {
         whereCondition.price = Between(minPrice, maxPrice);
       }
       const tours = await this.tourRepository.findAll({
-        where: whereCondition,
         skip: skip,
         order: { createdAt: 'DESC' },
         relations: { store: true, comments: { user: true } },
+        where: whereCondition,
         take: itemsPerPage,
       });
 
