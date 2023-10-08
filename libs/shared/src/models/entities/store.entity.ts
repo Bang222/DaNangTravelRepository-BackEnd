@@ -7,7 +7,12 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import {OrderEntity, PaymentEntity, TourEntity, UserEntity} from '@app/shared';
+import {
+  OrderEntity,
+  PaymentEntity,
+  TourEntity,
+  UserEntity,
+} from '@app/shared';
 import { StoreStatus } from '@app/shared/models/enum';
 
 @Entity('store')

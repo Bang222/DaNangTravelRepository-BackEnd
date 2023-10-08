@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {BadRequestException, Inject, Injectable} from '@nestjs/common';
 import {
   PaymentRepositoryInterface,
   StoreRepositoryInterface,
@@ -26,27 +26,32 @@ export class AdminService {
     const currentYear = currentDate.getFullYear();
 
     // Check if a payment has already been confirmed for the current month and year
-    const existingPayment = await this.paymentRepository.findByCondition({
-      where: {
-        storeId: storeId,
+    try {
+      const existingPayment = await this.paymentRepository.findByCondition({
+        where: {
+          storeId: storeId,
+          isPaymentConfirmed: true,
+          totalProfit: profit * 0.17,
+          month: currentMonth,
+          year: currentYear,
+        },
+      });
+
+      if (existingPayment) {
+        return new BadRequestException('confirmed');
+      }
+      const newPayment = this.paymentRepository.create({
         isPaymentConfirmed: true,
+        storeId: storeId,
+        totalProfit: profit,
         month: currentMonth,
         year: currentYear,
-      },
-    });
-
-    if (existingPayment) {
-      return { isPaymentConfirmed: existingPayment.isPaymentConfirmed };
+      });
+      await this.paymentRepository.save(await newPayment);
+      return newPayment;
+    } catch (e) {
+      return e;
     }
-    const newPayment = this.paymentRepository.create({
-      isPaymentConfirmed: true,
-      storeId: storeId,
-      totalProfit: profit,
-      month: currentMonth,
-      year: currentYear,
-    });
-    await this.paymentRepository.save(await newPayment);
-    return newPayment;
   }
   async getAllStore(page: number) {
     const itemsPerPage = 10;
@@ -76,7 +81,6 @@ export class AdminService {
       const skip = (page - 1) * itemsPerPage;
       const currentDate = new Date();
       currentDate.setMonth(month - 1);
-
       const firstDayOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
