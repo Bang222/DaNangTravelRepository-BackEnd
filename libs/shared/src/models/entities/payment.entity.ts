@@ -21,6 +21,8 @@ export class PaymentEntity {
   @Column({ nullable: true })
   totalProfit: number;
 
+  @CreateDateColumn({ default: new Date() })
+  createdAt: Date;
   @Column({ nullable: true })
   month: number;
 

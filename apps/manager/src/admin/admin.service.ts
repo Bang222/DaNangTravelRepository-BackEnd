@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   OrderRepositoryInterface,
+  PaymentEntity,
   PaymentRepositoryInterface,
   StoreRepositoryInterface,
   TourRepositoryInterface,
@@ -8,6 +9,7 @@ import {
 } from '@app/shared';
 
 import { Between } from 'typeorm';
+import { StoreStatus } from '@app/shared/models/enum';
 
 @Injectable()
 export class AdminService {
@@ -23,8 +25,34 @@ export class AdminService {
     @Inject('OrderRepositoryInterface')
     private readonly orderRepository: OrderRepositoryInterface,
   ) {}
-
-  async confirmedPayment(storeId: string, month: number) {
+  async unBanStore(storeId: string) {
+    try {
+      const findStore = await this.storeRepository.findOneById(storeId);
+      if (!findStore) throw new BadRequestException('Can not found store');
+      return await this.storeRepository.save({
+        ...findStore,
+        isActive: StoreStatus.ACTIVE,
+      });
+    } catch (e) {
+      return e;
+    }
+  }
+  async banStore(storeId: string) {
+    try {
+      const findStore = await this.storeRepository.findOneById(storeId);
+      if (!findStore) throw new BadRequestException('Can not found store');
+      return await this.storeRepository.save({
+        ...findStore,
+        isActive: StoreStatus.CLOSE,
+      });
+    } catch (e) {
+      return e;
+    }
+  }
+  async confirmedPayment(
+    storeId: string,
+    month: number,
+  ): Promise<PaymentEntity> {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     currentDate.setMonth(month - 1);
@@ -45,6 +73,9 @@ export class AdminService {
           createdAt: Between(firstDayOfMonth, lastDayOfMonth),
         },
       });
+      const findStoreById = await this.storeRepository.findByCondition({
+        where: { id: storeId },
+      });
       const TotalIncomeInAMonth = ordersInAMonth.reduce((sum, order) => {
         return sum + (order.totalPrice || 0); // Use 0 if totalPrice is undefined or null
       }, 0);
@@ -52,16 +83,18 @@ export class AdminService {
       const existingPayment = await this.paymentRepository.findByCondition({
         where: {
           storeId: storeId,
-          isPaymentConfirmed: true,
-          totalProfit: result,
           month: month,
           year: currentYear,
         },
       });
 
       if (existingPayment) {
-        return new BadRequestException('Store Paid');
+        throw new BadRequestException('Store Paid');
       }
+      await this.storeRepository.save({
+        ...findStoreById,
+        paidMonth: [...findStoreById.paidMonth, Number(month)],
+      });
       const newPayment = this.paymentRepository.create({
         isPaymentConfirmed: true,
         storeId: storeId,
@@ -83,7 +116,6 @@ export class AdminService {
       skip: skip,
       take: itemsPerPage,
       order: { createdAt: 'DESC' },
-      relations: { orders: true },
     });
     return { data, totalStore: countStore };
   }
@@ -102,48 +134,38 @@ export class AdminService {
     try {
       const itemsPerPage = 10;
       const skip = (page - 1) * itemsPerPage;
-      const currentDate = new Date();
-      currentDate.setMonth(month - 1);
-      const firstDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1,
-      );
-      const lastDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0,
-      );
-      const totalPage = await this.paymentRepository.count({
-        where: { month: month, year: currentDate.getFullYear() },
-      });
+      // const currentDate = new Date();
+      // currentDate.setMonth(month - 1);
+      // const firstDayOfMonth = new Date(
+      //   currentDate.getFullYear(),
+      //   currentDate.getMonth(),
+      //   1,
+      // );
+      // const lastDayOfMonth = new Date(
+      //   currentDate.getFullYear(),
+      //   currentDate.getMonth() + 1,
+      //   0,
+      // );
+      // const totalPage = await this.paymentRepository.count({
+      //   where: { month: month, year: currentDate.getFullYear() },
+      // });
       const dataTotalIncomeTrackingMonth =
         await this.storeRepository.findWithRelations({
           skip: skip,
           take: itemsPerPage,
           order: { createdAt: 'DESC' },
-          relations: { orders: true, payments: true },
+          relations: { payments: true },
           where: {
             payments: {
               year: currentDate.getFullYear(),
               month: month,
             },
           },
-          select: {
-            orders: {
-              id: true,
-              totalPrice: true,
-            },
-          },
         });
-      const data = dataTotalIncomeTrackingMonth.map((store) => {
-        const totalOrderPriceAMonth = store.orders.reduce(
-          (total, order) => total + order.totalPrice,
-          0,
-        );
-        return { ...store, totalOrderPriceAMonth };
-      });
-      return { data, totalData: totalPage };
+      return {
+        data: dataTotalIncomeTrackingMonth,
+        totalData: dataTotalIncomeTrackingMonth.length,
+      };
     } catch (e) {
       return e;
     }

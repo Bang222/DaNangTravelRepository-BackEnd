@@ -26,6 +26,9 @@ export class StoreEntity {
   @Column()
   slogan: string;
 
+  @Column('simple-array', { default: 0, nullable: true })
+  paidMonth: number[];
+
   @CreateDateColumn({ default: new Date() })
   createdAt: Date;
 
