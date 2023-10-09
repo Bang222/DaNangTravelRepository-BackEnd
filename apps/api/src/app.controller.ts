@@ -6,7 +6,7 @@ import {
   Inject,
   Param,
   ParseIntPipe,
-  Post,
+  Post, Put,
   Query,
   Req,
   Res,
@@ -99,6 +99,33 @@ export class AppController {
       return this.managerService.send(
         { admin: 'get-all-store-admin' },
         { page },
+      );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Put('admin/ban/store-id=:id')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async banStore(@Param('id') id: string) {
+    try {
+      if (!id) throw new BadRequestException({ message: 'id null' });
+      return this.managerService.send({ admin: 'ban-store' }, { storeId: id });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Put('admin/un-ban/store-id=:id')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async unBanStore(@Param('id') id: string) {
+    try {
+      if (!id) throw new BadRequestException({ message: 'id null' });
+      return this.managerService.send(
+        { admin: 'un-ban-store' },
+        { storeId: id },
       );
     } catch (e) {
       throw new BadRequestException(e);
@@ -593,21 +620,6 @@ export class AppController {
   //     return e;
   //   }
   // }
-
-  @Get('email1')
-  async helloThirdPartyService2() {
-    return this.emailService.send({ email: 'smail' }, {});
-  }
-
-  @Get('email2')
-  async helloThirdPartyService3() {
-    return this.socialSharingService.send({ social: 'smail' }, {});
-  }
-
-  @Get('email3')
-  async helloThirdPartyService4() {
-    return this.paymentService.send({ payment: 'smail' }, {});
-  }
 
   @Post('refresh-token')
   async refreshToken(@Req() req) {
