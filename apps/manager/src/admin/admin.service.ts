@@ -1,10 +1,12 @@
-import {BadRequestException, Inject, Injectable} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
+  OrderRepositoryInterface,
   PaymentRepositoryInterface,
   StoreRepositoryInterface,
   TourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
+
 import { Between } from 'typeorm';
 
 @Injectable()
@@ -18,33 +20,53 @@ export class AdminService {
     private readonly paymentRepository: PaymentRepositoryInterface,
     @Inject('UsersRepositoryInterface')
     private readonly usersRepository: UsersRepositoryInterface,
+    @Inject('OrderRepositoryInterface')
+    private readonly orderRepository: OrderRepositoryInterface,
   ) {}
 
-  async confirmedPayment(storeId: string, profit: number) {
+  async confirmedPayment(storeId: string, month: number) {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-
-    // Check if a payment has already been confirmed for the current month and year
+    currentDate.setMonth(month - 1);
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+    );
     try {
+      const ordersInAMonth = await this.orderRepository.findWithRelations({
+        where: {
+          storeId: storeId,
+          createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+        },
+      });
+      const TotalIncomeInAMonth = ordersInAMonth.reduce((sum, order) => {
+        return sum + (order.totalPrice || 0); // Use 0 if totalPrice is undefined or null
+      }, 0);
+      const result = Number((TotalIncomeInAMonth * 0.17).toFixed(2));
       const existingPayment = await this.paymentRepository.findByCondition({
         where: {
           storeId: storeId,
           isPaymentConfirmed: true,
-          totalProfit: profit * 0.17,
-          month: currentMonth,
+          totalProfit: result,
+          month: month,
           year: currentYear,
         },
       });
 
       if (existingPayment) {
-        return new BadRequestException('confirmed');
+        return new BadRequestException('Store Paid');
       }
       const newPayment = this.paymentRepository.create({
         isPaymentConfirmed: true,
         storeId: storeId,
-        totalProfit: profit,
-        month: currentMonth,
+        totalProfit: result,
+        month: month,
         year: currentYear,
       });
       await this.paymentRepository.save(await newPayment);
@@ -61,19 +83,20 @@ export class AdminService {
       skip: skip,
       take: itemsPerPage,
       order: { createdAt: 'DESC' },
+      relations: { orders: true },
     });
     return { data, totalStore: countStore };
   }
   async getAllUsers(page: number) {
     const itemsPerPage = 10;
     const skip = (page - 1) * itemsPerPage;
-    const countStore = await this.usersRepository.count();
+    const countUser = await this.usersRepository.count();
     const data = await this.usersRepository.findWithRelations({
       skip: skip,
       take: itemsPerPage,
       order: { createdTime: 'DESC' },
     });
-    return { data, totalUser: countStore };
+    return { data, totalUser: countUser };
   }
   async getProfit(page: number, month: number): Promise<any> {
     try {
@@ -91,7 +114,9 @@ export class AdminService {
         currentDate.getMonth() + 1,
         0,
       );
-
+      const totalPage = await this.paymentRepository.count({
+        where: { month: month, year: currentDate.getFullYear() },
+      });
       const dataTotalIncomeTrackingMonth =
         await this.storeRepository.findWithRelations({
           skip: skip,
@@ -99,8 +124,9 @@ export class AdminService {
           order: { createdAt: 'DESC' },
           relations: { orders: true, payments: true },
           where: {
-            orders: {
-              createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+            payments: {
+              year: currentDate.getFullYear(),
+              month: month,
             },
           },
           select: {
@@ -117,7 +143,7 @@ export class AdminService {
         );
         return { ...store, totalOrderPriceAMonth };
       });
-      return { data, totalData: dataTotalIncomeTrackingMonth.length };
+      return { data, totalData: totalPage };
     } catch (e) {
       return e;
     }

@@ -130,20 +130,24 @@ export class AppController {
       throw new BadRequestException(e);
     }
   }
+  @Throttle(200, 60)
   @Post('admin/confirm-payment')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
   async confirmPayment(
     @Body('storeId') storeId: number,
-    @Body('profit', ParseIntPipe) profit: number,
+    @Body('month', ParseIntPipe) month: number,
   ) {
     if (!storeId) {
-      throw new BadRequestException({ message: 'month or storeId null' });
+      return new BadRequestException({ message: 'month or storeId null' });
+    }
+    if (month > 12) {
+      return new BadRequestException({ message: 'Not Found' });
     }
     try {
       return this.managerService.send(
         { admin: 'confirm-payment-admin' },
-        { storeId, profit },
+        { storeId, month },
       );
     } catch (e) {
       throw new BadRequestException(e);

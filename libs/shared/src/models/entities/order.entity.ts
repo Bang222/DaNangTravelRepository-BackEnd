@@ -4,13 +4,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { OrderDetailEntity, StoreEntity, UserEntity } from '@app/shared';
-import { PaymentEntity } from '@app/shared/models/entities/payment.entity';
 
 @Entity('order')
 export class OrderEntity {

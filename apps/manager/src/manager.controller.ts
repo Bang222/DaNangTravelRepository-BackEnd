@@ -445,12 +445,12 @@ export class ManagerController {
   @MessagePattern({ admin: 'confirm-payment-admin' })
   async confirmedPayment(
     @Ctx() context: RmqContext,
-    @Payload() payload: { storeId: string; profit: number },
+    @Payload() payload: { storeId: string; month: number },
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.adminService.confirmedPayment(
       payload.storeId,
-      payload.profit,
+      payload.month,
     );
   }
 }
