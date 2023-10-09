@@ -272,7 +272,7 @@ export class ManagerController {
       payload.endDay,
       payload.currentPage,
     );
-    await this.redisService.set(condition, dataSearchTour, 10000);
+    await this.redisService.set(condition, dataSearchTour);
     return dataSearchTour;
   }
   @MessagePattern({ tour: 'search-experience' })
@@ -397,7 +397,7 @@ export class ManagerController {
   @MessagePattern({ admin: 'get-all-store-admin' })
   async getAllStore(
     @Ctx() context: RmqContext,
-    @Payload() payload: { page: number },
+    @Payload() payload: { page: number; month: number },
   ) {
     const key = `getAllStorePage=${payload.page}`;
     this.sharedService.acknowledgeMessage(context);
@@ -405,7 +405,10 @@ export class ManagerController {
     if (cachedTourView) {
       return cachedTourView;
     }
-    const getAllStore = await this.adminService.getAllStore(payload.page);
+    const getAllStore = await this.adminService.getAllStore(
+      payload.page,
+      payload.month,
+    );
     await this.redisService.set(key, getAllStore);
     return getAllStore;
   }
@@ -452,5 +455,21 @@ export class ManagerController {
       payload.storeId,
       payload.month,
     );
+  }
+  @MessagePattern({ admin: 'ban-store' })
+  async banStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { storeId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.adminService.banStore(payload.storeId);
+  }
+  @MessagePattern({ admin: 'un-ban-store' })
+  async unBanStore(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { storeId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.adminService.unBanStore(payload.storeId);
   }
 }

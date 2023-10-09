@@ -6,7 +6,8 @@ import {
   Inject,
   Param,
   ParseIntPipe,
-  Post, Put,
+  Post,
+  Put,
   Query,
   Req,
   Res,
@@ -91,14 +92,17 @@ export class AppController {
       { title, page },
     );
   }
-  @Get('admin/get-all-store/page=:page')
+  @Get('admin/get-all-store/page=:page/month=:month')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
-  async getAllStore(@Param('page', ParseIntPipe) page: number) {
+  async getAllStore(
+    @Param('page', ParseIntPipe) page: number,
+    @Param('month', ParseIntPipe) month: number,
+  ) {
     try {
       return this.managerService.send(
         { admin: 'get-all-store-admin' },
-        { page },
+        { page, month },
       );
     } catch (e) {
       throw new BadRequestException(e);

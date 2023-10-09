@@ -108,16 +108,50 @@ export class AdminService {
       return e;
     }
   }
-  async getAllStore(page: number) {
+  async getAllStore(page: number, month: number) {
+    const currentDate = new Date();
+    currentDate.setMonth(month - 1);
+
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+    );
     const itemsPerPage = 10;
     const skip = (page - 1) * itemsPerPage;
     const countStore = await this.storeRepository.count();
-    const data = await this.storeRepository.findWithRelations({
+    const stores = await this.storeRepository.findWithRelations({
       skip: skip,
       take: itemsPerPage,
       order: { createdAt: 'DESC' },
+      relations: { orders: true },
+      select: {
+        orders: {
+          id: true,
+          totalPrice: true,
+        },
+      },
     });
-    return { data, totalStore: countStore };
+    const newDataStore = [];
+    for (const store of stores) {
+      const findOrderStore = await this.orderRepository.findAll({
+        where: {
+          storeId: store.id,
+          createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+        },
+      });
+      const totalIncome = findOrderStore.reduce(
+        (acc, cur) => acc + cur.totalPrice,
+        0,
+      );
+      newDataStore.push({ ...store, totalIncome });
+    }
+    return { data: newDataStore, totalStore: countStore };
   }
   async getAllUsers(page: number) {
     const itemsPerPage = 10;
@@ -130,11 +164,12 @@ export class AdminService {
     });
     return { data, totalUser: countUser };
   }
+
   async getProfit(page: number, month: number): Promise<any> {
     try {
       const itemsPerPage = 10;
       const skip = (page - 1) * itemsPerPage;
-      // const currentDate = new Date();
+      const currentDate = new Date();
       // currentDate.setMonth(month - 1);
       // const firstDayOfMonth = new Date(
       //   currentDate.getFullYear(),
