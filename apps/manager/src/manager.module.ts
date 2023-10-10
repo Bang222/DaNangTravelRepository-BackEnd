@@ -180,10 +180,6 @@ import { AdminService } from './admin/admin.service';
       provide: 'ScheduleRepositoryInterface',
       useClass: ScheduleRepository,
     },
-    {
-      provide: 'PassengerRepositoryInterface',
-      useClass: PassengerRepository,
-    },
   ],
 })
 export class ManagerModule {}

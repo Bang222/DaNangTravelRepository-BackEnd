@@ -394,6 +394,37 @@ export class ManagerController {
       payload.month,
     );
   }
+  @MessagePattern({ admin: 'profit-admin-A-month' })
+  async getAllProfitAdminInAMonth(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { month: number },
+  ) {
+    const key = `getAllProfitInAMonth=${payload.month}`;
+    this.sharedService.acknowledgeMessage(context);
+    const cachedTourView = await this.redisService.get(key);
+    if (cachedTourView) {
+      return cachedTourView;
+    }
+    const getAllProfitInAMonth = await this.adminService.getTotalProfitInAMonth(
+      payload.month,
+    );
+    await this.redisService.set(key, getAllProfitInAMonth);
+    return getAllProfitInAMonth;
+  }
+  @MessagePattern({ admin: 'profit-admin-each-month' })
+  async getAllProfitAdminEachMonth(@Ctx() context: RmqContext) {
+    const key = `getAllProfitEachAMonth`;
+    this.sharedService.acknowledgeMessage(context);
+    const cachedTourView = await this.redisService.get(key);
+    if (cachedTourView) {
+      return cachedTourView;
+    }
+    const getAllProfitEachAMonth =
+      await this.adminService.getDataIncomeEachMonthAdmin();
+    await this.redisService.set(key, getAllProfitEachAMonth);
+    return getAllProfitEachAMonth;
+  }
+
   @MessagePattern({ admin: 'get-all-store-admin' })
   async getAllStore(
     @Ctx() context: RmqContext,
