@@ -49,6 +49,30 @@ export class AdminService {
       return e;
     }
   }
+  async banUser(userId: string) {
+    try {
+      const findUser = await this.usersRepository.findOneById(userId);
+      if (!findUser) throw new BadRequestException('Can not found User');
+      return await this.usersRepository.save({
+        ...findUser,
+        isActive: false,
+      });
+    } catch (e) {
+      return e;
+    }
+  }
+  async unBanUser(userId: string) {
+    try {
+      const findUser = await this.usersRepository.findOneById(userId);
+      if (!findUser) throw new BadRequestException('Can not found User');
+      return await this.usersRepository.save({
+        ...findUser,
+        isActive: true,
+      });
+    } catch (e) {
+      return e;
+    }
+  }
   async confirmedPayment(
     storeId: string,
     month: number,
@@ -129,11 +153,14 @@ export class AdminService {
       skip: skip,
       take: itemsPerPage,
       order: { createdAt: 'DESC' },
-      relations: { orders: true },
+      relations: { orders: true, user: true },
       select: {
         orders: {
           id: true,
           totalPrice: true,
+        },
+        user: {
+          email: true,
         },
       },
     });
@@ -189,11 +216,16 @@ export class AdminService {
           skip: skip,
           take: itemsPerPage,
           order: { createdAt: 'DESC' },
-          relations: { payments: true },
+          relations: { payments: true, user: true },
           where: {
             payments: {
               year: currentDate.getFullYear(),
               month: month,
+            },
+          },
+          select: {
+            user: {
+              email: true,
             },
           },
         });
