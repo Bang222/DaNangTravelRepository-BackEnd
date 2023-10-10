@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
+  KeyTokenRepositoryInterface,
   OrderRepositoryInterface,
   PaymentEntity,
   PaymentRepositoryInterface,
@@ -10,6 +11,7 @@ import {
 
 import { Between } from 'typeorm';
 import { StoreStatus } from '@app/shared/models/enum';
+import { DataEachMonthDashBoardDTO } from '../seller/dto';
 
 @Injectable()
 export class AdminService {
@@ -24,6 +26,8 @@ export class AdminService {
     private readonly usersRepository: UsersRepositoryInterface,
     @Inject('OrderRepositoryInterface')
     private readonly orderRepository: OrderRepositoryInterface,
+    @Inject('KeyTokenRepositoryInterface')
+    private readonly keyTokenRepository: KeyTokenRepositoryInterface,
   ) {}
   async unBanStore(storeId: string) {
     try {
@@ -41,6 +45,9 @@ export class AdminService {
     try {
       const findStore = await this.storeRepository.findOneById(storeId);
       if (!findStore) throw new BadRequestException('Can not found store');
+      await this.keyTokenRepository.removeCondition({
+        where: { userId: findStore.userId },
+      });
       return await this.storeRepository.save({
         ...findStore,
         isActive: StoreStatus.CLOSE,
@@ -191,26 +198,84 @@ export class AdminService {
     });
     return { data, totalUser: countUser };
   }
+  async getTotalProfitInAMonth(month: number) {
+    const currentDate = new Date();
+    currentDate.setMonth(month - 1);
 
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+    );
+    try {
+      const manyStoresCreateInAMonth = await this.storeRepository.count({
+        where: {
+          createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+        },
+      });
+      const manyStoreUsersInAMonth = await this.usersRepository.count({
+        where: {
+          createdTime: Between(firstDayOfMonth, lastDayOfMonth),
+        },
+      });
+      const getPaymentToMonth = await this.paymentRepository.findWithRelations({
+        where: {
+          month: month,
+          year: currentDate.getFullYear(),
+        },
+        select: {
+          totalProfit: true,
+          id: true,
+        },
+      });
+      const totalProfitSum = getPaymentToMonth.reduce(
+        (sum, payment) => sum + payment.totalProfit,
+        0,
+      );
+      return {
+        storeCreate: manyStoresCreateInAMonth,
+        totalProfitSum: totalProfitSum,
+        userCreate: manyStoreUsersInAMonth,
+      };
+    } catch (e) {
+      return e;
+    }
+  }
+  async getDataIncomeEachMonthAdmin() {
+    const month: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const currentDay = new Date();
+    const dataIncomeAMonthAdmin = [];
+    for (const monthNumber of month) {
+      const findOrderById = await this.paymentRepository.findWithRelations({
+        where: {
+          month: monthNumber,
+          year: currentDay.getFullYear(),
+        },
+        select: { totalProfit: true },
+      });
+
+      const total = findOrderById.reduce(
+        (acc, cur) => acc + cur.totalProfit,
+        0,
+      );
+
+      dataIncomeAMonthAdmin.push({
+        totalIncomeAMonthAdmin: total,
+        month: monthNumber,
+      });
+    }
+    return dataIncomeAMonthAdmin;
+  }
   async getProfit(page: number, month: number): Promise<any> {
     try {
       const itemsPerPage = 10;
       const skip = (page - 1) * itemsPerPage;
       const currentDate = new Date();
-      // currentDate.setMonth(month - 1);
-      // const firstDayOfMonth = new Date(
-      //   currentDate.getFullYear(),
-      //   currentDate.getMonth(),
-      //   1,
-      // );
-      // const lastDayOfMonth = new Date(
-      //   currentDate.getFullYear(),
-      //   currentDate.getMonth() + 1,
-      //   0,
-      // );
-      // const totalPage = await this.paymentRepository.count({
-      //   where: { month: month, year: currentDate.getFullYear() },
-      // });
       const dataTotalIncomeTrackingMonth =
         await this.storeRepository.findWithRelations({
           skip: skip,

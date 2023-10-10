@@ -92,6 +92,7 @@ export class AppController {
       { title, page },
     );
   }
+  @Throttle(200, 60)
   @Get('admin/get-all-store/page=:page/month=:month')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
@@ -104,6 +105,31 @@ export class AppController {
         { admin: 'get-all-store-admin' },
         { page, month },
       );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Get('admin/get-profit-a-month/month=:month')
+  // @UseGuards(AuthGuard, UseRoleGuard)
+  // @Roles(Role.ADMIN)
+  async getProfitAdminInAMonth(@Param('month', ParseIntPipe) month: number) {
+    try {
+      return this.managerService.send(
+        { admin: 'profit-admin-A-month' },
+        { month },
+      );
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Get('admin/get-profit-each-month')
+  // @UseGuards(AuthGuard, UseRoleGuard)
+  // @Roles(Role.ADMIN)
+  async getAllProfitEachAdminMonth() {
+    try {
+      return this.managerService.send({ admin: 'profit-admin-each-month' }, {});
     } catch (e) {
       throw new BadRequestException(e);
     }
