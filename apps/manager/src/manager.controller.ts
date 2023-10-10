@@ -464,6 +464,7 @@ export class ManagerController {
     this.sharedService.acknowledgeMessage(context);
     return await this.adminService.banStore(payload.storeId);
   }
+
   @MessagePattern({ admin: 'un-ban-store' })
   async unBanStore(
     @Ctx() context: RmqContext,
@@ -471,5 +472,21 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.adminService.unBanStore(payload.storeId);
+  }
+  @MessagePattern({ admin: 'ban-user' })
+  async banUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.adminService.banUser(payload.userId);
+  }
+  @MessagePattern({ admin: 'un-ban-user' })
+  async UnBanUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.adminService.unBanUser(payload.userId);
   }
 }

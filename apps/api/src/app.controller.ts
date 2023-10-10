@@ -121,6 +121,28 @@ export class AppController {
     }
   }
   @Throttle(200, 60)
+  @Get('admin/un-ban/user=:id')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async unBanUser(@Param('id') id: string) {
+    try {
+      return this.managerService.send({ admin: 'un-ban-user' }, { userId: id });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Get('admin/ban/user=:id')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
+  async banUser(@Param('id') id: string) {
+    try {
+      return this.managerService.send({ admin: 'ban-user' }, { userId: id });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
   @Put('admin/un-ban/store-id=:id')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.ADMIN)
