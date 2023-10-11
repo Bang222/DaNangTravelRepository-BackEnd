@@ -5,6 +5,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 
 import { OrderDetailEntity } from '@app/shared';
@@ -27,5 +28,8 @@ export class PassengerEntity {
   dayOfBirth: number;
 
   @ManyToOne(() => OrderDetailEntity, (orderDetail) => orderDetail.passengers)
+  @JoinColumn({ name: 'orderDetailId' })
   orderDetail: OrderDetailEntity;
+  @Column()
+  orderDetailId: string;
 }

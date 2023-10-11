@@ -15,7 +15,7 @@ import {
 } from '@app/shared';
 import * as bcrypt from 'bcrypt';
 import { USER } from '@app/shared/models/seeds/base';
-import { Role } from '@app/shared/models/enum';
+import { Role, TourStatus } from '@app/shared/models/enum';
 
 @Injectable()
 export class BaseDataService {
@@ -56,13 +56,26 @@ export class BaseDataService {
   async userData() {
     try {
       const password = await bcrypt.hash('123', 10);
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 500; i++) {
+        const randomMonthUser = Math.floor(Math.random() * 12);
+
+        // Generate a random day within the month (1-28 to simplify)
+        const randomDayUser = Math.floor(Math.random() * 28) + 1;
+
+        // Create a new Date object with the random month and day
+        const createdAtDataUser = new Date();
+        createdAtDataUser.setFullYear(
+          createdAtDataUser.getFullYear(),
+          randomMonthUser,
+          randomDayUser,
+        );
         const user = await this.usersRepository.save({
           firstName: USER.firstName,
           lastName: USER.lastName,
           password: password,
           email: `user${i}@gmail.com`,
           phone: '1234567890',
+          createdTime: createdAtDataUser,
           isActive: USER.isActive,
           isEmailValidated: true,
           address: USER.address,
@@ -120,15 +133,27 @@ export class BaseDataService {
   async store() {
     try {
       const password = await bcrypt.hash('123', 10);
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 100; i++) {
+        const randomMonthStore = Math.floor(Math.random() * 12);
+
+        // Generate a random day within the month (1-28 to simplify)
+        const randomDayStore = Math.floor(Math.random() * 28) + 1;
+
+        const createdAtDataStore = new Date();
+        createdAtDataStore.setFullYear(
+          createdAtDataStore.getFullYear(),
+          randomMonthStore,
+          randomDayStore,
+        );
         const user = await this.usersRepository.save({
           firstName: USER.firstName,
           lastName: USER.lastName,
           password: password,
-          email: `store${i}@gmail.com`,
+          email: `store${i + 4}@gmail.com`,
           phone: '1234567890',
           isActive: USER.isActive,
           isEmailValidated: true,
+          createdTime: createdAtDataStore,
           address: USER.address,
           profilePicture: USER.profilePicture,
           role: Role.SELLER,
@@ -136,8 +161,8 @@ export class BaseDataService {
         const nameStore = [
           'Dong Giang',
           'Viet Travel',
-          'Dumberdore',
-          'Hary Porter',
+          'Dumbledore',
+          'Harry Porter',
         ];
         const slogan = [
           'We feel travel',
@@ -151,6 +176,7 @@ export class BaseDataService {
         store.userId = user.id;
         store.name = nameStore[randomNameStore];
         store.slogan = slogan[randomSlogan];
+        store.createdAt = createdAtDataStore;
         const storeCreated = await this.storeRepository.save(store);
 
         const nameTour = [
@@ -234,14 +260,6 @@ export class BaseDataService {
           "Tucked inside the Ba Na-Nui Chua Nature Reserve, Nui Than Tai Hot Springs Park is a nature and water park lover haven providing every guest with an exciting and relaxing experience. Surrounded by mountains, the park is blessed with a panoramic view of the lush green forest and various mineral-rich hot springs and streams. Heal and release the tensions in your body naturally in the mud bathing area or experience the unique traditional Japanese bath, Onsen, to discover its abundant health benefits. For fun and thrill-seekers, the park includes many exciting attractions like a mountainside wave pool, twisting swimming pool slides, and Long Tien Cave, to name a few! The complimentary 9D to 12D movie experience is something you shouldn't miss while staying in the park",
         ];
         const randomNameTour = this.getRandomIndex(nameTour.length);
-        const CurrentDay = new Date();
-        const lastRegisterDate = new Date();
-        const startDate = new Date();
-        const endDate = new Date();
-
-        lastRegisterDate.setDate(CurrentDay.getDate() + 5);
-        startDate.setDate(CurrentDay.getDate() + 10);
-        endDate.setDate(CurrentDay.getDate() + 10 + this.getRandomIndex(6));
         const price: number[] = [1.2, 20, 200, 50, 7, 9, 12];
         const AddressRandom = [
           'Ha Noi',
@@ -263,7 +281,29 @@ export class BaseDataService {
         ];
         const randomSecondPicture = this.getRandomIndex(imageURL.length);
         const randomThirdPicture = this.getRandomIndex(imageURL.length);
-        for (let j = 0; j < 10; j++) {
+        // Generate a random month from 0 (January) to 11 (December)
+        for (let j = 0; j < 100; j++) {
+          const randomMonth = Math.floor(Math.random() * 11) + 1;
+
+          // Generate a random day within the month (1-28 to simplify)
+          const randomDay = Math.floor(Math.random() * 28) + 1;
+
+          // Create a new Date object with the random month and day
+          const createdAtData = new Date();
+          createdAtData.setFullYear(
+            createdAtData.getFullYear(),
+            randomMonth,
+            randomDay,
+          );
+          const CurrentDay = new Date();
+          const lastRegisterDate = new Date();
+          const startDate = new Date();
+          const endDate = new Date();
+
+          lastRegisterDate.setDate(CurrentDay.getDate() + 5);
+          startDate.setDate(CurrentDay.getDate() + 10);
+          endDate.setDate(CurrentDay.getDate() + 10 + this.getRandomIndex(6));
+
           const tour = await this.tourRepository.save({
             storeId: storeCreated.id,
             name: nameTour[randomNameTour],
@@ -271,10 +311,17 @@ export class BaseDataService {
             baseQuantity: 30,
             quantity: 0,
             lastRegisterDate: lastRegisterDate,
-            startDate: startDate,
-            endDate: endDate,
+            startDate: new Date(
+              `${startDate.getFullYear()}-${randomMonth}-${startDate.getDate()}`,
+            ),
+            endDate: new Date(
+              `${endDate.getFullYear()}-${randomMonth}-${
+                endDate.getDate() + 5
+              }`,
+            ),
             price: price[randomNameTour] * 1000000,
             address: 'Da Nang',
+            createdAt: createdAtData,
             startAddress: AddressRandom[randomNameTour],
             endingAddress: AddressRandom[randomNameTour],
             imageUrl: [
@@ -293,6 +340,205 @@ export class BaseDataService {
               title: nameTour[randomNameTour],
               description: description[randomNameTour],
               tourId: tour.id,
+            });
+          }
+          const dataBooking = [
+            {
+              email: 'bang1@gmail.com',
+              adultPassengers: 1,
+              childPassengers: 2,
+              phone: '+123456789',
+              fullName: 'Mai',
+              firstName: 'Thao',
+              toddlerPassengers: 2,
+              infantPassengers: 1,
+              address: 'Da Nang',
+              passenger: [
+                {
+                  name: 'Danh Cong Ly',
+                  type: 'Adult',
+                  sex: 'Men',
+                  dayOfBirth: 20,
+                },
+                {
+                  name: 'Danh Cong Ly',
+                  type: 'Toddler',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Danh ',
+                  type: 'Child',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Bang Danh ',
+                  type: 'Child',
+                  sex: 'Men',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Danh Cong',
+                  type: 'Infant',
+                  sex: 'Men',
+                  dayOfBirth: 1,
+                },
+              ],
+            },
+            {
+              email: 'bang2@gmail.com',
+              adultPassengers: 1,
+              childPassengers: 2,
+              phone: '+123456789',
+              fullName: 'Danh',
+              firstName: 'Bang',
+              toddlerPassengers: 2,
+              infantPassengers: 1,
+              address: 'Da Nang',
+              passenger: [
+                {
+                  name: 'Bang Danh',
+                  type: 'Adult',
+                  sex: 'Men',
+                  dayOfBirth: 20,
+                },
+                {
+                  name: 'Tu Tinh',
+                  type: 'Toddler',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Name ',
+                  type: 'Child',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Hary potter ',
+                  type: 'Child',
+                  sex: 'Men',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Dumbledore',
+                  type: 'Infant',
+                  sex: 'Men',
+                  dayOfBirth: 1,
+                },
+              ],
+            },
+            {
+              email: 'bang3@gmail.com',
+              adultPassengers: 1,
+              childPassengers: 2,
+              phone: '+1231',
+              fullName: 'John',
+              firstName: 'Wick',
+              toddlerPassengers: 2,
+              infantPassengers: 1,
+              address: 'Da Nang',
+              passenger: [
+                {
+                  name: 'Bang Danh',
+                  type: 'Adult',
+                  sex: 'Men',
+                  dayOfBirth: 20,
+                },
+                {
+                  name: 'Tu Tinh',
+                  type: 'Toddler',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Winston ',
+                  type: 'Child',
+                  sex: 'Women',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Hary potter ',
+                  type: 'Child',
+                  sex: 'Men',
+                  dayOfBirth: 12,
+                },
+                {
+                  name: 'Dumbledore',
+                  type: 'Infant',
+                  sex: 'Men',
+                  dayOfBirth: 1,
+                },
+              ],
+            },
+          ];
+          const randomDataBooking = this.getRandomIndex(dataBooking.length);
+          const quantity =
+            dataBooking[randomDataBooking].adultPassengers +
+            dataBooking[randomDataBooking].childPassengers +
+            dataBooking[randomDataBooking].toddlerPassengers +
+            dataBooking[randomDataBooking].infantPassengers;
+          const totalPrice =
+            Number(dataBooking[randomDataBooking].adultPassengers) *
+              Number(tour.price) +
+            +dataBooking[randomDataBooking].childPassengers * +tour.price +
+            +dataBooking[randomDataBooking].toddlerPassengers *
+              0.7 *
+              +tour.price +
+            +dataBooking[randomDataBooking].infantPassengers *
+              0.15 *
+              +tour.price;
+          const findAllUser = await this.usersRepository.findAll();
+          const randomDataUser = this.getRandomIndex(findAllUser.length);
+          const userId = findAllUser[randomDataUser].id;
+          const dataOrder = await this.orderRepository.save({
+            createdAt: createdAtData,
+            firstName: dataBooking[randomDataBooking].firstName, // Use dot notation
+            fullName: dataBooking[randomDataBooking].fullName, // Use dot notation
+            email: dataBooking[randomDataBooking].email, // Use dot notation
+            address: dataBooking[randomDataBooking].address, // Use dot notation
+            phone: dataBooking[randomDataBooking].phone, // Use dot notation
+            totalPrice: Number(totalPrice.toFixed(2)),
+            participants: +quantity,
+            userId: userId,
+            storeId: tour.storeId,
+            status: 'CONFIRMED',
+          });
+          const {
+            firstName,
+            fullName,
+            email,
+            address,
+            passenger,
+            phone,
+            ...orderDetailFilter
+          } = dataBooking[randomDataBooking];
+          const orderDetailData = await this.orderDetailRepository.save({
+            ...orderDetailFilter,
+            tourId: tour.id,
+            orderId: dataOrder.id,
+          });
+          const dataToSave = dataBooking[randomDataBooking].passenger.map(
+            (passenger) => ({
+              ...passenger,
+              orderDetailId: orderDetailData.id, // Add the orderId to each passenger
+            }),
+          );
+          await this.orderRepository.save({
+            ...dataOrder,
+            orderDetailId: orderDetailData.id,
+          });
+
+          await this.passengerRepository.saveMany(dataToSave);
+          const updateQuantity = await this.tourRepository.save({
+            ...tour,
+            quantity: +tour.quantity + Number(quantity),
+          });
+          if (updateQuantity.baseQuantity - updateQuantity.quantity < 1) {
+            await this.tourRepository.save({
+              ...updateQuantity,
+              status: TourStatus.FULL,
             });
           }
         }
