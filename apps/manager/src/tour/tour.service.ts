@@ -409,17 +409,6 @@ export class TourService {
           status: TourStatus.FULL,
         });
       }
-      const findUserRegisteredTour =
-        await this.userRegisteredTourRepository.findByCondition({
-          where: { tourId },
-          relations: { users: true },
-        });
-      if (!findUserRegisteredTour.users.includes(findUserById)) {
-        await this.userRegisteredTourRepository.save({
-          ...findUserRegisteredTour,
-          users: [...findUserRegisteredTour.users, findUserById],
-        });
-      }
       const findTourInCart = await this.cartRepository.findByCondition({
         where: { tourId, userId },
       });
@@ -434,7 +423,6 @@ export class TourService {
         startDay: findTourById.startDate,
         endDate: findTourById.endDate,
       };
-      console.log(configData);
       await this.emailService
         .send(
           { email: 'send-booking' },
@@ -591,7 +579,7 @@ export class TourService {
     currentPage: number,
   ) {
     try {
-      const itemsPerPage = 3;
+      const itemsPerPage = 4;
       const skip = (currentPage - 1) * itemsPerPage;
 
       const whereCondition: any = {
@@ -612,8 +600,8 @@ export class TourService {
       if (endDay) {
         whereCondition.endDate = endDay;
       }
-      if (minPrice !== null && maxPrice !== null) {
-        whereCondition.price = Between(minPrice, maxPrice);
+      if (minPrice && maxPrice) {
+        whereCondition.price = Between(minPrice ?? 1, maxPrice ?? 99999999999);
       }
       const tours = await this.tourRepository.findAll({
         skip: skip,

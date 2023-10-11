@@ -190,11 +190,9 @@ export class SellerService {
         where: { userId: userId },
       });
       if (!findStoreById) throw new BadRequestException('Can not find Store');
-      const takeTotalPages = (
-        await this.orderRepository.findAll({
-          where: { storeId: findStoreById.id },
-        })
-      ).length;
+      const takeTotalPages = await this.orderRepository.count({
+        where: { storeId: findStoreById.id },
+      });
       const orders = await this.orderRepository.findWithRelations({
         where: { storeId: findStoreById.id },
         relations: { orderDetail: { tour: true, passengers: true } },
