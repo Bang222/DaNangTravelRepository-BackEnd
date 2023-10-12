@@ -2,8 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
-  ManyToMany,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -16,7 +14,6 @@ import {
   OrderEntity,
   StoreEntity,
   ShareExperienceEntity,
-  UserRegisteredTourEntity,
 } from '@app/shared';
 
 @Entity('user')
@@ -77,11 +74,4 @@ export class UserEntity {
 
   @OneToMany(() => CommentEntity, (comments) => comments.user)
   comments: CommentEntity[];
-
-  @ManyToMany(
-    () => UserRegisteredTourEntity,
-    (userRegisteredTours) => userRegisteredTours.users,
-  )
-  @JoinTable()
-  userRegisteredTours: UserRegisteredTourEntity[];
 }

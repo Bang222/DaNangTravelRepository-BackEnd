@@ -357,16 +357,16 @@ export class ManagerController {
       return dataBillOfStore;
     }
   }
-  @MessagePattern({ manager: 'get-follower-user' })
-  async getFollowerTripRegisteredUser(
-    @Ctx() context: RmqContext,
-    @Payload() payload: { userId: string },
-  ) {
-    this.sharedService.acknowledgeMessage(context);
-    return await this.sellerService.getFollowerTripRegisteredUser(
-      payload.userId,
-    );
-  }
+  // @MessagePattern({ manager: 'get-follower-user' })
+  // async getFollowerTripRegisteredUser(
+  //   @Ctx() context: RmqContext,
+  //   @Payload() payload: { userId: string },
+  // ) {
+  //   this.sharedService.acknowledgeMessage(context);
+  //   return await this.sellerService.getFollowerTripRegisteredUser(
+  //     payload.userId,
+  //   );
+  // }
   @MessagePattern({ manager: 'get-bill-user' })
   async getBillOfUser(
     @Ctx() context: RmqContext,
@@ -519,5 +519,13 @@ export class ManagerController {
   ) {
     this.sharedService.acknowledgeMessage(context);
     return await this.adminService.unBanUser(payload.userId);
+  }
+  @MessagePattern({ admin: 'get-order-user' })
+  async getOrderUser(
+    @Ctx() context: RmqContext,
+    @Payload() payload: { userId: string },
+  ) {
+    this.sharedService.acknowledgeMessage(context);
+    return await this.sellerService.getOrderDetailByUserId(payload.userId);
   }
 }

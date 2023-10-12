@@ -10,7 +10,6 @@ import {
   StoreRepositoryInterface,
   TourRepositoryInterface,
   UserEntity,
-  UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
 import { DataEachMonthDashBoardDTO, NewStoreDTO } from './dto';
@@ -30,8 +29,6 @@ export class SellerService {
     private readonly cartRepository: CartRepositoryInterface,
     @Inject('ShareExperienceRepositoryInterface')
     private readonly usedTourReviewRepository: ShareExperienceRepositoryInterface,
-    @Inject('UserRegisteredTourRepositoryInterface')
-    private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')
@@ -156,29 +153,6 @@ export class SellerService {
     return store.tours;
   }
 
-  async trackUserRegistered(userId: string): Promise<StoreEntity> {
-    const OwnerDetail = await this.findOwnerIdByUserId(userId);
-    if (!OwnerDetail.store) return;
-    return await this.storeRepository.findByCondition({
-      where: { id: OwnerDetail.store?.id },
-      relations: { tours: { userRegisteredTour: { users: true } } },
-    });
-  }
-
-  async getUserRegisteredTour(tourId: string) {
-    try {
-      const UsersRegisterTour =
-        await this.userRegisteredTourRepository.findByCondition({
-          where: { tour: { id: tourId } },
-          relations: { users: true },
-        });
-      if (!UsersRegisterTour) throw new Error('Can not found tour');
-      return UsersRegisterTour;
-    } catch (e) {
-      throw new Error(e);
-    }
-  }
-
   async getBillOfStore(
     userId: string,
     page: number,
@@ -217,21 +191,6 @@ export class SellerService {
     } catch (e) {
       return e;
     }
-  }
-
-  async getFollowerTripRegisteredUser(userId: string) {
-    const getFollowerTrip = await this.usersRepository.findByCondition({
-      where: { id: userId },
-      relations: { userRegisteredTours: true },
-    });
-    if (!getFollowerTrip) return null;
-    return getFollowerTrip;
-  }
-
-  async getTrackUserRegisteredTourStore(userId: string) {
-    const findStore = await this.trackUserRegistered(userId);
-    if (!findStore) return null;
-    return findStore;
   }
 
   async getStatisticalDataDashBoard(
@@ -390,5 +349,37 @@ export class SellerService {
       dataIncomeAMonth.push({ totalIncome: total, month: monthNumber });
     }
     return dataIncomeAMonth;
+  }
+  async getOrderDetailByUserId(userId: string) {
+    try {
+      const order = await this.orderRepository.findWithRelations({
+        where: {
+          userId: userId,
+        },
+        relations: { orderDetail: { tour: true }, store: true },
+        select: {
+          id: true,
+          firstName: true,
+          fullName: true,
+          createdAt: true,
+          email: true,
+          participants: true,
+          totalPrice: true,
+          status: true,
+          store: { name: true },
+          orderDetail: {
+            id: true,
+            // toddlerPassengers: true,
+            // adultPassengers: true,
+            // childPassengers: true,
+            // infantPassengers: true,
+            tour: { name: true },
+          },
+        },
+      });
+      return order;
+    } catch (err) {
+      return err;
+    }
   }
 }

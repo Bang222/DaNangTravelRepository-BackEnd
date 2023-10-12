@@ -10,7 +10,6 @@ import {
   StoreEntity,
   StoreRepositoryInterface,
   TourRepositoryInterface,
-  UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
 import * as bcrypt from 'bcrypt';
@@ -31,8 +30,6 @@ export class BaseDataService {
     private readonly cartRepository: CartRepositoryInterface,
     @Inject('ShareExperienceRepositoryInterface')
     private readonly usedTourExperienceOfUserRepository: ShareExperienceRepositoryInterface,
-    @Inject('UserRegisteredTourRepositoryInterface')
-    private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')

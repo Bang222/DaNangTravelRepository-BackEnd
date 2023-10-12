@@ -16,7 +16,6 @@ import {
   TourEntity,
   TourRepositoryInterface,
   UserEntity,
-  UserRegisteredTourRepositoryInterface,
   UsersRepositoryInterface,
 } from '@app/shared';
 
@@ -33,7 +32,7 @@ import {
 import { StoreStatus, TourStatus } from '@app/shared/models/enum';
 import { SellerService } from '../seller/seller.service';
 import { Cron } from '@nestjs/schedule';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
 import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
 import { Between, ILike } from 'typeorm';
@@ -49,9 +48,6 @@ export class TourService {
     private readonly cartRepository: CartRepositoryInterface,
     @Inject('ShareExperienceRepositoryInterface')
     private readonly usedTourExperienceOfUserRepository: ShareExperienceRepositoryInterface,
-    @Inject('UserRegisteredTourRepositoryInterface')
-    @Inject('UserRegisteredTourRepositoryInterface')
-    private readonly userRegisteredTourRepository: UserRegisteredTourRepositoryInterface,
     @Inject('OrderDetailRepositoryInterface')
     private readonly orderDetailRepository: OrderDetailRepositoryInterface,
     @Inject('OrderRepositoryInterface')
@@ -83,10 +79,6 @@ export class TourService {
       relations: { store: true, comments: { user: true } },
       take: itemsPerPage,
     });
-  }
-
-  async findTourOfUserRegistered(tourId: string) {
-    return await this.userRegisteredTourRepository.findOneById(tourId);
   }
 
   async findOneByTourId(id: string): Promise<TourEntity> {
@@ -165,9 +157,6 @@ export class TourService {
         schedule.tourId = saveTour.id;
         await this.scheduleRepository.save({ ...schedule });
       }
-      await this.userRegisteredTourRepository.save({
-        tour: saveTour,
-      });
       const findTourById = await this.tourRepository.findByCondition({
         where: { id: saveTour.id },
         relations: { store: true, comments: { user: true } },

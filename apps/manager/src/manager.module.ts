@@ -34,8 +34,6 @@ import {
   ShareExperienceEntity,
   ShareExperience,
   UserEntity,
-  UserRegisteredTourEntity,
-  UserRegisteredTour,
   UsersRepository,
   PaymentEntity,
   ScheduleEntity,
@@ -98,7 +96,6 @@ import { AdminService } from './admin/admin.service';
       StoreEntity,
       OrderEntity,
       CartEntity,
-      UserRegisteredTourEntity,
       OrderDetailEntity,
       ShareExperienceEntity,
       CommentEntity,
@@ -147,10 +144,6 @@ import { AdminService } from './admin/admin.service';
     {
       provide: 'CartRepositoryInterface',
       useClass: CartRepository,
-    },
-    {
-      provide: 'UserRegisteredTourRepositoryInterface',
-      useClass: UserRegisteredTour,
     },
     {
       provide: 'OrderDetailRepositoryInterface',

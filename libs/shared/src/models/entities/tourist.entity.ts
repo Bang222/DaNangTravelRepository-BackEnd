@@ -1,5 +1,4 @@
 import {
-  AfterInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -16,7 +15,6 @@ import {
   CommentEntity,
   OrderDetailEntity,
   StoreEntity,
-  UserRegisteredTourEntity,
 } from '@app/shared';
 import { ScheduleEntity } from '@app/shared/models/entities/schedule.entity';
 
@@ -81,12 +79,6 @@ export class TourEntity {
 
   @OneToMany(() => OrderDetailEntity, (orderDetails) => orderDetails.tour)
   orderDetails: OrderDetailEntity[];
-
-  @OneToOne(
-    () => UserRegisteredTourEntity,
-    (userRegisteredTour) => userRegisteredTour.tour,
-  )
-  userRegisteredTour: UserRegisteredTourEntity;
 
   @OneToMany(() => CommentEntity, (comment) => comment.tourist)
   comments: CommentEntity[];
