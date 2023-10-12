@@ -216,6 +216,7 @@ export class AuthService implements AuthServiceInterface {
   }
   async validateUser(email: string, password: string): Promise<UserEntity> {
     const user = await this.findByEmail(email);
+    if (!user) throw new BadRequestException('Please Register!!');
     const doesUserExist = !!user;
     const doesPasswordMatch = await this.authUtil.doesPasswordMatch(
       password,

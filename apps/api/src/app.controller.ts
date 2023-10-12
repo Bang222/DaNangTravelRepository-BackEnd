@@ -111,8 +111,8 @@ export class AppController {
   }
   @Throttle(200, 60)
   @Get('admin/get-profit-a-month/month=:month')
-  // @UseGuards(AuthGuard, UseRoleGuard)
-  // @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
   async getProfitAdminInAMonth(@Param('month', ParseIntPipe) month: number) {
     try {
       return this.managerService.send(
@@ -125,11 +125,23 @@ export class AppController {
   }
   @Throttle(200, 60)
   @Get('admin/get-profit-each-month')
-  // @UseGuards(AuthGuard, UseRoleGuard)
-  // @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.ADMIN)
   async getAllProfitEachAdminMonth() {
     try {
       return this.managerService.send({ admin: 'profit-admin-each-month' }, {});
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+  @Throttle(200, 60)
+  @Get('user/get-order')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.USER, Role.SELLER)
+  async getOrderUserHistory(@Req() req) {
+    try {
+      const userId = req.headers['x-client-id'];
+      return this.managerService.send({ admin: 'get-order-user' }, { userId });
     } catch (e) {
       throw new BadRequestException(e);
     }
