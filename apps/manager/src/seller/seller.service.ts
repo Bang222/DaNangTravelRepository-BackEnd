@@ -67,7 +67,7 @@ export class SellerService {
     newStoreDTO: NewStoreDTO,
     user: Readonly<UserEntity>,
   ): Promise<StoreEntity> {
-    const { name, slogan } = newStoreDTO;
+    const { name, slogan, paymentId } = newStoreDTO;
     try {
       const userExistsStore = await this.findOwnerIdOfAllStore();
       if (userExistsStore.includes(user.id)) {
@@ -81,7 +81,7 @@ export class SellerService {
         where: { userId: user.id },
       });
       await this.keyTokenRepository.remove(findKey);
-      return await this.storeRepository.save({ name, slogan, user });
+      return await this.storeRepository.save({ name, slogan, user, paymentId });
     } catch (e) {
       return e;
     }

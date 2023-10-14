@@ -6,6 +6,8 @@ export class NewStoreDTO {
   name: string;
   @IsNotEmpty()
   slogan: string;
+  @IsNotEmpty()
+  paymentId: string;
 }
 export class DataEachMonthDashBoardDTO {
   totalIncome: number;

@@ -647,13 +647,13 @@ export class AppController {
   @UseGuards(AuthGuard)
   @Post('store/create')
   async createStore(@Body() newStoreDTO: NewStoreDTO, @Req() req: UserRequest) {
-    const { name, slogan } = newStoreDTO;
+    const { name, slogan, paymentId } = newStoreDTO;
     if (!req?.user) {
       throw new BadRequestException('can not find user');
     }
     return this.managerService.send(
       { manager: 'create-store' },
-      { name, slogan, userId: req.user.id },
+      { paymentId, name, slogan, userId: req.user.id },
     );
   }
 

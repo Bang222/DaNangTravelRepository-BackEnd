@@ -29,6 +29,9 @@ export class StoreEntity {
   @Column('simple-array', { default: 0, nullable: true })
   paidMonth: number[];
 
+  @Column({ nullable: true })
+  paymentId: string;
+
   @CreateDateColumn({ default: new Date() })
   createdAt: Date;
 
