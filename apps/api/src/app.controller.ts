@@ -55,7 +55,7 @@ export class AppController {
     private tourService: ClientProxy,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
-  //Search-----------------------------------
+  //Search----------------------------------------------
   @Throttle(200, 60)
   @Get('tour/page=:currentPage/search=')
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)

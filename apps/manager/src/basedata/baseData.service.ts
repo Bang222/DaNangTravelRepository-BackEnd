@@ -174,6 +174,7 @@ export class BaseDataService {
         store.name = nameStore[randomNameStore];
         store.slogan = slogan[randomSlogan];
         store.createdAt = createdAtDataStore;
+        store.paymentId = ""
         const storeCreated = await this.storeRepository.save(store);
 
         const nameTour = [
