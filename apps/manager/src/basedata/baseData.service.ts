@@ -15,6 +15,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { USER } from '@app/shared/models/seeds/base';
 import { Role, TourStatus } from '@app/shared/models/enum';
+import * as process from "process";
 
 @Injectable()
 export class BaseDataService {
@@ -41,16 +42,16 @@ export class BaseDataService {
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
   ) {}
-  // async onModuleInit() {
-  //   try {
-  //     console.log('Data seeding started');
-  //     await Promise.all([this.userData(), this.store()]);
-  //     console.log('Data seeding completed');
-  //   } catch (error) {
-  //     console.error('Data seeding error:', error);
-  //   }
-  // }
-  async userData() {
+  async onModuleInit() {
+    try {
+      console.log('Data seeding started');
+      await Promise.all([this.userData(), this.store()]);
+      console.log('Data seeding completed');
+    } catch (error) {
+      console.error('Data seeding error:', error);
+    }
+  }
+  async userData():Promise<any> {
     try {
       const password = await bcrypt.hash('123', 10);
       for (let i = 0; i < 500; i++) {
@@ -146,7 +147,7 @@ export class BaseDataService {
           firstName: USER.firstName,
           lastName: USER.lastName,
           password: password,
-          email: `store${i + 4}@gmail.com`,
+          email: `store${i}@gmail.com`,
           phone: '1234567890',
           isActive: USER.isActive,
           isEmailValidated: true,
@@ -174,7 +175,7 @@ export class BaseDataService {
         store.name = nameStore[randomNameStore];
         store.slogan = slogan[randomSlogan];
         store.createdAt = createdAtDataStore;
-        store.paymentId = ""
+        store.paymentId = "ATtq4NPFbuB8-MlfYR1n9avUvBiVlv2bcb0_GSst9HP3eKiJ9r5lXjOsQKI1sALqUV0TXN_85l9KuddV"
         const storeCreated = await this.storeRepository.save(store);
 
         const nameTour = [
@@ -280,7 +281,7 @@ export class BaseDataService {
         const randomSecondPicture = this.getRandomIndex(imageURL.length);
         const randomThirdPicture = this.getRandomIndex(imageURL.length);
         // Generate a random month from 0 (January) to 11 (December)
-        for (let j = 0; j < 100; j++) {
+        for (let j = 0; j < 50; j++) {
           const randomMonth = Math.floor(Math.random() * 11) + 1;
 
           // Generate a random day within the month (1-28 to simplify)
@@ -293,30 +294,19 @@ export class BaseDataService {
             randomMonth,
             randomDay,
           );
-          const CurrentDay = new Date();
-          const lastRegisterDate = new Date();
-          const startDate = new Date();
-          const endDate = new Date();
-
-          lastRegisterDate.setDate(CurrentDay.getDate() + 5);
-          startDate.setDate(CurrentDay.getDate() + 10);
-          endDate.setDate(CurrentDay.getDate() + 10 + this.getRandomIndex(6));
-
+          const day = this.getRandomIndex(20);
+          const month = this.getRandomIndex(11);
+          const totalDay = this.getRandomIndex(7);
+          const year = 2023; // You can specify the year
           const tour = await this.tourRepository.save({
             storeId: storeCreated.id,
             name: nameTour[randomNameTour],
             description: description[randomNameTour],
             baseQuantity: 30,
             quantity: 0,
-            lastRegisterDate: lastRegisterDate,
-            startDate: new Date(
-              `${startDate.getFullYear()}-${randomMonth}-${startDate.getDate()}`,
-            ),
-            endDate: new Date(
-              `${endDate.getFullYear()}-${randomMonth}-${
-                endDate.getDate() + 5
-              }`,
-            ),
+            lastRegisterDate: new Date(year, month, day),
+            startDate: new Date(year, month, day + 2),
+            endDate: new Date(year, month, day + 2 + totalDay),
             price: price[randomNameTour] * 1000000,
             address: 'Da Nang',
             createdAt: createdAtData,
@@ -471,7 +461,7 @@ export class BaseDataService {
               ],
             },
           ];
-          const randomDataBooking = this.getRandomIndex(dataBooking.length);
+          const randomDataBooking:number = this.getRandomIndex(dataBooking.length);
           const quantity =
             dataBooking[randomDataBooking].adultPassengers +
             dataBooking[randomDataBooking].childPassengers +

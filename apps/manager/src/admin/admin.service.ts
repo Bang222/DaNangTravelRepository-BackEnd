@@ -3,7 +3,7 @@ import {
   KeyTokenRepositoryInterface,
   OrderRepositoryInterface,
   PaymentEntity,
-  PaymentRepositoryInterface,
+  PaymentRepositoryInterface, StoreEntity,
   StoreRepositoryInterface,
   TourRepositoryInterface,
   UsersRepositoryInterface,
@@ -154,9 +154,9 @@ export class AdminService {
       0,
     );
     const itemsPerPage = 10;
-    const skip = (page - 1) * itemsPerPage;
-    const countStore = await this.storeRepository.count();
-    const stores = await this.storeRepository.findWithRelations({
+    const skip:number = (page - 1) * itemsPerPage;
+    const countStore:number = await this.storeRepository.count();
+    const stores:StoreEntity[] = await this.storeRepository.findWithRelations({
       skip: skip,
       take: itemsPerPage,
       order: { createdAt: 'DESC' },
@@ -246,7 +246,7 @@ export class AdminService {
       return e;
     }
   }
-  async getDataIncomeEachMonthAdmin() {
+  async getDataIncomeEachMonthAdmin():Promise<any> {
     const month: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     const currentDay = new Date();
     const dataIncomeAMonthAdmin = [];
