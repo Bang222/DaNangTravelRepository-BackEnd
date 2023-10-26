@@ -17,7 +17,7 @@ import {
   UpdateTouristDTO,
 } from './tour/dtos';
 import { SellerService } from './seller/seller.service';
-import { NewStoreDTO } from './seller/dto';
+import {EditStoreDTO, NewStoreDTO} from './seller/dto';
 import { AdminService } from './admin/admin.service';
 
 @Controller()
@@ -303,6 +303,16 @@ export class ManagerController {
   //   return this.tourService.getTours();
   // }
   //-----------seller------------------
+  @MessagePattern({ manager: 'edit-store' })
+  async editInformationStore(
+      @Ctx() context: RmqContext,
+      @Payload() payload: {storeId:string},
+      @Payload() editStore:EditStoreDTO
+  ) {
+    const {storeId} = payload
+    this.sharedService.acknowledgeMessage(context);
+    return this.sellerService.editProfile(storeId, editStore?.paymentId,editStore?.name);
+  }
   @MessagePattern({ manager: 'create-store' })
   async createStore(
     @Ctx() context: RmqContext,

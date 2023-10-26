@@ -13,3 +13,9 @@ export class DataEachMonthDashBoardDTO {
   totalIncome: number;
   month: number;
 }
+export class EditStoreDTO {
+  @IsNotEmpty()
+  storeId:string
+  name?: string;
+  paymentId?: string;
+}

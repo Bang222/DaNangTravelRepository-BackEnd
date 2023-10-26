@@ -32,7 +32,7 @@ import {
   TourCommentDto,
   UpdateTouristDTO,
 } from '../../manager/src/tour/dtos';
-import { NewStoreDTO } from '../../manager/src/seller/dto';
+import {EditStoreDTO, NewStoreDTO} from '../../manager/src/seller/dto';
 import { Throttle } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guard';
 import { catchError, of } from 'rxjs';
@@ -245,6 +245,23 @@ export class AppController {
     }
   }
   // MANAGER---------------------------------------
+  @Post('store/edit')
+  @UseGuards(AuthGuard, UseRoleGuard)
+  @Roles(Role.PREMIUM, Role.SELLER)
+  @UseInterceptors(UserInterceptor)
+  async editStore(
+      @Req() req: UserRequest,
+      @Body() editStoreDTO: EditStoreDTO,
+  ) {
+    try {
+      return this.managerService.send(
+          {manager: 'edit-store'},
+          {userId: req.user?.id, ...editStoreDTO},
+      );
+    } catch(error){
+      throw new BadRequestException(error);
+    }
+  }
   @Post('experience/create/comment')
   @UseGuards(AuthGuard, UseRoleGuard)
   @Roles(Role.USER, Role.PREMIUM, Role.SELLER)
@@ -697,7 +714,7 @@ export class AppController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('logout')
+  @Get('logout')
   async logout(@Req() req) {
     const userId = req.headers['x-client-id'];
     return this.authService.send({ cmd: 'log-out' }, { userId: userId });

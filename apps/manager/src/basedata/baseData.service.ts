@@ -42,15 +42,15 @@ export class BaseDataService {
     @Inject('PassengerRepositoryInterface')
     private readonly passengerRepository: PassengerRepositoryInterface,
   ) {}
-  async onModuleInit() {
-    try {
-      console.log('Data seeding started');
-      await Promise.all([this.userData(), this.store()]);
-      console.log('Data seeding completed');
-    } catch (error) {
-      console.error('Data seeding error:', error);
-    }
-  }
+  // async onModuleInit() {
+  //   try {
+  //     console.log('Data seeding started');
+  //     await Promise.all([this.userData(), this.store()]);
+  //     console.log('Data seeding completed');
+  //   } catch (statusCode) {
+  //     console.statusCode('Data seeding statusCode:', statusCode);
+  //   }
+  // }
   async userData():Promise<any> {
     try {
       const password = await bcrypt.hash('123', 10);

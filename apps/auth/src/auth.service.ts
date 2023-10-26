@@ -18,6 +18,7 @@ import { AuthUtilService } from './util/authUtil.service';
 import axios from 'axios';
 import { UserInfoGoogle } from './dto/auth-google-login.dto';
 import { Role } from '@app/shared/models/enum';
+import {OKE, StatusCodeDTO} from "../../manager/src/statusCode/statusCode";
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
@@ -123,7 +124,7 @@ export class AuthService implements AuthServiceInterface {
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
   }
-  async register(newUser: Readonly<NewUserDTO>): Promise<UserEntity> {
+  async register(newUser: Readonly<NewUserDTO>): Promise<StatusCodeDTO> {
     const { firstName, lastName, email, password, sex, address } = newUser;
     const existingUser = await this.findByEmail(email);
     try {
@@ -147,9 +148,9 @@ export class AuthService implements AuthServiceInterface {
       await this.emailService
         .send({ email: 'send-email' }, { email: email })
         .toPromise();
-      return savedUser;
-    } catch (e) {
-      return e;
+      return OKE;
+    } catch (e:any) {
+      return {statusCode: 400, message: e.message};
     }
   }
   async signTokenUsingPrivateKeyAndPublishKey(userId: string) {
@@ -200,10 +201,14 @@ export class AuthService implements AuthServiceInterface {
         where: { id: findUserByEmail.id },
         relations: { store: true },
       });
-      return { token: accessAndRefresh, user };
-    } catch (e) {
-      return e;
-    }
+      return {...OKE,token: accessAndRefresh, user };
+    } catch (err) {
+      return {
+        token: { access: '', refresh: '' },
+        user: null,
+        statusCode: 401,
+        message: err.message };
+    };
   }
   async validateUserLoginGoogle(email: string): Promise<UserEntity> {
     const user = await this.findByEmail(email);
@@ -234,7 +239,12 @@ export class AuthService implements AuthServiceInterface {
     return user;
   }
 
-  async login(existingUser: Readonly<ExistingUserDTO>) {
+  async login(existingUser: Readonly<ExistingUserDTO>): Promise<{
+    token: {access: string, refresh: string};
+    user: UserEntity;
+    statusCode:number,
+    message:string
+  }> {
     try {
       const { email, password } = existingUser;
       const baseUser = await this.validateUser(email, password);
@@ -249,9 +259,13 @@ export class AuthService implements AuthServiceInterface {
         where: { id: baseUser.id },
         relations: { store: true },
       });
-      return { token: accessAndRefresh, user };
+      return { ...OKE,token: accessAndRefresh, user };
     } catch (err) {
-      return { error: err.message };
+      return {
+        token: { access: '', refresh: '' },
+        user: null,
+        statusCode: 401,
+        message: err.message };
     }
   }
   async verifyJwt(jwt: string, userId: string) {
@@ -276,16 +290,17 @@ export class AuthService implements AuthServiceInterface {
     }
   }
 
-  async logOut(userId: string) {
+  async logOut(userId: string):Promise<StatusCodeDTO> {
     try {
       const findKeyToken = await this.keyTokenRepository.findByCondition({
         where: { userId: userId },
       });
       if (!findKeyToken)
         throw new BadRequestException({ msg: 'can not found' });
-      return await this.keyTokenRepository.remove({ ...findKeyToken });
+      await this.keyTokenRepository.remove({ ...findKeyToken });
+      return OKE;
     } catch (e) {
-      return e;
+      return{statusCode:401, message:e.message};
     }
   }
 }

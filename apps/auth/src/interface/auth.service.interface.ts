@@ -1,5 +1,6 @@
 import { UserEntity } from '@app/shared/models/entities/user.entity';
 import { ExistingUserDTO, NewUserDTO } from '../dto';
+import {OKE, StatusCodeDTO} from "../../../manager/src/statusCode/statusCode";
 
 export interface AuthServiceInterface {
   getHello(): string;
@@ -8,12 +9,13 @@ export interface AuthServiceInterface {
   findByEmail(email: string): Promise<UserEntity>;
   findById(id: string): Promise<UserEntity>;
   hashPassword(password: string): Promise<string>;
-  register(newUser: Readonly<NewUserDTO>): Promise<UserEntity>;
+  register(newUser: Readonly<NewUserDTO>): Promise<StatusCodeDTO>;
   validateUser(email: string, password: string): Promise<UserEntity>;
   login(existingUser: Readonly<ExistingUserDTO>): Promise<{
-    token?: any;
-    user?: any;
-    error?: string;
+    token: {access: string, refresh: string};
+    user: UserEntity;
+    statusCode:number,
+    message:string
   }>;
   // : Promise<{ user: UserEntity; exp: number }>
   verifyJWT(jwt: string, userId: string);

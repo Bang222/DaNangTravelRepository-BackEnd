@@ -15,6 +15,8 @@ import {
 import { DataEachMonthDashBoardDTO, NewStoreDTO } from './dto';
 import { Role } from '@app/shared/models/enum';
 import { Between } from 'typeorm';
+import {Store} from "cache-manager";
+import {OKE, StatusCodeDTO} from "../statusCode/statusCode";
 
 @Injectable()
 export class SellerService {
@@ -37,13 +39,27 @@ export class SellerService {
     private readonly keyTokenRepository: KeyTokenRepositoryInterface,
   ) {}
 
-  async findAllStore() {
+  async findAllStore():Promise<StoreEntity[]> {
     return await this.storeRepository.findWithRelations({
       relations: ['user'],
     });
   }
+  async editProfile(id: string,paymentId?:string | undefined, name?:string | undefined ):Promise<{
+    paymentId: string;
+    name: string;
+    message: string;
+    statusCode: number
+  }> {
+    try {
+      const store: StoreEntity = await this.storeRepository.findOneById(id);
+      const storeUpdate =  await this.storeRepository.save({...store, paymentId: paymentId, name: name})
+      return {...OKE, name:storeUpdate.name,paymentId:storeUpdate.paymentId}
+    } catch(error) {
+        return error
+    }
+  }
 
-  async findOwnerIdOfAllStore() {
+  async findOwnerIdOfAllStore():Promise<string[]> {
     return (
       await this.storeRepository.findWithRelations({ relations: ['user'] })
     ).map((item) => {
@@ -51,7 +67,7 @@ export class SellerService {
     });
   }
 
-  async findOwnerIdByUserId(userId: string) {
+  async findOwnerIdByUserId(userId: string):Promise<UserEntity> {
     return await this.usersRepository.findByCondition({
       where: { id: userId },
       relations: { store: true },
@@ -369,10 +385,6 @@ export class SellerService {
           store: { name: true },
           orderDetail: {
             id: true,
-            // toddlerPassengers: true,
-            // adultPassengers: true,
-            // childPassengers: true,
-            // infantPassengers: true,
             tour: { name: true },
           },
         },
