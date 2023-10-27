@@ -36,6 +36,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { NotFoundError } from 'rxjs';
 import { SendMailServiceInterface } from '../../../third-party-service/src/interface/email/send-mail.service.interface';
 import { Between, ILike } from 'typeorm';
+import {ERROR, OKE, StatusCodeDTO} from "../statusCode/statusCode";
 
 @Injectable()
 export class TourService {
@@ -512,16 +513,16 @@ export class TourService {
           ...findTourById,
           upVote: [...updateUpVoteExistUserId],
         });
-        return { status: findTour.upVote, total: -1 };
+        return { ...OKE,status: findTour.upVote, total: -1 };
       } else {
         const findTour = await this.tourRepository.save({
           ...findTourById,
           upVote: [...findTourById.upVote, userId],
         });
-        return { status: findTour.upVote, total: 1 };
+        return { ...OKE,status: findTour.upVote, total: 1 };
       }
     } catch (e) {
-      return e;
+      return {...ERROR,message: e.message};
     }
   }
 
@@ -542,7 +543,7 @@ export class TourService {
           ...findExperienceOfUserById,
           upVote: [...updateUpVoteExistUserId],
         });
-        return { status: totalUpvote.upVote, total: -1 };
+        return {...OKE,status: totalUpvote.upVote, total: -1 };
       } else {
         const updateUpvote = await this.usedTourExperienceOfUserRepository.save(
           {
@@ -550,7 +551,7 @@ export class TourService {
             upVote: [...findExperienceOfUserById.upVote, userId],
           },
         );
-        return { status: updateUpvote.upVote, total: 1 };
+        return {...OKE,status: updateUpvote.upVote, total: 1 };
       }
     } catch (e) {
       return e;
@@ -610,19 +611,23 @@ export class TourService {
     const itemsPerPage = 3;
     const skip = (page - 1) * itemsPerPage;
     const whereCondition: any = {};
-    if (title) {
-      whereCondition.title = ILike(`%${title}%`);
+    try {
+      if (title) {
+        whereCondition.title = ILike(`%${title}%`);
+      }
+      const getExperience = await this.usedTourExperienceOfUserRepository.findAll(
+          {
+            where: whereCondition,
+            relations: {comments: {user: true}, user: true},
+            order: {createdAt: 'DESC'},
+            skip: skip,
+            take: itemsPerPage,
+          },
+      );
+      return {...OKE,getExperience};
+    }catch(e){
+      return {statusCode: 400, message: e.message}
     }
-    const getExperience = await this.usedTourExperienceOfUserRepository.findAll(
-      {
-        where: whereCondition,
-        relations: { comments: { user: true }, user: true },
-        order: { createdAt: 'DESC' },
-        skip: skip,
-        take: itemsPerPage,
-      },
-    );
-    return getExperience;
   }
   @Cron('* 0 * * *')
   async updateStatusTourAutomatic(): Promise<void> {

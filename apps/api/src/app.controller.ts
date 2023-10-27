@@ -39,7 +39,7 @@ import { catchError, of } from 'rxjs';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../../third-party-service/src/cloudinary/cloudinary.service';
 
-@Throttle(30, 60)
+@Throttle(200, 60)
 @UseGuards(ThrottlerBehindProxyGuard)
 @Controller()
 export class AppController {
@@ -81,7 +81,7 @@ export class AppController {
       },
     );
   }
-  @Throttle(200, 60)
+  @Throttle(10, 7)
   @Get('experience/page=:page/search=')
   async searchExperience(
     @Param('page', ParseIntPipe) page: string,

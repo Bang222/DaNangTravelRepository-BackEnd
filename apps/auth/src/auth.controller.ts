@@ -113,7 +113,6 @@ export class AuthController {
     const userInfo = await this.authService.validateGoogle(payload.accessToken);
     return await this.authService.loginGoogle(userInfo as UserInfoGoogle);
   }
-
   @MessagePattern({ cmd: 'verify-jwt' })
   async verifyJwt(
     @Ctx()
