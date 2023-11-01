@@ -28,7 +28,7 @@ import { CloudinaryProvider } from '../../third-party-service/src/cloudinary/clo
     ),
     ThrottlerModule.forRoot({
       ttl: 60, // seconds
-      limit: 10, // requests per TTL period
+      limit: 100, // requests per TTL period
     }),
   ],
   controllers: [AppController],

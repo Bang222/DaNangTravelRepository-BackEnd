@@ -18,13 +18,30 @@ export class SharedService implements SharedServiceInterface {
         queue,
         queueOptions: {
           durable: true,
+          // name: `${queue}DLX`
         },
       },
     };
   }
   acknowledgeMessage(context: RmqContext) {
-    const channel = context.getChannelRef(); //allow particular messenger
-    const message = context.getMessage();
-    channel.ack(message);
+    try{
+      const channel = context.getChannelRef(); //allow particular me
+      // Set the message TTL in milliseconds (e.g., 10000ms for 10 seconds)// ssenger
+      const message = context.getMessage();
+      // set error time to leave
+      // message.properties.expiration = '10000';
+      // channel.sendToQueue(queue, Buffer.from(JSON.stringify(message.content), { expiration: message.properties.expiration }));
+      channel.ack(message);
+    } catch(error){
+      console.error(error)
+      // đối số thứ 2 nếu bằng True thì nó sẽ đẩy ngược lên lại Queue đang đợi nếu bằng false thì sẽ đấy xuống Queue bị lỗi
+      // đối số 3 thì chỉ định từ chối nhiều thư hay không nêys false thì sẽ chỉ từ chối cái thư này thôi
+      context.getChannelRef().nack(context.getMessage(),true,false)
+    }
   }
+  // setFalseMessage(context:RmqContext){
+  //   const channel = context.getChannelRef(); //allow particular messenger
+  //   const message = context.getMessage();
+  //   channel.ack(message);
+  // }
 }
